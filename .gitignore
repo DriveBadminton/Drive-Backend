@@ -125,3 +125,5 @@ keystore/
 ### API 키 및 설정 ###
 apikeys.properties
 external-config.properties
+/FUNCTIONAL_SPECIFICATION.md
+/PROJECT_ANALYSIS.md
