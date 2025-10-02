@@ -1,0 +1,18 @@
+.git
+.github
+.gradle
+.idea
+build
+out
+Dockerfile
+README*
+LICENSE
+**/*.md
+**/*.iml
+**/*.ipr
+**/*.iws
+**/*.log
+
+# OS
+.DS_Store
+Thumbs.db

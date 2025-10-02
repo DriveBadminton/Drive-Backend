@@ -110,7 +110,6 @@ jmeter/
 performance/
 
 ### Docker ###
-.dockerignore
 docker-compose.override.yml
 
 ### SSL 인증서 및 키 파일 ###
