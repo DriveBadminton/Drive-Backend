@@ -57,6 +57,8 @@ jobs:
       - name: Push Docker image to ECR
         if: ${{ env.AWS_ACCOUNT_ID != '' && env.AWS_REGION != '' && env.ECR_REPOSITORY != '' }}
         run: |
+          docker image inspect drive-backend:${{ github.sha }} >/dev/null 2>&1 || \
+            docker build -t drive-backend:${{ github.sha }} .
           IMAGE_URI="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY"
           docker tag drive-backend:${{ github.sha }} "$IMAGE_URI:${{ github.sha }}"
           docker tag drive-backend:${{ github.sha }} "$IMAGE_URI:latest"
