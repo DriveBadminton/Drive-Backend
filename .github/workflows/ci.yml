@@ -29,8 +29,14 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build
 
-      - name: Build Docker image
-        run: docker build -t drive-backend:${{ github.sha }} .
+      - name: “Check EC2_INSTANCE_ID secret exists”
+        id: check_ec2
+        run: |
+          if [ -n "${{ secrets.EC2_INSTANCE_ID }}" ]; then
+            echo "ec2_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "ec2_exists=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Configure AWS credentials
         if: ${{ env.AWS_ACCOUNT_ID != '' && env.AWS_REGION != '' }}
@@ -58,7 +64,8 @@ jobs:
           docker push "$IMAGE_URI:latest"
 
       - name: Deploy to EC2 via SSM
-        if: ${{ env.AWS_ACCOUNT_ID != '' && env.AWS_REGION != '' && env.ECR_REPOSITORY != '' && secrets.EC2_INSTANCE_ID != '' }}
+        # 여기서 secrets 대신 outputs 값을 사용
+        if: ${{ env.AWS_ACCOUNT_ID != '' && env.AWS_REGION != '' && env.ECR_REPOSITORY != '' && steps.check_ec2.outputs.ec2_exists == 'true' }}
         env:
           IMAGE_REGISTRY: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
           EC2_INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
