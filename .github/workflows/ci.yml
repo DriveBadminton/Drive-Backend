@@ -56,3 +56,39 @@ jobs:
           docker tag drive-backend:${{ github.sha }} "$IMAGE_URI:latest"
           docker push "$IMAGE_URI:${{ github.sha }}"
           docker push "$IMAGE_URI:latest"
+
+      - name: Deploy to EC2 via SSM
+        if: ${{ env.AWS_ACCOUNT_ID != '' && env.AWS_REGION != '' && env.ECR_REPOSITORY != '' && secrets.EC2_INSTANCE_ID != '' }}
+        env:
+          IMAGE_REGISTRY: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+          EC2_INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
+          EC2_APP_PATH: ${{ vars.EC2_APP_PATH }}
+        run: |
+          if [ -z "$EC2_APP_PATH" ]; then
+            EC2_APP_PATH="/home/ssm-user/Drive-Backend"
+          fi
+
+          COMMANDS=$(jq -n \
+            --arg reg "$IMAGE_REGISTRY" \
+            --arg repo "$ECR_REPOSITORY" \
+            --arg region "$AWS_REGION" \
+            --arg app "$EC2_APP_PATH" \
+            '[
+              "#!/bin/bash",
+              "set -e",
+              "aws ecr get-login-password --region \($region) | docker login --username AWS --password-stdin \($reg)",
+              "docker pull \($reg)/\($repo):latest",
+              "docker tag \($reg)/\($repo):latest drive-backend:latest",
+              "cd \($app)",
+              "docker compose down || true",
+              "docker compose up -d",
+              "docker image prune -f"
+            ]')
+
+          aws ssm send-command \
+            --instance-ids "$EC2_INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy Drive Backend" \
+            --parameters commands="$COMMANDS" \
+            --region "$AWS_REGION" \
+            --output text
