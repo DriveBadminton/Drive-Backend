@@ -25,7 +25,7 @@ RUN --mount=type=cache,target=/home/gradle/.gradle \
 ############################
 FROM eclipse-temurin:21-jre
 ENV TZ=Asia/Seoul \
-    SPRING_PROFILES_ACTIVE=local-mysql
+    SPRING_PROFILES_ACTIVE=local-dev
 WORKDIR /app
 
 COPY --from=builder /workspace/build/libs/app.jar ./app.jar
