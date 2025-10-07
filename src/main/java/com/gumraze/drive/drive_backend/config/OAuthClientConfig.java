@@ -33,7 +33,7 @@ public class OAuthClientConfig {
             .userNameAttributeName(userNameAttribute)
             .clientAuthenticationMethod(org.springframework.security.oauth2.core.ClientAuthenticationMethod.CLIENT_SECRET_POST)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-            .scope("profile_nickname", "profile_image", "account_email")
+            .scope("profile_nickname", "profile_image")
             .clientName("Kakao");
 
         return new InMemoryClientRegistrationRepository(builder.build());
