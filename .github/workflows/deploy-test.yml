@@ -1,7 +1,7 @@
 name: Deploy Test
 
 on:
-  workflow_dispatch:   # 수동 실행
+  workflow_dispatch:
 
 jobs:
   ssh-test:
