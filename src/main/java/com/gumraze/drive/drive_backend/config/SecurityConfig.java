@@ -21,7 +21,7 @@ public class SecurityConfig {
                     "/",
                     "/actuator/health"
                 ).permitAll()
-                .anyRequest().authenticated()
+                .anyRequest().permitAll()
             )
             .httpBasic(Customizer.withDefaults());
 
