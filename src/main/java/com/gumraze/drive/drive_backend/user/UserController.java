@@ -1,4 +1,4 @@
-package com.gumraze.drive.drive_backend.user.controller;
+package com.gumraze.drive.drive_backend.user;
 
 import java.util.Optional;
 
