@@ -1,15 +1,29 @@
 package com.gumraze.drive.drive_backend.auth.service;
 
 import com.gumraze.drive.drive_backend.auth.dto.OAuthLoginRequestDto;
+import com.gumraze.drive.drive_backend.auth.oauth.FakeOAuthClient;
 import com.gumraze.drive.drive_backend.auth.token.AccessTokenGenerator;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class AuthServiceTest {
-    private AccessTokenGenerator accessTokenGenerator = new AccessTokenGenerator();
-    private AuthService authService = new AuthServiceImpl(accessTokenGenerator);
+    private AuthService authService;
+    private AccessTokenGenerator accessTokenGenerator;
+    private FakeOAuthClient fakeOAuthClient;
+
+    // 테스트 실행되기 전에 항상 실행되는 메서드
+    @BeforeEach
+    void setUp() {
+        accessTokenGenerator = new AccessTokenGenerator();
+        fakeOAuthClient = new FakeOAuthClient("oauth-user-123");
+        authService = new AuthServiceImpl(
+                accessTokenGenerator,
+                fakeOAuthClient
+        );
+    }
 
     @Test
     @DisplayName("OAuth 로그인을 하면 결과 객체를 반환한다.")
@@ -96,5 +110,29 @@ class AuthServiceTest {
 
         // then
         assertThat(result.getUserId()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("OAuth 로그인 시 OAuthClient를 호출한다.")
+    void oauth_login_calls_oauth_client() {
+        // given
+        FakeOAuthClient fakeOAuthClient = new FakeOAuthClient("oauth-user-123");
+
+        AuthService authservice = new AuthServiceImpl(
+                accessTokenGenerator,
+                fakeOAuthClient
+        );
+
+        OAuthLoginRequestDto request = OAuthLoginRequestDto.builder()
+                .provider(null)
+                .authorizationCode("test-code")
+                .redirectUri("https://test.com")
+                .build();
+
+        // when
+        authservice.login(request);
+
+        // then
+        assertThat(fakeOAuthClient.isCalled()).isTrue();
     }
 }
