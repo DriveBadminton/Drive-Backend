@@ -1,15 +1,13 @@
 package com.gumraze.drive.drive_backend.user.service;
 
-import java.util.Optional;
-
-import com.gumraze.drive.drive_backend.user.constants.AuthProvider;
+import com.gumraze.drive.drive_backend.auth.constants.AuthProvider;
+import com.gumraze.drive.drive_backend.user.entity.OauthUser;
+import com.gumraze.drive.drive_backend.user.repository.OauthUserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.gumraze.drive.drive_backend.user.entity.OauthUser;
-import com.gumraze.drive.drive_backend.user.repository.OauthUserRepository;
-
-import lombok.RequiredArgsConstructor;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service

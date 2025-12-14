@@ -1,6 +1,6 @@
 package com.gumraze.drive.drive_backend.user.entity;
 
-import com.gumraze.drive.drive_backend.user.constants.AuthProvider;
+import com.gumraze.drive.drive_backend.auth.constants.AuthProvider;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
