@@ -1,7 +1,6 @@
 package com.gumraze.drive.drive_backend.auth.service;
 
 import com.gumraze.drive.drive_backend.auth.dto.OAuthLoginRequestDto;
-import com.gumraze.drive.drive_backend.auth.oauth.FakeOAuthClient;
 import com.gumraze.drive.drive_backend.auth.oauth.OAuthClient;
 import com.gumraze.drive.drive_backend.auth.token.AccessTokenGenerator;
 
@@ -12,9 +11,10 @@ public class AuthServiceImpl implements AuthService {
 
     public AuthServiceImpl(
             AccessTokenGenerator accessTokenGenerator,
-            FakeOAuthClient fakeOAuthClient) {
+            OAuthClient oauthClient
+    ) {
         this.accessTokenGenerator = accessTokenGenerator;
-        this.oauthClient = fakeOAuthClient;
+        this.oauthClient = oauthClient;
     }
 
     @Override
@@ -26,7 +26,7 @@ public class AuthServiceImpl implements AuthService {
         );
 
         // 우리 서비스의 사용자 식별 (임시)
-        Long userId = 1L;
+        Long userId = 10L;
 
         // 액세스 토큰 발급 (userId 기반)
         String accessToken = accessTokenGenerator.generateAccessToken(userId);

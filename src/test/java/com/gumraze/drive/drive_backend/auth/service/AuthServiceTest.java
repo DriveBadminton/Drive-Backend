@@ -1,7 +1,7 @@
 package com.gumraze.drive.drive_backend.auth.service;
 
+import com.gumraze.drive.drive_backend.auth.constants.AuthProvider;
 import com.gumraze.drive.drive_backend.auth.dto.OAuthLoginRequestDto;
-import com.gumraze.drive.drive_backend.auth.oauth.FakeOAuthClient;
 import com.gumraze.drive.drive_backend.auth.token.AccessTokenGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -134,5 +134,32 @@ class AuthServiceTest {
 
         // then
         assertThat(fakeOAuthClient.isCalled()).isTrue();
+    }
+
+    @Test
+    @DisplayName("이미 가입된 사용자는 providerUserId로 기존 userId를 반환한다.")
+    void returns_existing_user_id_when_user_already_registered() {
+
+        // given
+        FakeUserAuthRepository userAuthRepository =
+                new FakeUserAuthRepository();
+
+        userAuthRepository.save(
+                "GOOGLE",
+                "oauth-user-123",
+                10L
+        );
+
+        OAuthLoginRequestDto request = OAuthLoginRequestDto.builder()
+                .provider(AuthProvider.GOOGLE)
+                .authorizationCode("test-code")
+                .redirectUri("https://test.com")
+                .build();
+
+        // when
+        OAuthLoginResult result = authService.login(request);
+
+        // then
+        assertThat(result.getUserId()).isEqualTo(10L);
     }
 }

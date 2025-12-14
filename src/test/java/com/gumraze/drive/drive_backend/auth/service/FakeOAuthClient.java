@@ -1,4 +1,6 @@
-package com.gumraze.drive.drive_backend.auth.oauth;
+package com.gumraze.drive.drive_backend.auth.service;
+
+import com.gumraze.drive.drive_backend.auth.oauth.OAuthClient;
 
 public class FakeOAuthClient implements OAuthClient {
 
