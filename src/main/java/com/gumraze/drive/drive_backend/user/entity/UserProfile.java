@@ -21,6 +21,10 @@ public class UserProfile {
     @Enumerated(EnumType.STRING)
     private Grade grade;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "region_id")
+    private Region region;
+
     private LocalDateTime createdAt;    // 계정 생성 시점이 아닌 프로필 생성 시점
     private LocalDateTime updatedAt;
 }
