@@ -1,4 +1,4 @@
-package com.gumraze.drive.drive_backend.user.entity;
+package com.gumraze.drive.drive_backend.region;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
