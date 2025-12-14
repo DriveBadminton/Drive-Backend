@@ -14,6 +14,7 @@ class AuthServiceTest {
     private AccessTokenGenerator accessTokenGenerator;
     private FakeOAuthClient fakeOAuthClient;
     private FakeUserAuthRepository userAuthRepository;
+    private FakeUserRepository userRepository;
 
     // 테스트 실행되기 전에 항상 실행되는 메서드
     @BeforeEach
@@ -21,10 +22,13 @@ class AuthServiceTest {
         accessTokenGenerator = new AccessTokenGenerator();
         fakeOAuthClient = new FakeOAuthClient("oauth-user-123");
         userAuthRepository = new FakeUserAuthRepository();
+        userRepository = new FakeUserRepository();
+
         authService = new AuthServiceImpl(
                 accessTokenGenerator,
                 fakeOAuthClient,
-                userAuthRepository
+                userAuthRepository,
+                userRepository
         );
     }
 
@@ -161,12 +165,19 @@ class AuthServiceTest {
     void creates_new_user_when_not_registered_yet() {
         // given
         FakeUserAuthRepository userAuthRepository =
-                new FakeUserAuthRepository();
+            new FakeUserAuthRepository();
+
+        FakeOAuthClient fakeOAuthClient =
+                new FakeOAuthClient("oauth-user-123");
+
+        FakeUserRepository userRepository =
+                new FakeUserRepository();
 
         AuthService authService = new AuthServiceImpl(
                 accessTokenGenerator,
                 fakeOAuthClient,
-                userAuthRepository
+                userAuthRepository,
+                userRepository
         );
 
         OAuthLoginRequestDto request = OAuthLoginRequestDto.builder()
@@ -187,5 +198,32 @@ class AuthServiceTest {
                         "oauth-user-123"
                 )
         ).isPresent();      // Optional 안에 값이 존재하는지 여부를 알려주는 메서드
+    }
+
+    @Test
+    @DisplayName("신규 사용자일 경우 UserRepository를 통해 사용자를 생성한다.")
+    void creates_user_through_user_repository_when_new_user() {
+        // given
+        FakeUserAuthRepository userAuthRepository =
+            new FakeUserAuthRepository();
+
+        AuthService authService = new AuthServiceImpl(
+                accessTokenGenerator,
+                fakeOAuthClient,
+                userAuthRepository,
+                userRepository
+        );
+
+        OAuthLoginRequestDto request = OAuthLoginRequestDto.builder()
+                .provider(AuthProvider.GOOGLE)
+                .authorizationCode("test-code")
+                .redirectUri("https://test.com")
+                .build();
+
+        // when
+        OAuthLoginResult result = authService.login(request);
+
+        // then
+        assertThat(userRepository.isCreateCalled()).isTrue();
     }
 }

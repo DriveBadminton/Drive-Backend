@@ -4,22 +4,26 @@ import com.gumraze.drive.drive_backend.auth.dto.OAuthLoginRequestDto;
 import com.gumraze.drive.drive_backend.auth.oauth.OAuthClient;
 import com.gumraze.drive.drive_backend.auth.repository.UserAuthRepository;
 import com.gumraze.drive.drive_backend.auth.token.AccessTokenGenerator;
+import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 
 public class AuthServiceImpl implements AuthService {
 
     private final AccessTokenGenerator accessTokenGenerator;
     private final OAuthClient oauthClient;
     private final UserAuthRepository userAuthRepository;
+    private final UserRepository userRepository;
 
     public AuthServiceImpl(
             AccessTokenGenerator accessTokenGenerator,
             OAuthClient oauthClient,
-            UserAuthRepository userAuthRepository
+            UserAuthRepository userAuthRepository,
+            UserRepository userRepository
 
     ) {
         this.accessTokenGenerator = accessTokenGenerator;
         this.oauthClient = oauthClient;
         this.userAuthRepository = userAuthRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -37,13 +41,16 @@ public class AuthServiceImpl implements AuthService {
                         providerUserId
                 )
                 .orElseGet(() -> {
-                    // 신규 사용자
-                    Long newUserId = System.currentTimeMillis();
+                    // 신규 사용자 생성
+                    Long newUserId = userRepository.createUser();
+
+                    // 신규 사용자 저장
                     userAuthRepository.save(
                             request.getProvider().name(),
                             providerUserId,
                             newUserId
                     );
+
                     return newUserId;
                 });
 
