@@ -63,4 +63,38 @@ class AuthServiceTest {
         assertThat(result1.getAccessToken())
                 .isNotEqualTo(result2.getAccessToken());
     }
+
+    @Test
+    @DisplayName("accessToken은 사용자의 식별자를 기반으로 발급된다.")
+    void access_token_contains_user_identifier() {
+        // given
+        OAuthLoginRequestDto request = OAuthLoginRequestDto.builder()
+                .provider(null)
+                .authorizationCode("test-code")
+                .redirectUri("https://test.com")
+                .build();
+
+        // when
+        OAuthLoginResult result = authService.login(request);
+
+        // then
+        assertThat(result.getAccessToken()).contains("user-");
+    }
+
+    @Test
+    @DisplayName("OAuth 로그인 시 사용자 식별이 먼저 수행된다.")
+    void oauth_login_identifies_user() {
+        // given
+        OAuthLoginRequestDto request = OAuthLoginRequestDto.builder()
+                .provider(null)
+                .authorizationCode("test-code")
+                .redirectUri("https://test.com")
+                .build();
+
+        // when
+        OAuthLoginResult result = authService.login(request);
+
+        // then
+        assertThat(result.getUserId()).isNotNull();
+    }
 }

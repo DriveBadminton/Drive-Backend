@@ -13,7 +13,12 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public OAuthLoginResult login(OAuthLoginRequestDto request) {
-        String accessToken = accessTokenGenerator.generateAccessToken();
-        return new OAuthLoginResult(accessToken);
+        // 사용자 식별(임시)
+        Long userId = 1L;
+
+        // 토큰 발급 (userId 기반)
+        String accessToken = accessTokenGenerator.generateAccessToken(userId);
+
+        return new OAuthLoginResult(userId, accessToken);
     }
 }

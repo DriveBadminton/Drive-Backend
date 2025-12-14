@@ -4,7 +4,7 @@ import java.util.UUID;
 
 public class AccessTokenGenerator implements TokenProvider{
     @Override
-    public String generateAccessToken() {
-        return UUID.randomUUID().toString();
+    public String generateAccessToken(Long userId) {
+        return "user-" + userId + "-" + UUID.randomUUID();
     }
 }
