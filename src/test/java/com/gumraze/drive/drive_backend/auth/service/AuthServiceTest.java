@@ -13,15 +13,18 @@ class AuthServiceTest {
     private AuthService authService;
     private AccessTokenGenerator accessTokenGenerator;
     private FakeOAuthClient fakeOAuthClient;
+    private FakeUserAuthRepository userAuthRepository;
 
     // 테스트 실행되기 전에 항상 실행되는 메서드
     @BeforeEach
     void setUp() {
         accessTokenGenerator = new AccessTokenGenerator();
         fakeOAuthClient = new FakeOAuthClient("oauth-user-123");
+        userAuthRepository = new FakeUserAuthRepository();
         authService = new AuthServiceImpl(
                 accessTokenGenerator,
-                fakeOAuthClient
+                fakeOAuthClient,
+                userAuthRepository
         );
     }
 
@@ -30,7 +33,7 @@ class AuthServiceTest {
     void login_returns_result_when_oauth_login() {
         // given
         OAuthLoginRequestDto request = OAuthLoginRequestDto.builder()
-                .provider(null) // 지금은 중요하지 않음.
+                .provider(AuthProvider.GOOGLE)
                 .authorizationCode("test-code")
                 .redirectUri("https://test.com")
                 .build();
@@ -47,7 +50,7 @@ class AuthServiceTest {
     void login_result_contains_access_token() {
         // given
         OAuthLoginRequestDto request = OAuthLoginRequestDto.builder()
-                .provider(null)
+                .provider(AuthProvider.GOOGLE)
                 .authorizationCode("test-code")
                 .redirectUri("https://test.com")
                 .build();
@@ -64,7 +67,7 @@ class AuthServiceTest {
     void access_token_is_newly_issued_each_time() {
         // given
         OAuthLoginRequestDto request = OAuthLoginRequestDto.builder()
-                .provider(null)
+                .provider(AuthProvider.GOOGLE)
                 .authorizationCode("test-code")
                 .redirectUri("https://test.com")
                 .build();
@@ -83,7 +86,7 @@ class AuthServiceTest {
     void access_token_contains_user_identifier() {
         // given
         OAuthLoginRequestDto request = OAuthLoginRequestDto.builder()
-                .provider(null)
+                .provider(AuthProvider.GOOGLE)
                 .authorizationCode("test-code")
                 .redirectUri("https://test.com")
                 .build();
@@ -100,7 +103,7 @@ class AuthServiceTest {
     void oauth_login_identifies_user() {
         // given
         OAuthLoginRequestDto request = OAuthLoginRequestDto.builder()
-                .provider(null)
+                .provider(AuthProvider.GOOGLE)
                 .authorizationCode("test-code")
                 .redirectUri("https://test.com")
                 .build();
@@ -116,21 +119,14 @@ class AuthServiceTest {
     @DisplayName("OAuth 로그인 시 OAuthClient를 호출한다.")
     void oauth_login_calls_oauth_client() {
         // given
-        FakeOAuthClient fakeOAuthClient = new FakeOAuthClient("oauth-user-123");
-
-        AuthService authservice = new AuthServiceImpl(
-                accessTokenGenerator,
-                fakeOAuthClient
-        );
-
         OAuthLoginRequestDto request = OAuthLoginRequestDto.builder()
-                .provider(null)
+                .provider(AuthProvider.GOOGLE)
                 .authorizationCode("test-code")
                 .redirectUri("https://test.com")
                 .build();
 
         // when
-        authservice.login(request);
+        OAuthLoginResult result = authService.login(request);
 
         // then
         assertThat(fakeOAuthClient.isCalled()).isTrue();
@@ -141,9 +137,6 @@ class AuthServiceTest {
     void returns_existing_user_id_when_user_already_registered() {
 
         // given
-        FakeUserAuthRepository userAuthRepository =
-                new FakeUserAuthRepository();
-
         userAuthRepository.save(
                 "GOOGLE",
                 "oauth-user-123",
@@ -161,5 +154,38 @@ class AuthServiceTest {
 
         // then
         assertThat(result.getUserId()).isEqualTo(10L);
+    }
+
+    @Test
+    @DisplayName("신규 사용자는 userId를 생성하고 user_auth에 저장한다.")
+    void creates_new_user_when_not_registered_yet() {
+        // given
+        FakeUserAuthRepository userAuthRepository =
+                new FakeUserAuthRepository();
+
+        AuthService authService = new AuthServiceImpl(
+                accessTokenGenerator,
+                fakeOAuthClient,
+                userAuthRepository
+        );
+
+        OAuthLoginRequestDto request = OAuthLoginRequestDto.builder()
+                .provider(AuthProvider.GOOGLE)
+                .authorizationCode("test-code")
+                .redirectUri("https://test.com")
+                .build();
+
+        // when
+        OAuthLoginResult result = authService.login(request);
+
+        // then
+        assertThat(result.getUserId()).isNotNull();
+
+        assertThat(
+                userAuthRepository.findUserId(
+                        "GOOGLE",
+                        "oauth-user-123"
+                )
+        ).isPresent();      // Optional 안에 값이 존재하는지 여부를 알려주는 메서드
     }
 }
