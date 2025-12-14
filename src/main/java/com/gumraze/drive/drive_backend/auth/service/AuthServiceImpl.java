@@ -5,6 +5,6 @@ import com.gumraze.drive.drive_backend.auth.dto.OAuthLoginRequestDto;
 public class AuthServiceImpl implements AuthService {
     @Override
     public OAuthLoginResult login(OAuthLoginRequestDto request) {
-        return new OAuthLoginResult();
+        return new OAuthLoginResult("dummy-access-token");
     }
 }

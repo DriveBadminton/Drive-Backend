@@ -25,4 +25,21 @@ class AuthServiceTest {
         // then
         assertThat(result).isNotNull();
     }
+
+    @Test
+    @DisplayName("로그인 결과에는 accessToken이 포함된다.")
+    void login_result_contains_access_token() {
+        // given
+        OAuthLoginRequestDto request = OAuthLoginRequestDto.builder()
+                .provider(null)
+                .authorizationCode("test-code")
+                .redirectUri("https://test.com")
+                .build();
+
+        // when
+        OAuthLoginResult result = authService.login(request);
+
+        // then
+        assertThat(result.getAccessToken()).isNotBlank();
+    }
 }
