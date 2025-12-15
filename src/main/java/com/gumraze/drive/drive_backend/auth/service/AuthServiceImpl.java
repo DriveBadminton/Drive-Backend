@@ -5,7 +5,11 @@ import com.gumraze.drive.drive_backend.auth.oauth.OAuthClient;
 import com.gumraze.drive.drive_backend.auth.repository.UserAuthRepository;
 import com.gumraze.drive.drive_backend.auth.token.AccessTokenGenerator;
 import com.gumraze.drive.drive_backend.user.repository.UserRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+@Service
+@Transactional
 public class AuthServiceImpl implements AuthService {
 
     private final AccessTokenGenerator accessTokenGenerator;
