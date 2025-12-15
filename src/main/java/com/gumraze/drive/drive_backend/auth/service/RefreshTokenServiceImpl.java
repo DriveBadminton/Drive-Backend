@@ -22,20 +22,20 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     @Override
     public String rotate(Long userId) {
+        // 사용자 id 조회
+        User user = jpaUserRepository.findById(userId).orElseThrow();
+
         // 기존 Refresh Token 삭제
-        refreshTokenRepository.deleteByUserId(userId);
+        refreshTokenRepository.deleteByUser(user);
 
         // 새로운 Refresh Token 생성
         String token = refreshTokenGenerator.generatePlainToken();
-
-        // 사용자 조회
-        User user = jpaUserRepository.findById(userId).orElseThrow();
 
         // 저장
         RefreshToken refreshToken = new RefreshToken(
                 user,
                 refreshTokenGenerator.hash(token),
-                LocalDateTime.now().plusDays(14)
+                LocalDateTime.now().plusDays(5)
         );
 
         refreshTokenRepository.save(refreshToken);
