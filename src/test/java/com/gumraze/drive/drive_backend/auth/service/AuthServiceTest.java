@@ -18,6 +18,7 @@ class AuthServiceTest {
     private FakeOAuthClient fakeOAuthClient;
     private FakeUserAuthRepository userAuthRepository;
     private FakeUserRepository userRepository;
+    private RefreshTokenService refreshTokenService;
 
     // 테스트 실행되기 전에 항상 실행되는 메서드
     @BeforeEach
@@ -32,11 +33,13 @@ class AuthServiceTest {
         userAuthRepository = new FakeUserAuthRepository();
         userRepository = new FakeUserRepository();
 
+
         authService = new AuthServiceImpl(
                 jwtAccessTokenGenerator,
                 fakeOAuthClient,
                 userAuthRepository,
-                userRepository
+                userRepository,
+                refreshTokenService
         );
     }
 
@@ -170,7 +173,8 @@ class AuthServiceTest {
                 jwtAccessTokenGenerator,
                 fakeOAuthClient,
                 userAuthRepository,
-                userRepository
+                userRepository,
+                refreshTokenService
         );
 
         OAuthLoginRequestDto request = OAuthLoginRequestDto.builder()
@@ -204,7 +208,8 @@ class AuthServiceTest {
                 jwtAccessTokenGenerator,
                 fakeOAuthClient,
                 userAuthRepository,
-                userRepository
+                userRepository,
+                refreshTokenService
         );
 
         OAuthLoginRequestDto request = OAuthLoginRequestDto.builder()

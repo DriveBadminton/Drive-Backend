@@ -16,18 +16,20 @@ public class AuthServiceImpl implements AuthService {
     private final OAuthClient oauthClient;
     private final UserAuthRepository userAuthRepository;
     private final UserRepository userRepository;
+    private final RefreshTokenService refreshTokenService;
 
     public AuthServiceImpl(
             JwtAccessTokenGenerator jwtAccessTokenGenerator,
             OAuthClient oauthClient,
             UserAuthRepository userAuthRepository,
-            UserRepository userRepository
+            UserRepository userRepository, RefreshTokenService refreshTokenService
 
     ) {
         this.jwtAccessTokenGenerator = jwtAccessTokenGenerator;
         this.oauthClient = oauthClient;
         this.userAuthRepository = userAuthRepository;
         this.userRepository = userRepository;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @Override

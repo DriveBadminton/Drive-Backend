@@ -25,4 +25,21 @@ public class RefreshToken {
 
     private LocalDateTime expiredAt;
     private LocalDateTime createdAt;
+
+    protected RefreshToken() {}
+
+    public RefreshToken(
+            User user,
+            String tokenHash,
+            LocalDateTime expiredAt
+    ) {
+        this.user = user;
+        this.tokenHash = tokenHash;
+        this.expiredAt = expiredAt;
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public boolean isExpired() {
+        return expiredAt.isBefore(LocalDateTime.now());
+    }
 }
