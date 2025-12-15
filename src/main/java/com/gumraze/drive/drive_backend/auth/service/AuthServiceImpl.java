@@ -3,7 +3,7 @@ package com.gumraze.drive.drive_backend.auth.service;
 import com.gumraze.drive.drive_backend.auth.dto.OAuthLoginRequestDto;
 import com.gumraze.drive.drive_backend.auth.oauth.OAuthClient;
 import com.gumraze.drive.drive_backend.auth.repository.UserAuthRepository;
-import com.gumraze.drive.drive_backend.auth.token.AccessTokenGenerator;
+import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenGenerator;
 import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,19 +12,19 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class AuthServiceImpl implements AuthService {
 
-    private final AccessTokenGenerator accessTokenGenerator;
+    private final JwtAccessTokenGenerator jwtAccessTokenGenerator;
     private final OAuthClient oauthClient;
     private final UserAuthRepository userAuthRepository;
     private final UserRepository userRepository;
 
     public AuthServiceImpl(
-            AccessTokenGenerator accessTokenGenerator,
+            JwtAccessTokenGenerator jwtAccessTokenGenerator,
             OAuthClient oauthClient,
             UserAuthRepository userAuthRepository,
             UserRepository userRepository
 
     ) {
-        this.accessTokenGenerator = accessTokenGenerator;
+        this.jwtAccessTokenGenerator = jwtAccessTokenGenerator;
         this.oauthClient = oauthClient;
         this.userAuthRepository = userAuthRepository;
         this.userRepository = userRepository;
@@ -59,7 +59,7 @@ public class AuthServiceImpl implements AuthService {
                 });
 
         // 액세스 토큰 발급 (userId 기반)
-        String accessToken = accessTokenGenerator.generateAccessToken(userId);
+        String accessToken = jwtAccessTokenGenerator.generateAccessToken(userId);
 
         return new OAuthLoginResult(userId, accessToken);
     }

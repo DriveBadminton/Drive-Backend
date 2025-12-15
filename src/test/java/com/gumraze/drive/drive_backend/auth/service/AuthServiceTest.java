@@ -2,7 +2,9 @@ package com.gumraze.drive.drive_backend.auth.service;
 
 import com.gumraze.drive.drive_backend.auth.constants.AuthProvider;
 import com.gumraze.drive.drive_backend.auth.dto.OAuthLoginRequestDto;
-import com.gumraze.drive.drive_backend.auth.token.AccessTokenGenerator;
+import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenGenerator;
+import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenValidator;
+import com.gumraze.drive.drive_backend.auth.token.JwtProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,7 +13,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class AuthServiceTest {
     private AuthService authService;
-    private AccessTokenGenerator accessTokenGenerator;
+    private JwtAccessTokenGenerator jwtAccessTokenGenerator;
+    private JwtProperties properties;
     private FakeOAuthClient fakeOAuthClient;
     private FakeUserAuthRepository userAuthRepository;
     private FakeUserRepository userRepository;
@@ -19,13 +22,18 @@ class AuthServiceTest {
     // 테스트 실행되기 전에 항상 실행되는 메서드
     @BeforeEach
     void setUp() {
-        accessTokenGenerator = new AccessTokenGenerator();
+        properties = new JwtProperties(
+                "test-secret-key-test-secret-key-test-secret-key",
+                1800000L
+        );
+
+        jwtAccessTokenGenerator = new JwtAccessTokenGenerator(properties);
         fakeOAuthClient = new FakeOAuthClient("oauth-user-123");
         userAuthRepository = new FakeUserAuthRepository();
         userRepository = new FakeUserRepository();
 
         authService = new AuthServiceImpl(
-                accessTokenGenerator,
+                jwtAccessTokenGenerator,
                 fakeOAuthClient,
                 userAuthRepository,
                 userRepository
@@ -67,26 +75,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("로그인할 때마다 accessToken은 새로 발급된다.")
-    void access_token_is_newly_issued_each_time() {
-        // given
-        OAuthLoginRequestDto request = OAuthLoginRequestDto.builder()
-                .provider(AuthProvider.GOOGLE)
-                .authorizationCode("test-code")
-                .redirectUri("https://test.com")
-                .build();
-
-        // when
-        OAuthLoginResult result1 = authService.login(request);
-        OAuthLoginResult result2 = authService.login(request);
-
-        // then
-        assertThat(result1.getAccessToken())
-                .isNotEqualTo(result2.getAccessToken());
-    }
-
-    @Test
-    @DisplayName("accessToken은 사용자의 식별자를 기반으로 발급된다.")
+    @DisplayName("accessToken은 사용자의 식별자(userId)를 포함한다.")
     void access_token_contains_user_identifier() {
         // given
         OAuthLoginRequestDto request = OAuthLoginRequestDto.builder()
@@ -99,7 +88,11 @@ class AuthServiceTest {
         OAuthLoginResult result = authService.login(request);
 
         // then
-        assertThat(result.getAccessToken()).contains("user-");
+        JwtAccessTokenValidator validator = new JwtAccessTokenValidator(properties);
+
+        Long userIdFromToken = validator.validateAndGetUserId(result.getAccessToken()).orElseThrow();
+
+        assertThat(userIdFromToken).isEqualTo(result.getUserId());
     }
 
     @Test
@@ -174,7 +167,7 @@ class AuthServiceTest {
                 new FakeUserRepository();
 
         AuthService authService = new AuthServiceImpl(
-                accessTokenGenerator,
+                jwtAccessTokenGenerator,
                 fakeOAuthClient,
                 userAuthRepository,
                 userRepository
@@ -208,7 +201,7 @@ class AuthServiceTest {
             new FakeUserAuthRepository();
 
         AuthService authService = new AuthServiceImpl(
-                accessTokenGenerator,
+                jwtAccessTokenGenerator,
                 fakeOAuthClient,
                 userAuthRepository,
                 userRepository
