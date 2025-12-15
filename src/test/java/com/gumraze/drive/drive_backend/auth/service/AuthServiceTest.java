@@ -142,7 +142,7 @@ class AuthServiceTest {
 
         // given
         userAuthRepository.save(
-                "GOOGLE",
+                AuthProvider.GOOGLE,
                 "oauth-user-123",
                 10L
         );
@@ -194,7 +194,7 @@ class AuthServiceTest {
 
         assertThat(
                 userAuthRepository.findUserId(
-                        "GOOGLE",
+                        AuthProvider.GOOGLE,
                         "oauth-user-123"
                 )
         ).isPresent();      // Optional 안에 값이 존재하는지 여부를 알려주는 메서드

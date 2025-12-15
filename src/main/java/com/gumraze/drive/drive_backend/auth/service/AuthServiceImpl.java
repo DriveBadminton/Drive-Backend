@@ -37,7 +37,7 @@ public class AuthServiceImpl implements AuthService {
         // 우리 서비스의 사용자 식별 (임시)
         Long userId = userAuthRepository
                 .findUserId(
-                        request.getProvider().name(),
+                        request.getProvider(),
                         providerUserId
                 )
                 .orElseGet(() -> {
@@ -46,7 +46,7 @@ public class AuthServiceImpl implements AuthService {
 
                     // 신규 사용자 저장
                     userAuthRepository.save(
-                            request.getProvider().name(),
+                            request.getProvider(),
                             providerUserId,
                             newUserId
                     );

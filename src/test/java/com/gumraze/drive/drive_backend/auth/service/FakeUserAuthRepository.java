@@ -1,5 +1,6 @@
 package com.gumraze.drive.drive_backend.auth.service;
 
+import com.gumraze.drive.drive_backend.auth.constants.AuthProvider;
 import com.gumraze.drive.drive_backend.auth.repository.UserAuthRepository;
 
 import java.util.HashMap;
@@ -12,7 +13,7 @@ public class FakeUserAuthRepository implements UserAuthRepository {
 
     @Override
     public Optional<Long> findUserId(
-            String provider,
+            AuthProvider provider,
             String providerUserId
     ) {
         return Optional.ofNullable(
@@ -22,7 +23,7 @@ public class FakeUserAuthRepository implements UserAuthRepository {
 
     @Override
     public void save(
-            String provider,
+            AuthProvider provider,
             String providerUserId,
             Long userId
     ) {
