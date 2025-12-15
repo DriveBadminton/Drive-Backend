@@ -2,6 +2,7 @@ package com.gumraze.drive.drive_backend.config;
 
 import com.gumraze.drive.drive_backend.auth.security.JwtAuthenticationFilter;
 import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenValidator;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,9 +33,18 @@ public class SecurityConfig {
         http
                 // csrf 비활성화
                 .csrf(csrf -> csrf.disable())
+
                 // Stateless (세션 사용 안함)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // 예외 처리
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(
+                                (request, response, authException) ->
+                                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
+                        )
+                )
 
                 // 권한 설정
                 .authorizeHttpRequests(auth -> auth
@@ -46,6 +56,9 @@ public class SecurityConfig {
                                 "/",
                                 "/actuator/health"
                         ).permitAll()
+
+                        .requestMatchers("/users/me").hasRole("USER")
+
                         .anyRequest().authenticated()
                 )
 
