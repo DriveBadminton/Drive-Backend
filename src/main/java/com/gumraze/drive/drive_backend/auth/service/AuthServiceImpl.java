@@ -40,7 +40,7 @@ public class AuthServiceImpl implements AuthService {
                 request.getRedirectUri()
         );
 
-        // 우리 서비스의 사용자 식별 (임시)
+        // 우리 서비스의 사용자 확인
         Long userId = userAuthRepository
                 .findUserId(
                         request.getProvider(),
@@ -56,13 +56,19 @@ public class AuthServiceImpl implements AuthService {
                             providerUserId,
                             newUserId
                     );
-
                     return newUserId;
                 });
 
-        // 액세스 토큰 발급 (userId 기반)
+        // Access 토큰 발급 (userId 기반)
         String accessToken = jwtAccessTokenGenerator.generateAccessToken(userId);
 
-        return new OAuthLoginResult(userId, accessToken);
+        // Refresh Token 발급(회전)
+        String refreshToken = refreshTokenService.rotate(userId);
+
+        return new OAuthLoginResult(
+                userId,
+                accessToken,
+                refreshToken
+        );
     }
 }
