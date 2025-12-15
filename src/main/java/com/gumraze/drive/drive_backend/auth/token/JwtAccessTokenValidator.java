@@ -9,7 +9,7 @@ import javax.crypto.SecretKey;
 import java.util.Optional;
 
 @Component
-public class JwtAccessTokenValidator implements AccessTokenValidator {
+public class JwtAccessTokenValidator {
 
     private final SecretKey secretKey;
 
@@ -17,7 +17,6 @@ public class JwtAccessTokenValidator implements AccessTokenValidator {
         this.secretKey = Keys.hmacShaKeyFor(properties.secret().getBytes());
     }
 
-    @Override
     public Optional<Long> validateAndGetUserId(String accessToken) {
         try {
             Claims claims = Jwts.parserBuilder()
@@ -25,11 +24,12 @@ public class JwtAccessTokenValidator implements AccessTokenValidator {
                     .build()
                     .parseClaimsJws(accessToken)
                     .getBody();
+
             return Optional.of(Long.parseLong(claims.getSubject()));
+
         } catch (Exception e) {
-            // TODO: 만료, 서명 오류, 형식 오류 작성
+            // 만료(exp), 서명 오류, 위변조, 형식 오류 등
             return Optional.empty();
         }
     }
 }
-
