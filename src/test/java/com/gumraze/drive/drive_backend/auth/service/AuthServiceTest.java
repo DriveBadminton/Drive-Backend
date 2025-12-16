@@ -19,6 +19,7 @@ class AuthServiceTest {
     private FakeUserAuthRepository userAuthRepository;
     private FakeUserRepository userRepository;
     private RefreshTokenService refreshTokenService;
+    private FakeOAuthClientResolver oAuthClientResolver;
 
     // 테스트 실행되기 전에 항상 실행되는 메서드
     @BeforeEach
@@ -30,6 +31,8 @@ class AuthServiceTest {
 
         jwtAccessTokenGenerator = new JwtAccessTokenGenerator(properties);
         fakeOAuthClient = new FakeOAuthClient("oauth-user-123");
+        oAuthClientResolver = new FakeOAuthClientResolver();
+        oAuthClientResolver.register(AuthProvider.GOOGLE, fakeOAuthClient);
         userAuthRepository = new FakeUserAuthRepository();
         userRepository = new FakeUserRepository();
         refreshTokenService = new FakeRefreshTokenService();
@@ -40,7 +43,8 @@ class AuthServiceTest {
                 fakeOAuthClient,
                 userAuthRepository,
                 userRepository,
-                refreshTokenService
+                refreshTokenService,
+                oAuthClientResolver
         );
     }
 
@@ -170,12 +174,17 @@ class AuthServiceTest {
         FakeUserRepository userRepository =
                 new FakeUserRepository();
 
+        FakeOAuthClientResolver oAuthClientResolver =
+                new FakeOAuthClientResolver();
+        oAuthClientResolver.register(AuthProvider.GOOGLE, fakeOAuthClient);
+
         AuthService authService = new AuthServiceImpl(
                 jwtAccessTokenGenerator,
                 fakeOAuthClient,
                 userAuthRepository,
                 userRepository,
-                refreshTokenService
+                refreshTokenService,
+                oAuthClientResolver
         );
 
         OAuthLoginRequestDto request = OAuthLoginRequestDto.builder()
@@ -205,12 +214,17 @@ class AuthServiceTest {
         FakeUserAuthRepository userAuthRepository =
             new FakeUserAuthRepository();
 
+        FakeOAuthClientResolver oAuthClientResolver =
+                new FakeOAuthClientResolver();
+        oAuthClientResolver.register(AuthProvider.GOOGLE, fakeOAuthClient);
+
         AuthService authService = new AuthServiceImpl(
                 jwtAccessTokenGenerator,
                 fakeOAuthClient,
                 userAuthRepository,
                 userRepository,
-                refreshTokenService
+                refreshTokenService,
+                oAuthClientResolver
         );
 
         OAuthLoginRequestDto request = OAuthLoginRequestDto.builder()
