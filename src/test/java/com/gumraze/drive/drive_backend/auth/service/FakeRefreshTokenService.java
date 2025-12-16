@@ -5,4 +5,9 @@ public class FakeRefreshTokenService implements RefreshTokenService{
     public String rotate(Long userId) {
         return "fake-refresh-token" + userId;
     }
+
+    @Override
+    public Long validateAndGetUserId(String refreshToken) {
+        return 0L;
+    }
 }
