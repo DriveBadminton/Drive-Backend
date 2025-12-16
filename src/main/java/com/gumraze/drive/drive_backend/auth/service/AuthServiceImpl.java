@@ -2,6 +2,7 @@ package com.gumraze.drive.drive_backend.auth.service;
 
 import com.gumraze.drive.drive_backend.auth.dto.OAuthLoginRequestDto;
 import com.gumraze.drive.drive_backend.auth.oauth.OAuthClient;
+import com.gumraze.drive.drive_backend.auth.oauth.OAuthClientResolver;
 import com.gumraze.drive.drive_backend.auth.repository.UserAuthRepository;
 import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenGenerator;
 import com.gumraze.drive.drive_backend.user.repository.UserRepository;
@@ -17,28 +18,30 @@ public class AuthServiceImpl implements AuthService {
     private final UserAuthRepository userAuthRepository;
     private final UserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
+    private final OAuthClientResolver oAuthClientResolver;
 
     public AuthServiceImpl(
             JwtAccessTokenGenerator jwtAccessTokenGenerator,
             OAuthClient oauthClient,
             UserAuthRepository userAuthRepository,
-            UserRepository userRepository, RefreshTokenService refreshTokenService
+            UserRepository userRepository, RefreshTokenService refreshTokenService,
 
-    ) {
+            OAuthClientResolver oAuthClientResolver) {
         this.jwtAccessTokenGenerator = jwtAccessTokenGenerator;
         this.oauthClient = oauthClient;
         this.userAuthRepository = userAuthRepository;
         this.userRepository = userRepository;
         this.refreshTokenService = refreshTokenService;
+        this.oAuthClientResolver = oAuthClientResolver;
     }
 
     @Override
     public OAuthLoginResult login(OAuthLoginRequestDto request) {
         // OAuth Provider 사용자 식별
-        String providerUserId = oauthClient.getProviderUserId(
-                request.getAuthorizationCode(),
-                request.getRedirectUri()
-        );
+        String providerUserId = oAuthClientResolver
+                .resolve(request.getProvider())
+                .getProviderUserId(request.getAuthorizationCode(), request.getRedirectUri());
+
 
         // 우리 서비스의 사용자 확인
         Long userId = userAuthRepository
