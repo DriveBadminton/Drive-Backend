@@ -42,4 +42,21 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
         return token;
     }
+
+    @Override
+    public Long validateAndGetUserId(String token) {
+        String tokenHash = refreshTokenGenerator.hash(token);
+
+        // Refresh Token 조회
+        RefreshToken refreshToken = jpaRefreshTokenRepository
+                .findByTokenHash(tokenHash)
+                .orElseThrow();
+
+        if (refreshToken.getExpiredAt().isBefore(LocalDateTime.now())) {
+            jpaRefreshTokenRepository.delete(refreshToken); // 만료 토큰 정리
+            throw new RuntimeException("Refresh Token이 만료되었습니다.");
+        }
+
+        return refreshToken.getUser().getId();
+    }
 }

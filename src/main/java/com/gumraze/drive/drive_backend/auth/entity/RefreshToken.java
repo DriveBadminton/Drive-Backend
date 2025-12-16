@@ -2,9 +2,11 @@ package com.gumraze.drive.drive_backend.auth.entity;
 
 import com.gumraze.drive.drive_backend.user.entity.User;
 import jakarta.persistence.*;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
+@Getter
 @Entity
 @Table(
         name = "refresh_token",

@@ -71,4 +71,16 @@ public class AuthServiceImpl implements AuthService {
                 refreshToken
         );
     }
+
+    @Override
+    public OAuthLoginResult refresh(String refreshToken) {
+        // Refresh Token으로 UserId 조회
+        Long userId = refreshTokenService.validateAndGetUserId(refreshToken);
+
+        // 새로운 AccessToken, RefreshToken 발급
+        String newAccessToken = jwtAccessTokenGenerator.generateAccessToken(userId);
+        String newRefreshToken = refreshTokenService.rotate(userId);
+
+        return new OAuthLoginResult(userId, newAccessToken, newRefreshToken);
+    }
 }
