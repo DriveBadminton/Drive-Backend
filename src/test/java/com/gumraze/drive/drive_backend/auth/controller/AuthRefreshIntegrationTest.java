@@ -5,6 +5,8 @@ import com.gumraze.drive.drive_backend.auth.constants.AuthProvider;
 import com.gumraze.drive.drive_backend.auth.dto.OAuthLoginRequestDto;
 import com.gumraze.drive.drive_backend.auth.dto.OAuthRefreshTokenResponseDto;
 import com.gumraze.drive.drive_backend.auth.entity.RefreshToken;
+import com.gumraze.drive.drive_backend.auth.oauth.OAuthClient;
+import com.gumraze.drive.drive_backend.auth.oauth.ProviderAwareOAuthClient;
 import com.gumraze.drive.drive_backend.auth.repository.JpaRefreshTokenRepository;
 import com.gumraze.drive.drive_backend.auth.token.RefreshTokenGenerator;
 import com.gumraze.drive.drive_backend.user.entity.User;
@@ -17,6 +19,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -34,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "jwt.access-token.expiration-ms=3600000"
 })
 @AutoConfigureMockMvc
+@Import(AuthRefreshIntegrationTest.TestOAuthClients.class)
 @ActiveProfiles("test")
 @Transactional
 class AuthRefreshIntegrationTest {
@@ -55,6 +62,33 @@ class AuthRefreshIntegrationTest {
 
     @Autowired
     RefreshTokenGenerator refreshTokenGenerator;
+
+    @TestConfiguration
+    static class TestOAuthClients {
+        @Bean
+        @Primary
+        OAuthClient kakaoOAuthClient() {
+            return new TestOAuthClient(AuthProvider.KAKAO, "kakao-user-123");
+        }
+
+        @Bean
+        OAuthClient googleOAuthClient() {
+            return new TestOAuthClient(AuthProvider.GOOGLE, "google-user-123");
+        }
+    }
+
+    private record TestOAuthClient(AuthProvider provider, String userId)
+            implements OAuthClient, ProviderAwareOAuthClient {
+        @Override
+        public String getProviderUserId(String authorizationCode, String redirectUri) {
+            return userId;
+        }
+
+        @Override
+        public AuthProvider supports() {
+            return provider;
+        }
+    }
 
     @Test
     @DisplayName("Refresh 성공으로 access와 refresh token 재발급")
