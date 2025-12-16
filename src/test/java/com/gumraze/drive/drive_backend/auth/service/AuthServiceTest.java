@@ -32,6 +32,7 @@ class AuthServiceTest {
         fakeOAuthClient = new FakeOAuthClient("oauth-user-123");
         userAuthRepository = new FakeUserAuthRepository();
         userRepository = new FakeUserRepository();
+        refreshTokenService = new FakeRefreshTokenService();
 
 
         authService = new AuthServiceImpl(
