@@ -83,4 +83,9 @@ public class AuthServiceImpl implements AuthService {
 
         return new OAuthLoginResult(userId, newAccessToken, newRefreshToken);
     }
+
+    @Override
+    public void logout(String refreshToken) {
+        refreshTokenService.deleteByPlainToken(refreshToken);
+    }
 }
