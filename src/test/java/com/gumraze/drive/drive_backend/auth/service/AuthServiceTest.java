@@ -74,7 +74,7 @@ class AuthServiceTest {
         OAuthLoginResult result = authService.login(request);
 
         // then
-        assertThat(result.getAccessToken()).isNotBlank();
+        assertThat(result.accessToken()).isNotBlank();
     }
 
     @Test
@@ -93,9 +93,9 @@ class AuthServiceTest {
         // then
         JwtAccessTokenValidator validator = new JwtAccessTokenValidator(properties);
 
-        Long userIdFromToken = validator.validateAndGetUserId(result.getAccessToken()).orElseThrow();
+        Long userIdFromToken = validator.validateAndGetUserId(result.accessToken()).orElseThrow();
 
-        assertThat(userIdFromToken).isEqualTo(result.getUserId());
+        assertThat(userIdFromToken).isEqualTo(result.userId());
     }
 
     @Test
@@ -112,7 +112,7 @@ class AuthServiceTest {
         OAuthLoginResult result = authService.login(request);
 
         // then
-        assertThat(result.getUserId()).isNotNull();
+        assertThat(result.userId()).isNotNull();
     }
 
     @Test
@@ -153,7 +153,7 @@ class AuthServiceTest {
         OAuthLoginResult result = authService.login(request);
 
         // then
-        assertThat(result.getUserId()).isEqualTo(10L);
+        assertThat(result.userId()).isEqualTo(10L);
     }
 
     @Test
@@ -187,7 +187,7 @@ class AuthServiceTest {
         OAuthLoginResult result = authService.login(request);
 
         // then
-        assertThat(result.getUserId()).isNotNull();
+        assertThat(result.userId()).isNotNull();
 
         assertThat(
                 userAuthRepository.findUserId(
