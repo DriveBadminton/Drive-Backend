@@ -59,4 +59,13 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
         return refreshToken.getUser().getId();
     }
+
+    @Override
+    public void deleteByPlainToken(String token) {
+        String tokenHash = refreshTokenGenerator.hash(token);
+
+        // 토큰이 있으면 삭제
+        jpaRefreshTokenRepository.findByTokenHash(tokenHash)
+                .ifPresent(jpaRefreshTokenRepository::delete);
+    }
 }

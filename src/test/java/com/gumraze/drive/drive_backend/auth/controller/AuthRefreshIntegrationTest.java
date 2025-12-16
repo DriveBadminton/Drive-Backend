@@ -60,7 +60,7 @@ class AuthRefreshIntegrationTest {
     @DisplayName("Refresh 성공으로 access와 refresh token 재발급")
     void refresh_success_returns_new_access_and_refresh_token() throws Exception {
         // given
-        // 로그인 요철
+        // 로그인 요청
         OAuthLoginRequestDto request =
                 new OAuthLoginRequestDto(
                         AuthProvider.KAKAO,

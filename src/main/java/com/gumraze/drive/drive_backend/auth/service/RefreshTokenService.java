@@ -6,4 +6,6 @@ public interface RefreshTokenService {
     String rotate(Long userId);
 
     Long validateAndGetUserId(String token);
+
+    void deleteByPlainToken(String token);
 }

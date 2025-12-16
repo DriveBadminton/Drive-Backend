@@ -10,4 +10,9 @@ public class FakeRefreshTokenService implements RefreshTokenService{
     public Long validateAndGetUserId(String refreshToken) {
         return 0L;
     }
+
+    @Override
+    public void deleteByPlainToken(String token) {
+        
+    }
 }
