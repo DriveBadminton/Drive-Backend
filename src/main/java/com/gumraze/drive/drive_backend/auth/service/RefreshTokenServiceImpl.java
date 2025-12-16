@@ -1,7 +1,7 @@
 package com.gumraze.drive.drive_backend.auth.service;
 
 import com.gumraze.drive.drive_backend.auth.entity.RefreshToken;
-import com.gumraze.drive.drive_backend.auth.repository.RefreshTokenRepository;
+import com.gumraze.drive.drive_backend.auth.repository.JpaRefreshTokenRepository;
 import com.gumraze.drive.drive_backend.auth.token.RefreshTokenGenerator;
 import com.gumraze.drive.drive_backend.user.entity.User;
 import com.gumraze.drive.drive_backend.user.repository.JpaUserRepository;
@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Transactional
 public class RefreshTokenServiceImpl implements RefreshTokenService {
 
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final JpaRefreshTokenRepository jpaRefreshTokenRepository;
     private final RefreshTokenGenerator refreshTokenGenerator;
     private final JpaUserRepository jpaUserRepository;
 
@@ -26,7 +26,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         User user = jpaUserRepository.findById(userId).orElseThrow();
 
         // 기존 Refresh Token 삭제
-        refreshTokenRepository.deleteByUser(user);
+        jpaRefreshTokenRepository.deleteByUser(user);
 
         // 새로운 Refresh Token 생성
         String token = refreshTokenGenerator.generatePlainToken();
@@ -38,7 +38,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                 LocalDateTime.now().plusDays(5)
         );
 
-        refreshTokenRepository.save(refreshToken);
+        jpaRefreshTokenRepository.save(refreshToken);
 
         return token;
     }
