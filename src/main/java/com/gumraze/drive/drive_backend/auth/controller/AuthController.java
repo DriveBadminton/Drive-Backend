@@ -5,6 +5,7 @@ import com.gumraze.drive.drive_backend.auth.dto.OAuthLoginResponseDto;
 import com.gumraze.drive.drive_backend.auth.dto.OAuthRefreshTokenResponseDto;
 import com.gumraze.drive.drive_backend.auth.service.AuthService;
 import com.gumraze.drive.drive_backend.auth.service.OAuthLoginResult;
+import com.gumraze.drive.drive_backend.common.api.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -22,7 +23,7 @@ public class AuthController {
 
     // OAuth 로그인 API
     @PostMapping("/login")
-    public ResponseEntity<OAuthLoginResponseDto> login(
+    public ResponseEntity<ApiResponse<OAuthLoginResponseDto>> login(
             @RequestBody OAuthLoginRequestDto request
     ) {
         OAuthLoginResult result = authService.login(request);
@@ -37,16 +38,15 @@ public class AuthController {
                         .sameSite("Strict")
                         .build();
 
+        OAuthLoginResponseDto response = new OAuthLoginResponseDto(result.userId(), result.accessToken());
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
-                .body(new OAuthLoginResponseDto(
-                        result.userId(),
-                        result.accessToken()
-                ));
+                .body(ApiResponse.success("OAuth 로그인 성공", response));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<OAuthRefreshTokenResponseDto> refresh (
+    public ResponseEntity<ApiResponse<OAuthRefreshTokenResponseDto>> refresh (
             @CookieValue(name = "refresh_token", required = false) String refreshToken
     ) {
         if (refreshToken == null || refreshToken.isBlank()) {
@@ -64,13 +64,15 @@ public class AuthController {
                         .sameSite("Strict")
                         .build();
 
+        OAuthRefreshTokenResponseDto response = new OAuthRefreshTokenResponseDto(result.userId(), result.accessToken());
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
-                .body(new OAuthRefreshTokenResponseDto(result.userId(), result.accessToken()));
+                .body(ApiResponse.success("액세스 토큰 리프레시 성공", response));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(
+    public ResponseEntity<ApiResponse<Void>> logout(
             @CookieValue(name = "refresh_token", required = false) String refreshToken
     ) {
         if (refreshToken != null) {
@@ -87,6 +89,6 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
-                .build();
+                .body(ApiResponse.successMessage("로그아웃 성공"));
     }
 }
