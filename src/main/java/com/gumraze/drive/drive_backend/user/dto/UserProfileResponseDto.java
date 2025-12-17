@@ -1,4 +1,4 @@
-package com.gumraze.drive.drive_backend.user.dto.response;
+package com.gumraze.drive.drive_backend.user.dto;
 
 import com.gumraze.drive.drive_backend.user.constants.UserRole;
 import com.gumraze.drive.drive_backend.user.constants.UserStatus;
