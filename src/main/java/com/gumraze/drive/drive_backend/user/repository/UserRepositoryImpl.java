@@ -18,7 +18,7 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public Long createUser() {
         User user = new User(
-                UserStatus.ACTIVE,
+                UserStatus.PENDING,
                 UserRole.USER
         );
         return jpaUserRepository.save(user).getId();
