@@ -1,6 +1,6 @@
 package com.gumraze.drive.drive_backend.user;
 
-import com.gumraze.drive.drive_backend.user.dto.response.UserProfileResponseDto;
+import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
 import com.gumraze.drive.drive_backend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
