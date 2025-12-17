@@ -3,7 +3,6 @@ package com.gumraze.drive.drive_backend.auth.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gumraze.drive.drive_backend.auth.constants.AuthProvider;
 import com.gumraze.drive.drive_backend.auth.dto.OAuthLoginRequestDto;
-import com.gumraze.drive.drive_backend.auth.dto.OAuthRefreshTokenResponseDto;
 import com.gumraze.drive.drive_backend.auth.entity.RefreshToken;
 import com.gumraze.drive.drive_backend.auth.oauth.OAuthClient;
 import com.gumraze.drive.drive_backend.auth.oauth.ProviderAwareOAuthClient;
@@ -123,16 +122,13 @@ class AuthRefreshIntegrationTest {
                 .andReturn();
 
         // then
-        // access token이 body에 존재
+        // access token이 body(data)에 존재
         String responseBody = refreshResult.getResponse().getContentAsString();
-        OAuthRefreshTokenResponseDto response =
-                objectMapper.readValue(
-                        responseBody,
-                        OAuthRefreshTokenResponseDto.class
-                );
+        var dataNode = objectMapper.readTree(responseBody).get("data");
 
-        assertThat(response.accessToken()).isNotBlank();
-        assertThat(response.userId()).isNotNull();
+        assertThat(dataNode).isNotNull();
+        assertThat(dataNode.get("accessToken").asText()).isNotBlank();
+        assertThat(dataNode.get("userId").asLong()).isNotNull();
 
         // 새로운 refresh token 쿠키가 내려옴
         Cookie newRefreshTokenCookie = refreshResult.getResponse().getCookie("refresh_token");

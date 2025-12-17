@@ -1,7 +1,6 @@
 package com.gumraze.drive.drive_backend.auth.service;
 
 import com.gumraze.drive.drive_backend.auth.dto.OAuthLoginRequestDto;
-import com.gumraze.drive.drive_backend.auth.oauth.OAuthClient;
 import com.gumraze.drive.drive_backend.auth.oauth.OAuthClientResolver;
 import com.gumraze.drive.drive_backend.auth.repository.UserAuthRepository;
 import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenGenerator;
@@ -14,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthServiceImpl implements AuthService {
 
     private final JwtAccessTokenGenerator jwtAccessTokenGenerator;
-    private final OAuthClient oauthClient;
     private final UserAuthRepository userAuthRepository;
     private final UserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
@@ -22,13 +20,11 @@ public class AuthServiceImpl implements AuthService {
 
     public AuthServiceImpl(
             JwtAccessTokenGenerator jwtAccessTokenGenerator,
-            OAuthClient oauthClient,
             UserAuthRepository userAuthRepository,
-            UserRepository userRepository, RefreshTokenService refreshTokenService,
-
+            UserRepository userRepository,
+            RefreshTokenService refreshTokenService,
             OAuthClientResolver oAuthClientResolver) {
         this.jwtAccessTokenGenerator = jwtAccessTokenGenerator;
-        this.oauthClient = oauthClient;
         this.userAuthRepository = userAuthRepository;
         this.userRepository = userRepository;
         this.refreshTokenService = refreshTokenService;

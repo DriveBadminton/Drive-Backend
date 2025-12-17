@@ -40,7 +40,6 @@ class AuthServiceTest {
 
         authService = new AuthServiceImpl(
                 jwtAccessTokenGenerator,
-                fakeOAuthClient,
                 userAuthRepository,
                 userRepository,
                 refreshTokenService,
@@ -180,7 +179,6 @@ class AuthServiceTest {
 
         AuthService authService = new AuthServiceImpl(
                 jwtAccessTokenGenerator,
-                fakeOAuthClient,
                 userAuthRepository,
                 userRepository,
                 refreshTokenService,
@@ -220,7 +218,6 @@ class AuthServiceTest {
 
         AuthService authService = new AuthServiceImpl(
                 jwtAccessTokenGenerator,
-                fakeOAuthClient,
                 userAuthRepository,
                 userRepository,
                 refreshTokenService,
