@@ -18,7 +18,7 @@ services:
     restart: unless-stopped
 
   app:
-    image: ghcr.io/DriveBadminton/drive-backend:latest
+    image: ghcr.io/drivebadminton/drive-backend:latest
     container_name: drive-backend
     depends_on:
       db:
