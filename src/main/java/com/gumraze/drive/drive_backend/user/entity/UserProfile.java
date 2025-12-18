@@ -3,11 +3,16 @@ package com.gumraze.drive.drive_backend.user.entity;
 import com.gumraze.drive.drive_backend.region.Region;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "user_profile")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserProfile {
     @Id
     private Long id;
@@ -28,4 +33,29 @@ public class UserProfile {
 
     private LocalDateTime createdAt;    // 계정 생성 시점이 아닌 프로필 생성 시점
     private LocalDateTime updatedAt;
+
+    public UserProfile(
+            Long id,
+            String nickname,
+            Grade grade,
+            Region region
+    ) {
+        this.id = id;
+        this.nickname = nickname;
+        this.grade = grade;
+        this.region = region;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void updateProfile(
+            String nickname,
+            Grade grade,
+            Region region
+    ) {
+        this.nickname = nickname;
+        this.grade = grade;
+        this.region = region;
+        this.updatedAt = LocalDateTime.now();
+    }
 }
