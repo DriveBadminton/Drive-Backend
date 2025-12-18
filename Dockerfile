@@ -13,7 +13,7 @@ RUN gradle --version > /dev/null
 COPY . /workspace
 
 RUN --mount=type=cache,target=/home/gradle/.gradle \
-    ./gradlew clean bootJar --no-daemon && \
+    ./gradlew bootJar -x test --no-daemon && \
     JAR_PATH=$(ls build/libs/*.jar | grep -v '\-plain.jar' | head -n 1) && \
     mv "$JAR_PATH" build/libs/app.jar
 
