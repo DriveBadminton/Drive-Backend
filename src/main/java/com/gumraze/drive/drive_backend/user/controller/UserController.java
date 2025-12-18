@@ -1,4 +1,4 @@
-package com.gumraze.drive.drive_backend.user;
+package com.gumraze.drive.drive_backend.user.controller;
 
 import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
 import com.gumraze.drive.drive_backend.user.service.UserService;
