@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -25,6 +27,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 @AutoConfigureMockMvc
 @Transactional
+@ActiveProfiles("test")
+@Sql(statements = "INSERT INTO region (id, parent_id, region_name, region_code) VALUES (1, NULL, 'Region1', 'R1')")
 public class UserProfileOnboardingIntegrationTest {
     @Autowired
     MockMvc mockMvc;
@@ -62,6 +66,7 @@ public class UserProfileOnboardingIntegrationTest {
                     "nickname": "kim",
                     "regionId": 1,
                     "grade": "초심"
+                }
                 """;
 
         mockMvc.perform(
