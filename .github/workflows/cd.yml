@@ -3,7 +3,7 @@ name: CD - EC2 배포
 
 on:
   workflow_run:
-    workflows: ["CI - Build & Push Image"]
+    workflows: ["CI - 이미지 빌드 및 푸시"]
     types:
       - completed
 
