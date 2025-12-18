@@ -1,25 +1,25 @@
-name: Deploy Prod
+# .github/workflows/cd.yml
+name: CD - EC2 배포
 
 on:
-  push:
-    branches: [ main ]
+  workflow_run:
+    workflows: ["CI - Build & Push Image"]
+    types:
+      - completed
 
 jobs:
   deploy:
+    name: EC2 배포
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-
     steps:
-      - name: Deploy to EC2
+      - name: SSH로 배포
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
+          username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          port: 2222
           script: |
-            set -e
             cd ~/Drive-Backend
-            git pull origin main
             docker compose pull
             docker compose up -d
-            docker image prune -f
