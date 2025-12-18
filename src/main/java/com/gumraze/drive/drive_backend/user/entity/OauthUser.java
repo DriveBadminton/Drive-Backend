@@ -1,21 +1,8 @@
 package com.gumraze.drive.drive_backend.user.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-import com.gumraze.drive.drive_backend.user.constants.OAuthProvider;
-
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.gumraze.drive.drive_backend.auth.constants.AuthProvider;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Getter
 @Builder
@@ -33,7 +20,7 @@ public class OauthUser {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "oauth_provider", nullable = false, length = 20)
-    private OAuthProvider oauthProvider;
+    private AuthProvider oauthProvider;
 
     @Column(name = "oauth_id", nullable = false, length = 100)
     private String oauthId;

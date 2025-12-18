@@ -1,13 +1,12 @@
 package com.gumraze.drive.drive_backend.user.repository;
 
-import java.util.Optional;
-
+import com.gumraze.drive.drive_backend.auth.constants.AuthProvider;
+import com.gumraze.drive.drive_backend.user.entity.OauthUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.gumraze.drive.drive_backend.user.constants.OAuthProvider;
-import com.gumraze.drive.drive_backend.user.entity.OauthUser;
+import java.util.Optional;
 
 public interface OauthUserRepository extends JpaRepository<OauthUser, Long> {
 
-    Optional<OauthUser> findByOauthProviderAndOauthId(OAuthProvider oauthProvider, String oauthId);
+    Optional<OauthUser> findByOauthProviderAndOauthId(AuthProvider oauthProvider, String oauthId);
 }
