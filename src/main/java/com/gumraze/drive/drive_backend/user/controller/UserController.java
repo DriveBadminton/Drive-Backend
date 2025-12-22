@@ -1,15 +1,11 @@
 package com.gumraze.drive.drive_backend.user.controller;
 
 import com.gumraze.drive.drive_backend.common.api.ApiResponse;
-import com.gumraze.drive.drive_backend.region.Region;
-import com.gumraze.drive.drive_backend.user.constants.UserStatus;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
-import com.gumraze.drive.drive_backend.user.entity.User;
-import com.gumraze.drive.drive_backend.user.entity.UserGradeHistory;
-import com.gumraze.drive.drive_backend.user.entity.UserProfile;
 import com.gumraze.drive.drive_backend.user.repository.JpaUserGradeHistoryRepository;
 import com.gumraze.drive.drive_backend.user.repository.JpaUserProfileRepository;
+import com.gumraze.drive.drive_backend.user.service.UserProfileService;
 import com.gumraze.drive.drive_backend.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -22,10 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.*;
-
-import java.lang.reflect.Field;
 
 @RequiredArgsConstructor
 @RestController
@@ -36,6 +29,7 @@ public class UserController {
     private final UserService userService;
     private final JpaUserProfileRepository jpaUserProfileRepository;
     private final JpaUserGradeHistoryRepository jpaUserGradeHistoryRepository;
+    private final UserProfileService userProfileService;
 
     @GetMapping("/me")
     @Operation(
@@ -81,7 +75,9 @@ public class UserController {
                                             {
                                               "nickname": "kim",
                                               "regionId": 1,
-                                              "grade": "초심"
+                                              "grade": "초심,
+                                              "birth": "19980925"
+                                              "gender": "MALE"
                                             }
                                             """
                             )
@@ -111,30 +107,7 @@ public class UserController {
 
         Long userId = (Long) authentication.getPrincipal();
 
-        User user = userService.findById(userId).orElseThrow();
-
-        // Region은 id만 필요 -> Proxy사용
-        Region region = new Region();
-        Field idField = ReflectionUtils.findField(Region.class, "id");
-        ReflectionUtils.makeAccessible(idField);
-        ReflectionUtils.setField(idField, region, request.regionId());
-
-        // UserProfile 생성
-        UserProfile profile = new UserProfile(
-                userId,
-                request.nickname(),
-                request.grade(),
-                region
-        );
-
-        jpaUserProfileRepository.save(profile);
-
-        // UserGradeHistory 초기 생성
-        jpaUserGradeHistoryRepository.save(
-                new UserGradeHistory(user, request.grade())
-        );
-        // User 상채 ACTIVE 전환
-        user.setStatus(UserStatus.ACTIVE);
+        userProfileService.createProfile(userId, request);
 
         return ResponseEntity.ok(
                 ApiResponse.success("프로필 생성 완료", userId)
