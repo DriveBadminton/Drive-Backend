@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "region_sido")
-public class RegionSido {
+public class RegionProvince {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;        // 지역 기본 키

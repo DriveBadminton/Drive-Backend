@@ -12,14 +12,14 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "region_sigungu")
-public class RegionSigungu {
+public class RegionDistrict {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sido_id", nullable = false)
-    private RegionSido sido;
+    private RegionProvince sido;
 
     @Column(nullable = false, length = 50)
     private String name;
