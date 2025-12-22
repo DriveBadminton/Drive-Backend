@@ -2,9 +2,11 @@ package com.gumraze.drive.drive_backend.user.controller;
 
 import com.gumraze.drive.drive_backend.common.api.ApiResponse;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
+import com.gumraze.drive.drive_backend.user.dto.UserProfilePrefillResponseDto;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
 import com.gumraze.drive.drive_backend.user.repository.JpaUserGradeHistoryRepository;
 import com.gumraze.drive.drive_backend.user.repository.JpaUserProfileRepository;
+import com.gumraze.drive.drive_backend.user.service.UserNicknameProvider;
 import com.gumraze.drive.drive_backend.user.service.UserProfileService;
 import com.gumraze.drive.drive_backend.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,6 +22,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/users")
@@ -30,6 +34,7 @@ public class UserController {
     private final JpaUserProfileRepository jpaUserProfileRepository;
     private final JpaUserGradeHistoryRepository jpaUserGradeHistoryRepository;
     private final UserProfileService userProfileService;
+    private final UserNicknameProvider userNicknameProvider;
 
     @GetMapping("/me")
     @Operation(
@@ -112,5 +117,54 @@ public class UserController {
         return ResponseEntity.ok(
                 ApiResponse.success("프로필 생성 완료", userId)
         );
+    }
+
+    @GetMapping("/profile/prefill")
+    @Operation(
+            summary = "프로필 닉네임 프리필 조회",
+            description = "제3자 로그인 닉네임이 있으면 suggestedNickname으로 반환합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "조회 성공",
+                    content = @Content(
+                            schema = @Schema(implementation = ApiResponse.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                              "success": true,
+                                              "message": "제3자 로그인 닉네임 조회 성공",
+                                              "data": {
+                                                "suggestedNickname": "oauthNick",
+                                                "hasOauthNickname": true
+                                              },
+                                              "errorCode": null,
+                                              "timestamp": "2025-01-01T00:00:00"
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<UserProfilePrefillResponseDto>> prefillProfile() {
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).build();
+        }
+
+        Long userId = (Long) authentication.getPrincipal();
+        Optional<String> nickname = userNicknameProvider.findNicknameByUserId(userId);
+
+        UserProfilePrefillResponseDto body = new UserProfilePrefillResponseDto(
+                nickname.orElse(null),
+                nickname.isPresent()
+        );
+
+        return ResponseEntity.ok(ApiResponse.success("제3자 로그인 닉네임 조회 성공", body));
     }
 }
