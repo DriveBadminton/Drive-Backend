@@ -306,4 +306,32 @@ class UserProfileServiceImplTest {
         verify(jpaUserProfileRepository).save(argThat(profile ->
                 profile.getNickname().equals("oauthNick")));
     }
+
+    @Test
+    @DisplayName("요청 nickname이 있으면 DB nickname이 있어도 요청 nickname을 우선한다.")
+    void create_profile_uses_request_nickname_when_request_nickname_is_present() {
+        // given
+        Long userId = 1L;
+        UserProfileCreateRequest request = new UserProfileCreateRequest(
+                "requestNick",
+                2L,
+                Grade.A,
+                "19980925",
+                Gender.MALE
+        );
+
+        User user = new User(UserStatus.PENDING, UserRole.USER);
+
+        when(jpaUserProfileRepository.existsById(userId)).thenReturn(false);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(regionService.existsById(2L)).thenReturn(true);
+
+        // when
+        userProfileService.createProfile(userId, request);
+
+        // then
+        verify(jpaUserProfileRepository).save(argThat(profile ->
+                profile.getNickname().equals("requestNick")));
+
+    }
 }
