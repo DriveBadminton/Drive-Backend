@@ -2,6 +2,7 @@ package com.gumraze.drive.drive_backend.user.service;
 
 import com.gumraze.drive.drive_backend.user.constants.UserStatus;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
+import com.gumraze.drive.drive_backend.user.dto.UserProfilePrefillResponseDto;
 import com.gumraze.drive.drive_backend.user.entity.User;
 import com.gumraze.drive.drive_backend.user.entity.UserGradeHistory;
 import com.gumraze.drive.drive_backend.user.entity.UserProfile;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Optional;
 
 
 @Service
@@ -24,6 +26,7 @@ public class UserProfileServiceImpl implements UserProfileService{
     private final JpaUserGradeHistoryRepository jpaUserGradeHistoryRepository;
     private final UserProfileValidator validator;
     private final RegionService regionService;
+    private final UserNicknameProvider userNicknameProvider;
 
     @Override
     public void createProfile(Long userId, UserProfileCreateRequest request) {
@@ -80,5 +83,11 @@ public class UserProfileServiceImpl implements UserProfileService{
     @Override
     public void updateProfile(Long userId, UserProfileCreateRequest request) {
 
+    }
+
+    @Override
+    public UserProfilePrefillResponseDto getProfilePrefill(Long userId) {
+        Optional<String> nickname = userNicknameProvider.findNicknameByUserId(userId);
+        return new UserProfilePrefillResponseDto(nickname.orElse(null), nickname.isPresent());
     }
 }

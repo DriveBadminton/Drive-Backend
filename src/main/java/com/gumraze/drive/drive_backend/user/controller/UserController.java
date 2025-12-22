@@ -22,8 +22,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
-
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/users")
@@ -158,12 +156,7 @@ public class UserController {
         }
 
         Long userId = (Long) authentication.getPrincipal();
-        Optional<String> nickname = userNicknameProvider.findNicknameByUserId(userId);
-
-        UserProfilePrefillResponseDto body = new UserProfilePrefillResponseDto(
-                nickname.orElse(null),
-                nickname.isPresent()
-        );
+        UserProfilePrefillResponseDto body = userProfileService.getProfilePrefill(userId);
 
         return ResponseEntity.ok(ApiResponse.success("제3자 로그인 닉네임 조회 성공", body));
     }

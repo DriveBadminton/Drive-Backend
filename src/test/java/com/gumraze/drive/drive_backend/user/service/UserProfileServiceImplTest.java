@@ -55,7 +55,8 @@ class UserProfileServiceImplTest {
                 jpaUserProfileRepository,
                 jpaUserGradeHistoryRepository,
                 new UserProfileValidator(),
-                regionService
+                regionService,
+                userNicknameProvider
         );
     }
 
