@@ -1,22 +1,23 @@
 package com.gumraze.drive.drive_backend.user.service;
 
-import com.gumraze.drive.drive_backend.region.entity.Region;
-import com.gumraze.drive.drive_backend.user.repository.JpaRegionRepository;
+import com.gumraze.drive.drive_backend.region.entity.RegionDistrict;
+import com.gumraze.drive.drive_backend.user.repository.JpaRegionDistrictRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class RegionServiceImpl implements RegionService {
-    private final JpaRegionRepository jpaRegionRepository;
+
+    private final JpaRegionDistrictRepository jpaRegionDistrictRepository;
 
     @Override
-    public boolean existsById(Long regionId) {
-        return jpaRegionRepository.existsById(regionId);
+    public boolean existsById(Long district_id) {
+        return jpaRegionDistrictRepository.existsById(district_id);
     }
 
     @Override
-    public Region getReferenceById(Long regionId) {
-        return jpaRegionRepository.getReferenceById(regionId);
+    public RegionDistrict getReferenceById(Long district_id) {
+        return jpaRegionDistrictRepository.getReferenceById(district_id);
     }
 }
