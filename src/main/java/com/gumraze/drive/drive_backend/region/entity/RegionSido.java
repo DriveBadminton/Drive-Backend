@@ -2,25 +2,30 @@ package com.gumraze.drive.drive_backend.region.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "region")
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Region {
+@Table(name = "region_sido")
+public class RegionSido {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;        // 지역 기본 키
 
-    private Long parentId;  // 상위 지역 ID
-
-    private Integer level;  // 지역 깊이( 1 -> 시/도, 2 -> 시/군/구 )
+    @Column(nullable = false, length = 50)
     private String name;    // 표시용 지역명
+
+    @Column(nullable = false, length = 20, unique = true)
     private String code;    // 행정구역/법정동 코드
 
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @PrePersist
