@@ -65,7 +65,9 @@ public class UserProfileOnboardingIntegrationTest {
                 {
                     "nickname": "kim",
                     "regionId": 1,
-                    "grade": "초심"
+                    "grade": "초심",
+                    "birth": "19980925",
+                    "gender": "MALE"
                 }
                 """;
 
