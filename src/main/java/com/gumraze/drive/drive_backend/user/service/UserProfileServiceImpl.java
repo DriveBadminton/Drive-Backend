@@ -24,7 +24,6 @@ public class UserProfileServiceImpl implements UserProfileService{
     private final JpaUserGradeHistoryRepository jpaUserGradeHistoryRepository;
     private final UserProfileValidator validator;
     private final RegionService regionService;
-    private final UserNicknameProvider userNicknameProvider;
 
     @Override
     public void createProfile(Long userId, UserProfileCreateRequest request) {
@@ -44,11 +43,6 @@ public class UserProfileServiceImpl implements UserProfileService{
 
         // 닉네임 설정
         String resolvedNickname = request.nickname();
-
-        if (resolvedNickname == null || resolvedNickname.isBlank()) {
-            resolvedNickname = userNicknameProvider.findNicknameByUserId(userId).orElse(null);
-        }
-
         if (resolvedNickname == null || resolvedNickname.isBlank()) {
             throw new IllegalArgumentException("nickname이 필요합니다.");
         }
