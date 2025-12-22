@@ -1,6 +1,6 @@
 package com.gumraze.drive.drive_backend.user.entity;
 
-import com.gumraze.drive.drive_backend.region.entity.Region;
+import com.gumraze.drive.drive_backend.region.entity.RegionDistrict;
 import com.gumraze.drive.drive_backend.user.constants.Gender;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
 import jakarta.persistence.*;
@@ -31,8 +31,8 @@ public class UserProfile {
     private Grade grade;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "region_id")
-    private Region region;
+    @JoinColumn(name = "district_id")
+    private RegionDistrict regionDistrict;
 
     @Enumerated(EnumType.STRING)
     private Gender gender;
@@ -44,12 +44,12 @@ public class UserProfile {
             Long id,
             String nickname,
             Grade grade,
-            Region region
+            RegionDistrict regionDistrict
     ) {
         this.id = id;
         this.nickname = nickname;
         this.grade = grade;
-        this.region = region;
+        this.regionDistrict = regionDistrict;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -57,11 +57,11 @@ public class UserProfile {
     public void updateProfile(
             String nickname,
             Grade grade,
-            Region region
+            RegionDistrict regionDistrict
     ) {
         this.nickname = nickname;
         this.grade = grade;
-        this.region = region;
+        this.regionDistrict = regionDistrict;
         this.updatedAt = LocalDateTime.now();
     }
 }
