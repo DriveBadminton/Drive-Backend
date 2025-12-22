@@ -19,7 +19,7 @@ public class RegionDistrict {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "province_id", nullable = false)
-    private RegionProvince sido;
+    private RegionProvince province;
 
     @Column(nullable = false, length = 50)
     private String name;
