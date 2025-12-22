@@ -1,6 +1,6 @@
 package com.gumraze.drive.drive_backend.user.entity;
 
-import com.gumraze.drive.drive_backend.region.Region;
+import com.gumraze.drive.drive_backend.region.entity.Region;
 import com.gumraze.drive.drive_backend.user.constants.Gender;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
 import jakarta.persistence.*;

@@ -1,6 +1,6 @@
 package com.gumraze.drive.drive_backend.user.service;
 
-import com.gumraze.drive.drive_backend.region.Region;
+import com.gumraze.drive.drive_backend.region.entity.Region;
 
 public interface RegionService {
 
