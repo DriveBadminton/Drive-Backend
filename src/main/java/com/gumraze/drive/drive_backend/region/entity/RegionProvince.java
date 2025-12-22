@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "region_sido")
+@Table(name = "region_province")
 public class RegionProvince {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

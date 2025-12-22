@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "region_sigungu")
+@Table(name = "region_district")
 public class RegionDistrict {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
