@@ -2,6 +2,7 @@ package com.gumraze.drive.drive_backend.user.controller;
 
 import com.gumraze.drive.drive_backend.common.api.ApiResponse;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
+import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateResponseDto;
 import com.gumraze.drive.drive_backend.user.dto.UserProfilePrefillResponseDto;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
 import com.gumraze.drive.drive_backend.user.repository.JpaUserGradeHistoryRepository;
@@ -97,7 +98,7 @@ public class UserController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "요청 검증 실패")
     })
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<ApiResponse<?>> createProfile(
+    public ResponseEntity<ApiResponse<UserProfileCreateResponseDto>> createProfile(
             @RequestBody UserProfileCreateRequest request
     ) {
         // Spring Security가 저장해둔 인증된 사용자 정보를 가져오는 메서드
@@ -113,7 +114,7 @@ public class UserController {
         userProfileService.createProfile(userId, request);
 
         return ResponseEntity.ok(
-                ApiResponse.success("프로필 생성 완료", userId)
+                ApiResponse.success("프로필 등록에 성공했습니다.", new UserProfileCreateResponseDto(userId))
         );
     }
 
