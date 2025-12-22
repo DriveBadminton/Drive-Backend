@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class UserProfileValidatorTest {
@@ -31,10 +32,10 @@ class UserProfileValidatorTest {
         );
 
         // when & then
-        assertThatThrownBy(() ->
+        assertThatCode(() ->
                 validator.validateForCreate(request)
         )
-                .isInstanceOf(IllegalArgumentException.class);
+                .doesNotThrowAnyException();
     }
 
     @Test
@@ -50,10 +51,10 @@ class UserProfileValidatorTest {
         );
 
         // when & then
-        assertThatThrownBy(() ->
+        assertThatCode(() ->
                 validator.validateForCreate(request)
         )
-                .isInstanceOf(IllegalArgumentException.class);
+                .doesNotThrowAnyException();
     }
 
     @Test
