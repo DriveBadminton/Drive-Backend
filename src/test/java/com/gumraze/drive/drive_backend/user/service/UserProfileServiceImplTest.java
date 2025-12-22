@@ -40,11 +40,13 @@ class UserProfileServiceImplTest {
     @Mock
     JpaUserGradeHistoryRepository jpaUserGradeHistoryRepository;
 
-    @Mock RegionService regionService;
+    @Mock
+    RegionService regionService;
 
     private UserProfileServiceImpl userProfileService;
 
-    @Mock UserNicknameProvider userNicknameProvider;
+    @Mock
+    UserNicknameProvider userNicknameProvider;
 
     @BeforeEach
     void setUp() {
@@ -77,7 +79,7 @@ class UserProfileServiceImplTest {
         // when: 같은 userId로 createProfile을 호출하여 새로운 프로필 생성 시도
         assertThatThrownBy(() ->
                 userProfileService.createProfile(userId, request))
-                        .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(IllegalArgumentException.class);
 
         // Then: 예외가 발생해서 생성이 실패함.
         verify(jpaUserProfileRepository, never()).save(any());
@@ -85,7 +87,8 @@ class UserProfileServiceImplTest {
     }
 
     @Test
-    @DisplayName("사용자가 없으면 프로필 생성은 실패함") // user는 제3자 로그인 시 생성됨.
+    @DisplayName("사용자가 없으면 프로필 생성은 실패함")
+        // user는 제3자 로그인 시 생성됨.
     void create_profile_throws_when_user_does_not_exist() {
         // given: 사용자
         Long userId = 1L;
@@ -105,7 +108,7 @@ class UserProfileServiceImplTest {
         // when & then: 프로필 생성 시도시 에러 발생
         assertThatThrownBy(() ->
                 userProfileService.createProfile(userId, request)
-                ).isInstanceOf(IllegalArgumentException.class);
+        ).isInstanceOf(IllegalArgumentException.class);
 
         // then: DB에 저장된 값이 있는지 재검증
         verify(jpaUserProfileRepository, never()).save(any());
@@ -333,5 +336,35 @@ class UserProfileServiceImplTest {
         verify(jpaUserProfileRepository).save(argThat(profile ->
                 profile.getNickname().equals("requestNick")));
 
+    }
+
+    @Test
+    @DisplayName("요청 nickname도 없고 DB nickname도 없으면 프로필 생성은 실패한다.")
+    void create_profile_throws_when_nickname_is_missing_in_request_and_db() {
+        // given
+        Long userId = 1L;
+        UserProfileCreateRequest request = new UserProfileCreateRequest(
+                null,
+                2L,
+                Grade.A,
+                "19980925",
+                Gender.MALE
+        );
+
+        User user = new User(UserStatus.PENDING, UserRole.USER);
+
+        when(jpaUserProfileRepository.existsById(userId)).thenReturn(false);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(regionService.existsById(2L)).thenReturn(true);
+
+        // DB nickname도 없음
+        when(userNicknameProvider.findNicknameByUserId(userId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> userProfileService.createProfile(userId, request))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        // then
+        verify(jpaUserProfileRepository, never()).save(any());
     }
 }
