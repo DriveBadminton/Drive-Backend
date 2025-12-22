@@ -1,10 +1,12 @@
 package com.gumraze.drive.drive_backend.common.api;
 
-import java.time.LocalDateTime;
-
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.time.LocalDateTime;
+
 @Schema(description = "공통 API 응답 포맷")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record ApiResponse<T>(
     @Schema(description = "요청 성공 여부", example = "true")
     boolean success,
