@@ -44,6 +44,8 @@ class UserProfileServiceImplTest {
 
     private UserProfileServiceImpl userProfileService;
 
+    @Mock UserNicknameProvider userNicknameProvider;
+
     @BeforeEach
     void setUp() {
         userProfileService = new UserProfileServiceImpl(
@@ -51,7 +53,8 @@ class UserProfileServiceImplTest {
                 jpaUserProfileRepository,
                 jpaUserGradeHistoryRepository,
                 new UserProfileValidator(),
-                regionService
+                regionService,
+                userNicknameProvider
         );
     }
 
@@ -274,5 +277,33 @@ class UserProfileServiceImplTest {
                 argThat(profile ->
                         profile.getBirth().toLocalDate().equals(LocalDate.of(1998, 9, 25))
                                 && profile.getGender() == Gender.MALE));
+    }
+
+    @Test
+    @DisplayName("요청 nickname이 없으면 DB nickname으로 저장됨")
+    void create_profile_uses_db_nickname_when_request_nickname_is_null() {
+        // given
+        Long userId = 1L;
+        UserProfileCreateRequest request = new UserProfileCreateRequest(
+                null,
+                2L,
+                Grade.A,
+                "19980925",
+                Gender.MALE
+        );
+
+        User user = new User(UserStatus.PENDING, UserRole.USER);
+
+        when(jpaUserProfileRepository.existsById(userId)).thenReturn(false);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(regionService.existsById(2L)).thenReturn(true);
+        when(userNicknameProvider.findNicknameByUserId(userId)).thenReturn(Optional.of("oauthNick"));
+
+        // when
+        userProfileService.createProfile(userId, request);
+
+        // then
+        verify(jpaUserProfileRepository).save(argThat(profile ->
+                profile.getNickname().equals("oauthNick")));
     }
 }
