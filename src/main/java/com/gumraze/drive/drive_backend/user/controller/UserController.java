@@ -137,7 +137,7 @@ public class UserController {
         user.setStatus(UserStatus.ACTIVE);
 
         return ResponseEntity.ok(
-                ApiResponse.success("프로필 생성 완료", null)
+                ApiResponse.success("프로필 생성 완료", userId)
         );
     }
 }
