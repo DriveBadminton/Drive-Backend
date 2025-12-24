@@ -1,6 +1,6 @@
 package com.gumraze.drive.drive_backend;
 
-import com.gumraze.drive.drive_backend.user.service.RegionService;
+import com.gumraze.drive.drive_backend.region.service.RegionService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;

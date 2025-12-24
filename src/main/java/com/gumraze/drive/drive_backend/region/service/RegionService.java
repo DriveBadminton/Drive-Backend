@@ -1,4 +1,4 @@
-package com.gumraze.drive.drive_backend.user.service;
+package com.gumraze.drive.drive_backend.region.service;
 
 import com.gumraze.drive.drive_backend.region.entity.RegionDistrict;
 

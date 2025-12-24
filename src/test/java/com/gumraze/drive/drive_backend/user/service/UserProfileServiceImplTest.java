@@ -1,5 +1,6 @@
 package com.gumraze.drive.drive_backend.user.service;
 
+import com.gumraze.drive.drive_backend.region.service.RegionService;
 import com.gumraze.drive.drive_backend.user.constants.Gender;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
 import com.gumraze.drive.drive_backend.user.constants.UserRole;
