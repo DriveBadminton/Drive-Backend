@@ -1,7 +1,7 @@
 package com.gumraze.drive.drive_backend.region.service;
 
 import com.gumraze.drive.drive_backend.region.entity.RegionDistrict;
-import com.gumraze.drive.drive_backend.user.repository.JpaRegionDistrictRepository;
+import com.gumraze.drive.drive_backend.region.repository.JpaRegionDistrictRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

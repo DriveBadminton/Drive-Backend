@@ -1,4 +1,4 @@
-package com.gumraze.drive.drive_backend.user.repository;
+package com.gumraze.drive.drive_backend.region.repository;
 
 import com.gumraze.drive.drive_backend.region.entity.RegionDistrict;
 import org.springframework.data.jpa.repository.JpaRepository;
