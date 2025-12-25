@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,13 +19,8 @@ public class RegionServiceImpl implements RegionService {
     private final JpaRegionProvinceRepository jpaRegionProvinceRepository;
 
     @Override
-    public boolean existsById(Long district_id) {
+    public boolean existsByDistrictId(Long district_id) {
         return jpaRegionDistrictRepository.existsById(district_id);
-    }
-
-    @Override
-    public RegionDistrict getReferenceById(Long district_id) {
-        return jpaRegionDistrictRepository.getReferenceById(district_id);
     }
 
     @Override
@@ -39,5 +35,10 @@ public class RegionServiceImpl implements RegionService {
         return jpaRegionDistrictRepository.findAllByProvinceId(province_id).stream()
                 .sorted(Comparator.comparing(RegionDistrict::getId))
                 .toList();
+    }
+
+    @Override
+    public Optional<RegionDistrict> findDistrictsById(Long district_id) {
+        return jpaRegionDistrictRepository.findById(district_id);
     }
 }

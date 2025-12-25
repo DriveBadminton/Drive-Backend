@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@NoArgsConstructor()
+@NoArgsConstructor
 @Table(name = "region_district")
 public class RegionDistrict {
     @Id
