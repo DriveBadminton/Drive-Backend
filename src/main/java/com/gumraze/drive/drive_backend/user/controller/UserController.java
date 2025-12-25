@@ -5,9 +5,7 @@ import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateResponseDto;
 import com.gumraze.drive.drive_backend.user.dto.UserProfilePrefillResponseDto;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
-import com.gumraze.drive.drive_backend.user.repository.JpaUserGradeHistoryRepository;
 import com.gumraze.drive.drive_backend.user.repository.JpaUserProfileRepository;
-import com.gumraze.drive.drive_backend.user.service.UserNicknameProvider;
 import com.gumraze.drive.drive_backend.user.service.UserProfileService;
 import com.gumraze.drive.drive_backend.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,10 +28,8 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
-    private final JpaUserProfileRepository jpaUserProfileRepository;
-    private final JpaUserGradeHistoryRepository jpaUserGradeHistoryRepository;
     private final UserProfileService userProfileService;
-    private final UserNicknameProvider userNicknameProvider;
+    private final JpaUserProfileRepository jpaUserProfileRepository;
 
     @GetMapping("/me")
     @Operation(
@@ -49,21 +45,19 @@ public class UserController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
     })
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<UserProfileResponseDto> me() {
-
-        var authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).build();
-        }
-
+    public ResponseEntity<ApiResponse<UserProfileResponseDto>> me(
+            Authentication authentication
+    ) {
         Long userId = (Long) authentication.getPrincipal();
 
         return userService.findById(userId)
-                .map(UserProfileResponseDto::from)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .map(user -> {
+                    var profile = jpaUserProfileRepository.findById(userId).orElse(null);
+                    var responseDto = UserProfileResponseDto.from(user, profile);
+                    return ResponseEntity.ok(ApiResponse.success("내 프로필 조회 성공", responseDto));
+                })
+                .orElseGet(() -> ResponseEntity.status(404)
+                        .body(ApiResponse.error("NOT_FOUND", "사용자를 찾을 수 없습니다.")));
     }
 
     @PostMapping("/profile")
