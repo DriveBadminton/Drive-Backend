@@ -9,7 +9,6 @@ import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
 import com.gumraze.drive.drive_backend.user.entity.User;
 import com.gumraze.drive.drive_backend.user.repository.JpaUserGradeHistoryRepository;
 import com.gumraze.drive.drive_backend.user.repository.JpaUserProfileRepository;
-import com.gumraze.drive.drive_backend.user.repository.JpaUserRepository;
 import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,9 +30,6 @@ class UserProfileServiceImplTest {
 
     @Mock
     UserRepository userRepository;
-
-    @Mock
-    JpaUserRepository jpaUserRepository;
 
     @Mock
     JpaUserProfileRepository jpaUserProfileRepository;
@@ -134,7 +130,7 @@ class UserProfileServiceImplTest {
                 UserStatus.PENDING,
                 UserRole.USER
         )));
-        when(regionService.existsById(request.regionId())).thenReturn(false);
+        when(regionService.existsByDistrictId(request.districtId())).thenReturn(false);
 
         // when & then
         assertThatThrownBy(() -> userProfileService.createProfile(userId, request))
@@ -162,7 +158,7 @@ class UserProfileServiceImplTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(
                 new User(UserStatus.PENDING, UserRole.USER)
         ));
-        when(regionService.existsById(2L)).thenReturn(true);
+        when(regionService.existsByDistrictId(2L)).thenReturn(true);
 
         // when
         userProfileService.createProfile(userId, request);
@@ -190,7 +186,7 @@ class UserProfileServiceImplTest {
                 .thenReturn(false);
         when(userRepository.findById(userId))
                 .thenReturn(Optional.of(user));
-        when(regionService.existsById(2L)).thenReturn(true);
+        when(regionService.existsByDistrictId(2L)).thenReturn(true);
 
         // when
         userProfileService.createProfile(userId, request);
@@ -218,7 +214,7 @@ class UserProfileServiceImplTest {
 
         when(jpaUserProfileRepository.existsById(userId)).thenReturn(false);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(regionService.existsById(2L)).thenReturn(true);
+        when(regionService.existsByDistrictId(2L)).thenReturn(true);
 
         // when
         userProfileService.createProfile(userId, request);
@@ -245,7 +241,7 @@ class UserProfileServiceImplTest {
 
         when(jpaUserProfileRepository.existsById(userId)).thenReturn(false);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(regionService.existsById(2L)).thenReturn(true);
+        when(regionService.existsByDistrictId(2L)).thenReturn(true);
 
         // when
         userProfileService.createProfile(userId, request);
@@ -271,7 +267,7 @@ class UserProfileServiceImplTest {
 
         when(jpaUserProfileRepository.existsById(userId)).thenReturn(false);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(regionService.existsById(2L)).thenReturn(true);
+        when(regionService.existsByDistrictId(2L)).thenReturn(true);
 
         // when
         userProfileService.createProfile(userId, request);
@@ -300,7 +296,7 @@ class UserProfileServiceImplTest {
 
         when(jpaUserProfileRepository.existsById(userId)).thenReturn(false);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(regionService.existsById(2L)).thenReturn(true);
+        when(regionService.existsByDistrictId(2L)).thenReturn(true);
 
         // when & then
         assertThatThrownBy(() -> userProfileService.createProfile(userId, request))
@@ -326,7 +322,7 @@ class UserProfileServiceImplTest {
 
         when(jpaUserProfileRepository.existsById(userId)).thenReturn(false);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(regionService.existsById(2L)).thenReturn(true);
+        when(regionService.existsByDistrictId(2L)).thenReturn(true);
 
         // when
         userProfileService.createProfile(userId, request);

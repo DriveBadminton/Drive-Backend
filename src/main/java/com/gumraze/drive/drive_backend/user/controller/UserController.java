@@ -78,8 +78,8 @@ public class UserController {
                                     value = """
                                             {
                                               "nickname": "kim",
-                                              "regionId": 1,
-                                              "grade": "초심,
+                                              "districtId": 1,
+                                              "grade": "초심",
                                               "birth": "19980925"
                                               "gender": "MALE"
                                             }

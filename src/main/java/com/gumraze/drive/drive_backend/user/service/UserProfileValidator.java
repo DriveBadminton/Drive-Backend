@@ -21,6 +21,10 @@ public class UserProfileValidator {
         if (request.gender() == null) {
             throw new IllegalArgumentException("gender가 필요합니다.");
         }
+
+        if (request.districtId() == null) {
+            throw new IllegalArgumentException("districtId가 필요합니다.");
+        }
     }
 
     public void validateForUpdate(UserProfileCreateRequest request) {

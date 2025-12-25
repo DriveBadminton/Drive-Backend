@@ -1,5 +1,6 @@
 package com.gumraze.drive.drive_backend.user.service;
 
+import com.gumraze.drive.drive_backend.region.entity.RegionDistrict;
 import com.gumraze.drive.drive_backend.region.service.RegionService;
 import com.gumraze.drive.drive_backend.user.constants.UserStatus;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
@@ -35,15 +36,18 @@ public class UserProfileServiceImpl implements UserProfileService{
             throw new IllegalArgumentException("이미 프로필이 존재합니다.");
         }
 
+        // 사용자 조회
         User user = userRepository.findById(userId).orElseThrow(() ->
                 new IllegalArgumentException("사용자가 존재하지 않습니다.")
         );
 
-        if (request.regionId() != null && !regionService.existsById(request.regionId())) {
-            throw new IllegalArgumentException("지역이 존재하지 않습니다.");
-        }
-
+        // 사용자가 존재하면 request 검증 수행
         validator.validateForCreate(request);
+
+        // 지역 조회
+        Optional<RegionDistrict> regionDist = Optional.ofNullable(regionService.findDistrictsById(request.districtId())
+                .orElseThrow(() -> new IllegalArgumentException("지역이 존재하지 않습니다.")));
+
 
         // 닉네임 설정
         String resolvedNickname = request.nickname();
@@ -55,7 +59,7 @@ public class UserProfileServiceImpl implements UserProfileService{
                 userId,
                 resolvedNickname,
                 request.grade(),
-                null
+                regionDist.get()
         );
 
         // grade 저장
