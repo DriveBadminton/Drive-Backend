@@ -31,6 +31,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.flywaydb:flyway-core'
+	implementation 'org.flywaydb:flyway-database-postgresql'
+
 	// 최신 springdoc
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-api:2.8.14'
@@ -54,4 +57,15 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+
+	// Suppress JDK warnings related to dynamic agent loading and CDS in tests.
+	jvmArgs '-XX:+EnableDynamicAgentLoading', '-Xshare:off'
+
+	doFirst {
+		// Pre-install Byte Buddy agent to avoid Mockito self-attaching warnings.
+		def byteBuddyAgentJar = configurations.testRuntimeClasspath.files.find { it.name.startsWith('byte-buddy-agent') }
+		if (byteBuddyAgentJar != null) {
+			jvmArgs "-javaagent:${byteBuddyAgentJar.absolutePath}"
+		}
+	}
 }

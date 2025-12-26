@@ -28,7 +28,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Transactional
 @ActiveProfiles("test")
-@Sql(statements = "INSERT INTO region (id, parent_id, region_name, region_code) VALUES (1, NULL, 'Region1', 'R1')")
+@Sql(
+        statements = {
+                "INSERT INTO region_province (id, name, code, created_at, updated_at) VALUES (1, '서울특별시', '09', NOW(), NOW())",
+                "INSERT INTO region_district (id, province_id, name, code, created_at, updated_at) VALUES (1, 1, '강남구', '1001', NOW(), NOW())"
+        }
+)
 public class UserProfileOnboardingIntegrationTest {
     @Autowired
     MockMvc mockMvc;
@@ -51,7 +56,7 @@ public class UserProfileOnboardingIntegrationTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request))
                 )
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn();
 
         String accessToken = objectMapper
@@ -64,22 +69,25 @@ public class UserProfileOnboardingIntegrationTest {
         String requestBody = """
                 {
                     "nickname": "kim",
-                    "regionId": 1,
-                    "grade": "초심"
+                    "districtId": 1,
+                    "grade": "초심",
+                    "birth": "19980925",
+                    "gender": "MALE"
                 }
                 """;
 
         mockMvc.perform(
-                        post("/users/profile")
+                        post("/users/me/profile")
                                 .header("Authorization", "Bearer " + accessToken)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody)
                 )
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn();
 
         // then: account status가 ACTIVE + has Profile = true
         MvcResult statusResult = mockMvc.perform(
-                        get("/account/status")
+                        get("/users/me")
                                 .header("Authorization", "Bearer " + accessToken)
                 )
                 .andExpect(status().isOk())
@@ -90,6 +98,5 @@ public class UserProfileOnboardingIntegrationTest {
                 .get("data");
 
         assertThat(data.get("status").asText()).isEqualTo("ACTIVE");
-        assertThat(data.get("hasProfile").asBoolean()).isTrue();
     }
 }

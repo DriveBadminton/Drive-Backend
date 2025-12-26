@@ -1,16 +1,12 @@
 package com.gumraze.drive.drive_backend.user.controller;
 
 import com.gumraze.drive.drive_backend.common.api.ApiResponse;
-import com.gumraze.drive.drive_backend.region.Region;
-import com.gumraze.drive.drive_backend.user.constants.UserStatus;
+import com.gumraze.drive.drive_backend.common.api.ResultCode;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
+import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateResponseDto;
+import com.gumraze.drive.drive_backend.user.dto.UserProfilePrefillResponseDto;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
-import com.gumraze.drive.drive_backend.user.entity.User;
-import com.gumraze.drive.drive_backend.user.entity.UserGradeHistory;
-import com.gumraze.drive.drive_backend.user.entity.UserProfile;
-import com.gumraze.drive.drive_backend.user.repository.JpaUserGradeHistoryRepository;
-import com.gumraze.drive.drive_backend.user.repository.JpaUserProfileRepository;
-import com.gumraze.drive.drive_backend.user.service.UserService;
+import com.gumraze.drive.drive_backend.user.service.UserProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -21,11 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.*;
-
-import java.lang.reflect.Field;
 
 @RequiredArgsConstructor
 @RestController
@@ -33,9 +25,7 @@ import java.lang.reflect.Field;
 @Tag(name = "Users", description = "사용자 프로필 API")
 public class UserController {
 
-    private final UserService userService;
-    private final JpaUserProfileRepository jpaUserProfileRepository;
-    private final JpaUserGradeHistoryRepository jpaUserGradeHistoryRepository;
+    private final UserProfileService userProfileService;
 
     @GetMapping("/me")
     @Operation(
@@ -51,24 +41,24 @@ public class UserController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
     })
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<UserProfileResponseDto> me() {
-
-        var authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).build();
-        }
-
+    public ResponseEntity<ApiResponse<UserProfileResponseDto>> me(
+            Authentication authentication
+    ) {
+        // 인증 정보에서 userId 조회
         Long userId = (Long) authentication.getPrincipal();
 
-        return userService.findById(userId)
-                .map(UserProfileResponseDto::from)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        // userId로 프로필 조회
+        UserProfileResponseDto profile = userProfileService.getMyProfile(userId);
+
+        ResultCode code = ResultCode.OK;
+
+        // 프로필이 존재하면, 프로필 조회 성공
+        return ResponseEntity
+                .status(code.httpStatus())
+                .body(ApiResponse.success(code, "내 프로필 조회 성공", profile));
     }
 
-    @PostMapping("/profile")
+    @PostMapping("/me/profile")
     @Operation(
             summary = "프로필 생성",
             description = "닉네임/지역/등급을 입력해 프로필을 생성하고 계정을 ACTIVE로 전환합니다.",
@@ -80,8 +70,10 @@ public class UserController {
                                     value = """
                                             {
                                               "nickname": "kim",
-                                              "regionId": 1,
-                                              "grade": "초심"
+                                              "districtId": 1,
+                                              "grade": "초심",
+                                              "birth": "19980925"
+                                              "gender": "MALE"
                                             }
                                             """
                             )
@@ -98,46 +90,63 @@ public class UserController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "요청 검증 실패")
     })
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<ApiResponse<?>> createProfile(
+    public ResponseEntity<ApiResponse<UserProfileCreateResponseDto>> createProfile(
+            Authentication authentication,
             @RequestBody UserProfileCreateRequest request
     ) {
-        // Spring Security가 저장해둔 인증된 사용자 정보를 가져오는 메서드
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).build();
-        }
-
         Long userId = (Long) authentication.getPrincipal();
 
-        User user = userService.findById(userId).orElseThrow();
+        userProfileService.createProfile(userId, request);
 
-        // Region은 id만 필요 -> Proxy사용
-        Region region = new Region();
-        Field idField = ReflectionUtils.findField(Region.class, "id");
-        ReflectionUtils.makeAccessible(idField);
-        ReflectionUtils.setField(idField, region, request.regionId());
+        ResultCode code = ResultCode.OK;
+        UserProfileCreateResponseDto body = new UserProfileCreateResponseDto(userId);
 
-        // UserProfile 생성
-        UserProfile profile = new UserProfile(
-                userId,
-                request.nickname(),
-                request.grade(),
-                region
-        );
+        return ResponseEntity
+                .status(code.httpStatus())
+                .body(ApiResponse.success(code, "프로필 등록에 성공했습니다.", body));
+    }
 
-        jpaUserProfileRepository.save(profile);
+    @GetMapping("/me/profile/prefill")
+    @Operation(
+            summary = "프로필 닉네임 프리필 조회",
+            description = "제3자 로그인 닉네임이 있으면 suggestedNickname으로 반환합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "조회 성공",
+                    content = @Content(
+                            schema = @Schema(implementation = ApiResponse.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                              "success": true,
+                                              "message": "제3자 로그인 닉네임 조회 성공",
+                                              "data": {
+                                                "suggestedNickname": "oauthNick",
+                                                "hasOauthNickname": true
+                                              },
+                                              "errorCode": null,
+                                              "timestamp": "2025-01-01T00:00:00"
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<UserProfilePrefillResponseDto>> prefillProfile(
+            Authentication authentication
+    ) {
+        Long userId = (Long) authentication.getPrincipal();
 
-        // UserGradeHistory 초기 생성
-        jpaUserGradeHistoryRepository.save(
-                new UserGradeHistory(user, request.grade())
-        );
-        // User 상채 ACTIVE 전환
-        user.setStatus(UserStatus.ACTIVE);
+        UserProfilePrefillResponseDto body = userProfileService.getProfilePrefill(userId);
 
-        return ResponseEntity.ok(
-                ApiResponse.success("프로필 생성 완료", null)
-        );
+        ResultCode code = ResultCode.OK;
+
+        return ResponseEntity
+                .status(code.httpStatus())
+                .body(ApiResponse.success(code, "제3자 로그인 닉네임 조회 성공", body));
     }
 }

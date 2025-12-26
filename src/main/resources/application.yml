@@ -9,6 +9,10 @@ spring:
     hibernate:
       ddl-auto: none
 
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
 jwt:
   access-token:
     secret: ${JWT_ACCESS_TOKEN_SECRET}

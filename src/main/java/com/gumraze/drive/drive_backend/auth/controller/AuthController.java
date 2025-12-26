@@ -6,6 +6,7 @@ import com.gumraze.drive.drive_backend.auth.dto.OAuthRefreshTokenResponseDto;
 import com.gumraze.drive.drive_backend.auth.service.AuthService;
 import com.gumraze.drive.drive_backend.auth.service.OAuthLoginResult;
 import com.gumraze.drive.drive_backend.common.api.ApiResponse;
+import com.gumraze.drive.drive_backend.common.api.ResultCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -75,9 +76,12 @@ public class AuthController {
 
         OAuthLoginResponseDto response = new OAuthLoginResponseDto(result.userId(), result.accessToken());
 
-        return ResponseEntity.ok()
+        ResultCode code = ResultCode.OAUTH_LOGIN_SUCCESS;
+
+        return ResponseEntity
+                .status(code.httpStatus())
                 .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
-                .body(ApiResponse.success("OAuth 로그인 성공", response));
+                .body(ApiResponse.success(code, response));
     }
 
     @PostMapping("/refresh")
@@ -96,7 +100,7 @@ public class AuthController {
             @CookieValue(name = "refresh_token", required = false) String refreshToken
     ) {
         if (refreshToken == null || refreshToken.isBlank()) {
-            throw new RuntimeException("Refresh Token이 없습니다.");
+            throw new IllegalArgumentException("Refresh Token이 없습니다.");
         }
 
         OAuthLoginResult result = authService.refresh(refreshToken);
@@ -112,9 +116,12 @@ public class AuthController {
 
         OAuthRefreshTokenResponseDto response = new OAuthRefreshTokenResponseDto(result.userId(), result.accessToken());
 
-        return ResponseEntity.ok()
+        ResultCode code = ResultCode.OAUTH_REFRESH_TOKEN_SUCCESS;
+
+        return ResponseEntity
+                .status(code.httpStatus())
                 .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
-                .body(ApiResponse.success("액세스 토큰 리프레시 성공", response));
+                .body(ApiResponse.success(code, response));
     }
 
     @PostMapping("/logout")
@@ -144,8 +151,11 @@ public class AuthController {
                         .maxAge(0)
                         .build();
 
-        return ResponseEntity.ok()
+        ResultCode code = ResultCode.LOGOUT_SUCCESS;
+
+        return ResponseEntity
+                .status(code.httpStatus())
                 .header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
-                .body(ApiResponse.successMessage("로그아웃 성공"));
+                .body(ApiResponse.success(code));
     }
 }
