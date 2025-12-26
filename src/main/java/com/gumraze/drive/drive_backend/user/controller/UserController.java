@@ -17,7 +17,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
@@ -92,26 +91,19 @@ public class UserController {
     })
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<UserProfileCreateResponseDto>> createProfile(
+            Authentication authentication,
             @RequestBody UserProfileCreateRequest request
     ) {
-        // Spring Security가 저장해둔 인증된 사용자 정보를 가져오는 메서드
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).build();
-        }
-
         Long userId = (Long) authentication.getPrincipal();
+
         userProfileService.createProfile(userId, request);
 
-        UserProfileCreateResponseDto profile = new UserProfileCreateResponseDto(userId);
-
         ResultCode code = ResultCode.OK;
+        UserProfileCreateResponseDto body = new UserProfileCreateResponseDto(userId);
 
         return ResponseEntity
                 .status(code.httpStatus())
-                .body(ApiResponse.success(code, "프로필 등록에 성공했습니다.", profile));
+                .body(ApiResponse.success(code, "프로필 등록에 성공했습니다.", body));
     }
 
     @GetMapping("/me/profile/prefill")
@@ -144,15 +136,11 @@ public class UserController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
     })
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<ApiResponse<UserProfilePrefillResponseDto>> prefillProfile() {
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).build();
-        }
-
+    public ResponseEntity<ApiResponse<UserProfilePrefillResponseDto>> prefillProfile(
+            Authentication authentication
+    ) {
         Long userId = (Long) authentication.getPrincipal();
+
         UserProfilePrefillResponseDto body = userProfileService.getProfilePrefill(userId);
 
         ResultCode code = ResultCode.OK;
