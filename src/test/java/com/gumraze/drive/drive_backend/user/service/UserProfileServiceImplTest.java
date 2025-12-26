@@ -1,5 +1,6 @@
 package com.gumraze.drive.drive_backend.user.service;
 
+import com.gumraze.drive.drive_backend.region.entity.RegionDistrict;
 import com.gumraze.drive.drive_backend.region.service.RegionService;
 import com.gumraze.drive.drive_backend.user.constants.Gender;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
@@ -125,12 +126,12 @@ class UserProfileServiceImplTest {
                 Gender.MALE
         );
 
-        when(jpaUserProfileRepository.existsById(userId)).thenReturn(false);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(new User(
-                UserStatus.PENDING,
-                UserRole.USER
-        )));
-        when(regionService.existsByDistrictId(request.districtId())).thenReturn(false);
+        User user = new User(UserStatus.PENDING, UserRole.USER);
+
+        when(jpaUserProfileRepository.existsById(userId))
+                .thenReturn(false);
+        when(userRepository.findById(userId))
+                .thenReturn(Optional.of(user));
 
         // when & then
         assertThatThrownBy(() -> userProfileService.createProfile(userId, request))
@@ -154,11 +155,18 @@ class UserProfileServiceImplTest {
                 Gender.MALE
         );
 
-        when(jpaUserProfileRepository.existsById(userId)).thenReturn(false);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(
-                new User(UserStatus.PENDING, UserRole.USER)
-        ));
-        when(regionService.existsByDistrictId(2L)).thenReturn(true);
+        // 사용자 객체 생성
+        User user = new User(UserStatus.PENDING, UserRole.USER);
+        when(jpaUserProfileRepository.existsById(userId))
+                .thenReturn(false);      // 사용자가 존재하는지 확인
+
+        when(userRepository.findById(userId))
+                .thenReturn(Optional.of(user)); // 사용자를 조회하면 가짜 객체를 반환
+
+        // mock 지역 객체 생성
+        RegionDistrict district = mock(RegionDistrict.class);
+        when(regionService.findDistrictsById(2L))
+                .thenReturn(Optional.of(district));
 
         // when
         userProfileService.createProfile(userId, request);
@@ -181,12 +189,15 @@ class UserProfileServiceImplTest {
         );
 
         User user = new User(UserStatus.PENDING, UserRole.USER);
-
         when(jpaUserProfileRepository.existsById(userId))
                 .thenReturn(false);
         when(userRepository.findById(userId))
                 .thenReturn(Optional.of(user));
-        when(regionService.existsByDistrictId(2L)).thenReturn(true);
+
+        // Mockito로 RegionDistrict 객체 생성
+        RegionDistrict district = mock(RegionDistrict.class);       // .class는 타입 자체를 가리키는 Class 객체임
+        when(regionService.findDistrictsById(2L))
+                .thenReturn(Optional.of(district));
 
         // when
         userProfileService.createProfile(userId, request);
@@ -211,10 +222,14 @@ class UserProfileServiceImplTest {
         );
 
         User user = new User(UserStatus.PENDING, UserRole.USER);
+        when(jpaUserProfileRepository.existsById(userId))
+                .thenReturn(false);
+        when(userRepository.findById(userId))
+                .thenReturn(Optional.of(user));
 
-        when(jpaUserProfileRepository.existsById(userId)).thenReturn(false);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(regionService.existsByDistrictId(2L)).thenReturn(true);
+        RegionDistrict district = mock(RegionDistrict.class);
+        when(regionService.findDistrictsById(2L))
+                .thenReturn(Optional.of(district));
 
         // when
         userProfileService.createProfile(userId, request);
@@ -226,7 +241,6 @@ class UserProfileServiceImplTest {
     @Test
     @DisplayName("grade가 null이면 등급 히스토리를 저장하지 않음")
     void create_profile_does_not_save_grade_history_when_grade_is_null() {
-
         // given
         Long userId = 1L;
         UserProfileCreateRequest request = new UserProfileCreateRequest(
@@ -238,10 +252,14 @@ class UserProfileServiceImplTest {
         );
 
         User user = new User(UserStatus.PENDING, UserRole.USER);
+        when(jpaUserProfileRepository.existsById(userId))
+                .thenReturn(false);
+        when(userRepository.findById(userId))
+                .thenReturn(Optional.of(user));
 
-        when(jpaUserProfileRepository.existsById(userId)).thenReturn(false);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(regionService.existsByDistrictId(2L)).thenReturn(true);
+        RegionDistrict district = mock(RegionDistrict.class);
+        when(regionService.findDistrictsById(2L))
+                .thenReturn(Optional.of(district));
 
         // when
         userProfileService.createProfile(userId, request);
@@ -264,10 +282,14 @@ class UserProfileServiceImplTest {
         );
 
         User user = new User(UserStatus.PENDING, UserRole.USER);
+        when(jpaUserProfileRepository.existsById(userId))
+                .thenReturn(false);
+        when(userRepository.findById(userId))
+                .thenReturn(Optional.of(user));
 
-        when(jpaUserProfileRepository.existsById(userId)).thenReturn(false);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(regionService.existsByDistrictId(2L)).thenReturn(true);
+        RegionDistrict district = mock(RegionDistrict.class);
+        when(regionService.findDistrictsById(2L))
+                .thenReturn(Optional.of(district));
 
         // when
         userProfileService.createProfile(userId, request);
@@ -293,10 +315,10 @@ class UserProfileServiceImplTest {
         );
 
         User user = new User(UserStatus.PENDING, UserRole.USER);
-
-        when(jpaUserProfileRepository.existsById(userId)).thenReturn(false);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(regionService.existsByDistrictId(2L)).thenReturn(true);
+        when(jpaUserProfileRepository.existsById(userId))
+                .thenReturn(false);
+        when(userRepository.findById(userId))
+                .thenReturn(Optional.of(user));
 
         // when & then
         assertThatThrownBy(() -> userProfileService.createProfile(userId, request))
@@ -319,10 +341,14 @@ class UserProfileServiceImplTest {
         );
 
         User user = new User(UserStatus.PENDING, UserRole.USER);
+        when(jpaUserProfileRepository.existsById(userId))
+                .thenReturn(false);
+        when(userRepository.findById(userId))
+                .thenReturn(Optional.of(user));
 
-        when(jpaUserProfileRepository.existsById(userId)).thenReturn(false);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(regionService.existsByDistrictId(2L)).thenReturn(true);
+        RegionDistrict district = mock(RegionDistrict.class);
+        when(regionService.findDistrictsById(2L))
+                .thenReturn(Optional.of(district));
 
         // when
         userProfileService.createProfile(userId, request);
@@ -330,6 +356,5 @@ class UserProfileServiceImplTest {
         // then
         verify(jpaUserProfileRepository).save(argThat(profile ->
                 profile.getNickname().equals("requestNick")));
-
     }
 }
