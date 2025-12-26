@@ -9,8 +9,7 @@ import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
 import com.gumraze.drive.drive_backend.user.entity.User;
 import com.gumraze.drive.drive_backend.user.entity.UserGradeHistory;
 import com.gumraze.drive.drive_backend.user.entity.UserProfile;
-import com.gumraze.drive.drive_backend.user.repository.JpaUserGradeHistoryRepository;
-import com.gumraze.drive.drive_backend.user.repository.JpaUserProfileRepository;
+import com.gumraze.drive.drive_backend.user.repository.UserGradeHistoryRepository;
 import com.gumraze.drive.drive_backend.user.repository.UserProfileRepository;
 import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,15 +26,14 @@ import java.util.Optional;
 public class UserProfileServiceImpl implements UserProfileService{
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
-    private final JpaUserProfileRepository jpaUserProfileRepository;
-    private final JpaUserGradeHistoryRepository jpaUserGradeHistoryRepository;
     private final UserProfileValidator validator;
     private final RegionService regionService;
     private final UserNicknameProvider userNicknameProvider;
+    private final UserGradeHistoryRepository userGradeHistoryRepository;
 
     @Override
     public void createProfile(Long userId, UserProfileCreateRequest request) {
-        if (jpaUserProfileRepository.existsById(userId)) {
+        if (userProfileRepository.existsById(userId)) {
             throw new IllegalArgumentException("이미 프로필이 존재합니다.");
         }
 
@@ -67,7 +65,7 @@ public class UserProfileServiceImpl implements UserProfileService{
 
         // grade 저장
         if (request.grade() != null) {
-            jpaUserGradeHistoryRepository.save(
+            userGradeHistoryRepository.save(
                     new UserGradeHistory(user, request.grade())
             );
         }
@@ -85,7 +83,7 @@ public class UserProfileServiceImpl implements UserProfileService{
         user.setStatus(UserStatus.ACTIVE);
 
         // user 저장
-        jpaUserProfileRepository.save(profile);
+        userProfileRepository.save(profile);
     }
 
     @Override

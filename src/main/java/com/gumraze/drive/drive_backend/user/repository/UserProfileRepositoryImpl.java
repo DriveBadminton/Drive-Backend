@@ -22,4 +22,14 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
     public Optional<UserProfile> findByUserId(Long userId) {
         return jpaUserProfileRepository.findById(userId);
     }
+
+    @Override
+    public boolean existsById(Long userId) {
+        return jpaUserProfileRepository.existsById(userId);
+    }
+
+    @Override
+    public UserProfile save(UserProfile profile) {
+        return jpaUserProfileRepository.save(profile);
+    }
 }
