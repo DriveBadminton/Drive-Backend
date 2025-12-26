@@ -8,8 +8,7 @@ import com.gumraze.drive.drive_backend.user.constants.UserRole;
 import com.gumraze.drive.drive_backend.user.constants.UserStatus;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
 import com.gumraze.drive.drive_backend.user.entity.User;
-import com.gumraze.drive.drive_backend.user.repository.JpaUserGradeHistoryRepository;
-import com.gumraze.drive.drive_backend.user.repository.JpaUserProfileRepository;
+import com.gumraze.drive.drive_backend.user.repository.UserGradeHistoryRepository;
 import com.gumraze.drive.drive_backend.user.repository.UserProfileRepository;
 import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,10 +36,7 @@ class UserProfileServiceImplTest {
     UserProfileRepository userProfileRepository;
 
     @Mock
-    JpaUserProfileRepository jpaUserProfileRepository;
-
-    @Mock
-    JpaUserGradeHistoryRepository jpaUserGradeHistoryRepository;
+    UserGradeHistoryRepository userGradeHistoryRepository;
 
     @Mock
     RegionService regionService;
@@ -55,11 +51,10 @@ class UserProfileServiceImplTest {
         userProfileService = new UserProfileServiceImpl(
                 userRepository,
                 userProfileRepository,
-                jpaUserProfileRepository,
-                jpaUserGradeHistoryRepository,
                 new UserProfileValidator(),
                 regionService,
-                userNicknameProvider
+                userNicknameProvider,
+                userGradeHistoryRepository
         );
     }
 
@@ -77,7 +72,7 @@ class UserProfileServiceImplTest {
         );
 
         // jpa로 existsById(userId)가 호출되면 실제 DB를 조회하지 않고 true를 반환하도록 설정함.
-        when(jpaUserProfileRepository.existsById(userId)).thenReturn(true);
+        when(userProfileRepository.existsById(userId)).thenReturn(true);
 
         // when: 같은 userId로 createProfile을 호출하여 새로운 프로필 생성 시도
         assertThatThrownBy(() ->
@@ -85,8 +80,8 @@ class UserProfileServiceImplTest {
                 .isInstanceOf(IllegalArgumentException.class);
 
         // Then: 예외가 발생해서 생성이 실패함.
-        verify(jpaUserProfileRepository, never()).save(any());
-        verifyNoInteractions(jpaUserGradeHistoryRepository);
+        verify(userProfileRepository, never()).save(any());
+        verifyNoInteractions(userGradeHistoryRepository);
     }
 
     @Test
@@ -104,7 +99,7 @@ class UserProfileServiceImplTest {
         );
 
         // userId로 사용자 조회 -> 사용자가 없음
-        when(jpaUserProfileRepository.existsById(userId)).thenReturn(false);
+        when(userProfileRepository.existsById(userId)).thenReturn(false);
         // 재검증
         when(userRepository.findById(userId)).thenReturn(empty());
 
@@ -114,8 +109,8 @@ class UserProfileServiceImplTest {
         ).isInstanceOf(IllegalArgumentException.class);
 
         // then: DB에 저장된 값이 있는지 재검증
-        verify(jpaUserProfileRepository, never()).save(any());
-        verifyNoInteractions(jpaUserGradeHistoryRepository);
+        verify(userProfileRepository, never()).save(any());
+        verifyNoInteractions(userGradeHistoryRepository);
     }
 
     @Test
@@ -133,7 +128,7 @@ class UserProfileServiceImplTest {
 
         User user = new User(UserStatus.PENDING, UserRole.USER);
 
-        when(jpaUserProfileRepository.existsById(userId))
+        when(userProfileRepository.existsById(userId))
                 .thenReturn(false);
         when(userRepository.findById(userId))
                 .thenReturn(Optional.of(user));
@@ -143,8 +138,8 @@ class UserProfileServiceImplTest {
                 .isInstanceOf(IllegalArgumentException.class);
 
         // then
-        verify(jpaUserProfileRepository, never()).save(any());
-        verifyNoInteractions(jpaUserGradeHistoryRepository);
+        verify(userProfileRepository, never()).save(any());
+        verifyNoInteractions(userGradeHistoryRepository);
     }
 
     @Test
@@ -162,7 +157,7 @@ class UserProfileServiceImplTest {
 
         // 사용자 객체 생성
         User user = new User(UserStatus.PENDING, UserRole.USER);
-        when(jpaUserProfileRepository.existsById(userId))
+        when(userProfileRepository.existsById(userId))
                 .thenReturn(false);      // 사용자가 존재하는지 확인
 
         when(userRepository.findById(userId))
@@ -177,7 +172,7 @@ class UserProfileServiceImplTest {
         userProfileService.createProfile(userId, request);
 
         // then
-        verify(jpaUserProfileRepository).save(any());
+        verify(userProfileRepository).save(any());
     }
 
     @Test
@@ -194,7 +189,7 @@ class UserProfileServiceImplTest {
         );
 
         User user = new User(UserStatus.PENDING, UserRole.USER);
-        when(jpaUserProfileRepository.existsById(userId))
+        when(userProfileRepository.existsById(userId))
                 .thenReturn(false);
         when(userRepository.findById(userId))
                 .thenReturn(Optional.of(user));
@@ -227,7 +222,7 @@ class UserProfileServiceImplTest {
         );
 
         User user = new User(UserStatus.PENDING, UserRole.USER);
-        when(jpaUserProfileRepository.existsById(userId))
+        when(userProfileRepository.existsById(userId))
                 .thenReturn(false);
         when(userRepository.findById(userId))
                 .thenReturn(Optional.of(user));
@@ -240,7 +235,7 @@ class UserProfileServiceImplTest {
         userProfileService.createProfile(userId, request);
 
         // then
-        verify(jpaUserGradeHistoryRepository).save(any());
+        verify(userGradeHistoryRepository).save(any());
     }
 
     @Test
@@ -257,7 +252,7 @@ class UserProfileServiceImplTest {
         );
 
         User user = new User(UserStatus.PENDING, UserRole.USER);
-        when(jpaUserProfileRepository.existsById(userId))
+        when(userProfileRepository.existsById(userId))
                 .thenReturn(false);
         when(userRepository.findById(userId))
                 .thenReturn(Optional.of(user));
@@ -270,7 +265,7 @@ class UserProfileServiceImplTest {
         userProfileService.createProfile(userId, request);
 
         // then
-        verify(jpaUserGradeHistoryRepository, never()).save(any());
+        verify(userGradeHistoryRepository, never()).save(any());
     }
 
     @Test
@@ -287,7 +282,7 @@ class UserProfileServiceImplTest {
         );
 
         User user = new User(UserStatus.PENDING, UserRole.USER);
-        when(jpaUserProfileRepository.existsById(userId))
+        when(userProfileRepository.existsById(userId))
                 .thenReturn(false);
         when(userRepository.findById(userId))
                 .thenReturn(Optional.of(user));
@@ -300,7 +295,7 @@ class UserProfileServiceImplTest {
         userProfileService.createProfile(userId, request);
 
         // then
-        verify(jpaUserProfileRepository).save(
+        verify(userProfileRepository).save(
                 argThat(profile ->
                         profile.getBirth().toLocalDate().equals(LocalDate.of(1998, 9, 25))
                                 && profile.getGender() == Gender.MALE));
@@ -320,7 +315,7 @@ class UserProfileServiceImplTest {
         );
 
         User user = new User(UserStatus.PENDING, UserRole.USER);
-        when(jpaUserProfileRepository.existsById(userId))
+        when(userProfileRepository.existsById(userId))
                 .thenReturn(false);
         when(userRepository.findById(userId))
                 .thenReturn(Optional.of(user));
@@ -329,7 +324,7 @@ class UserProfileServiceImplTest {
         assertThatThrownBy(() -> userProfileService.createProfile(userId, request))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Nickname이 필요합니다.");
-        verify(jpaUserProfileRepository, never()).save(any());
+        verify(userProfileRepository, never()).save(any());
     }
 
     @Test
@@ -346,7 +341,7 @@ class UserProfileServiceImplTest {
         );
 
         User user = new User(UserStatus.PENDING, UserRole.USER);
-        when(jpaUserProfileRepository.existsById(userId))
+        when(userProfileRepository.existsById(userId))
                 .thenReturn(false);
         when(userRepository.findById(userId))
                 .thenReturn(Optional.of(user));
@@ -359,7 +354,7 @@ class UserProfileServiceImplTest {
         userProfileService.createProfile(userId, request);
 
         // then
-        verify(jpaUserProfileRepository).save(argThat(profile ->
+        verify(userProfileRepository).save(argThat(profile ->
                 profile.getNickname().equals("requestNick")));
     }
 }
