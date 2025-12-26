@@ -1,22 +1,31 @@
 package com.gumraze.drive.drive_backend.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gumraze.drive.drive_backend.auth.security.JwtAuthenticationFilter;
 import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenValidator;
+import com.gumraze.drive.drive_backend.common.api.ApiResponse;
+import com.gumraze.drive.drive_backend.common.api.ResultCode;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final ObjectMapper objectMapper;
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter(
@@ -43,7 +52,11 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(
                                 (request, response, authException) ->
-                                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
+                                        writeErrorResponse(response, ResultCode.UNAUTHORIZED)
+                        )
+                        .accessDeniedHandler(
+                                (request, response, accessDeniedException) ->
+                                        writeErrorResponse(response, ResultCode.FORBIDDEN)
                         )
                 )
 
@@ -81,5 +94,15 @@ public class SecurityConfig {
                 );
 
         return http.build();
+    }
+
+    private void writeErrorResponse(
+            HttpServletResponse response,
+            ResultCode code
+    ) throws IOException {
+        response.setStatus(code.httpStatus().value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        objectMapper.writeValue(response.getWriter(), ApiResponse.failure(code));
     }
 }
