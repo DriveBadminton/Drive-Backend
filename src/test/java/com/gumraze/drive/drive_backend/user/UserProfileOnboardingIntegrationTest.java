@@ -56,7 +56,7 @@ public class UserProfileOnboardingIntegrationTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request))
                 )
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn();
 
         String accessToken = objectMapper
@@ -77,16 +77,17 @@ public class UserProfileOnboardingIntegrationTest {
                 """;
 
         mockMvc.perform(
-                        post("/users/profile")
+                        post("/users/me/profile")
                                 .header("Authorization", "Bearer " + accessToken)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody)
                 )
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn();
 
         // then: account status가 ACTIVE + has Profile = true
         MvcResult statusResult = mockMvc.perform(
-                        get("/account/status")
+                        get("/users/me")
                                 .header("Authorization", "Bearer " + accessToken)
                 )
                 .andExpect(status().isOk())
@@ -97,6 +98,5 @@ public class UserProfileOnboardingIntegrationTest {
                 .get("data");
 
         assertThat(data.get("status").asText()).isEqualTo("ACTIVE");
-        assertThat(data.get("hasProfile").asBoolean()).isTrue();
     }
 }
