@@ -20,6 +20,10 @@ public class UserProfile {
     @Id
     private Long id;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id")
+    private User user;
+
     private String nickname;
     private String profileImageUrl;
 
