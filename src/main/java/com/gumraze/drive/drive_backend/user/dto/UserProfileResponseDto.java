@@ -18,8 +18,6 @@ public class UserProfileResponseDto {
     UserRole role;
     UserStatus status;
 
-    boolean hasProfile;
-
     Grade grade;
     String provinceName;
     String districtName;
@@ -28,24 +26,14 @@ public class UserProfileResponseDto {
             User user,
             UserProfile profile
     ) {
-        if (profile == null) {
-            return UserProfileResponseDto.builder()
-                    .id(user.getId())
-                    .role(user.getRole())
-                    .status(user.getStatus())
-                    .hasProfile(false)
-                    .build();
-        }
-
-        RegionDistrict district = profile.getRegionDistrict();
+        RegionDistrict district = profile != null ? profile.getRegionDistrict() : null;
         RegionProvince province = district != null ? district.getProvince() : null;
 
         return UserProfileResponseDto.builder()
                 .id(user.getId())
                 .role(user.getRole())
                 .status(user.getStatus())
-                .hasProfile(true)
-                .grade(profile.getGrade())
+                .grade(profile != null ? profile.getGrade() : null)
                 .provinceName(province != null ? province.getName() : null)
                 .districtName(district != null ? district.getName() : null)
                 .build();
