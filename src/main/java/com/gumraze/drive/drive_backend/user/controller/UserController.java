@@ -1,6 +1,7 @@
 package com.gumraze.drive.drive_backend.user.controller;
 
 import com.gumraze.drive.drive_backend.common.api.ApiResponse;
+import com.gumraze.drive.drive_backend.common.api.ResultCode;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateResponseDto;
 import com.gumraze.drive.drive_backend.user.dto.UserProfilePrefillResponseDto;
@@ -50,13 +51,15 @@ public class UserController {
         // userId로 프로필 조회
         UserProfileResponseDto profile = userProfileService.getMyProfile(userId);
 
+        ResultCode code = ResultCode.OK;
+
         // 프로필이 존재하면, 프로필 조회 성공
-        return ResponseEntity.ok(
-                ApiResponse.success("내 프로필 조회 성공", profile)
-        );
+        return ResponseEntity
+                .status(code.httpStatus())
+                .body(ApiResponse.success(code, "내 프로필 조회 성공", profile));
     }
 
-    @PostMapping("/profile")
+    @PostMapping("/me/profile")
     @Operation(
             summary = "프로필 생성",
             description = "닉네임/지역/등급을 입력해 프로필을 생성하고 계정을 ACTIVE로 전환합니다.",
@@ -100,15 +103,18 @@ public class UserController {
         }
 
         Long userId = (Long) authentication.getPrincipal();
-
         userProfileService.createProfile(userId, request);
 
-        return ResponseEntity.ok(
-                ApiResponse.success("프로필 등록에 성공했습니다.", new UserProfileCreateResponseDto(userId))
-        );
+        UserProfileCreateResponseDto profile = new UserProfileCreateResponseDto(userId);
+
+        ResultCode code = ResultCode.OK;
+
+        return ResponseEntity
+                .status(code.httpStatus())
+                .body(ApiResponse.success(code, "프로필 등록에 성공했습니다.", profile));
     }
 
-    @GetMapping("/profile/prefill")
+    @GetMapping("/me/profile/prefill")
     @Operation(
             summary = "프로필 닉네임 프리필 조회",
             description = "제3자 로그인 닉네임이 있으면 suggestedNickname으로 반환합니다."
@@ -149,6 +155,10 @@ public class UserController {
         Long userId = (Long) authentication.getPrincipal();
         UserProfilePrefillResponseDto body = userProfileService.getProfilePrefill(userId);
 
-        return ResponseEntity.ok(ApiResponse.success("제3자 로그인 닉네임 조회 성공", body));
+        ResultCode code = ResultCode.OK;
+
+        return ResponseEntity
+                .status(code.httpStatus())
+                .body(ApiResponse.success(code, "제3자 로그인 닉네임 조회 성공", body));
     }
 }
