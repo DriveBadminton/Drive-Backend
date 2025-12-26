@@ -10,6 +10,7 @@ import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
 import com.gumraze.drive.drive_backend.user.entity.User;
 import com.gumraze.drive.drive_backend.user.repository.JpaUserGradeHistoryRepository;
 import com.gumraze.drive.drive_backend.user.repository.JpaUserProfileRepository;
+import com.gumraze.drive.drive_backend.user.repository.UserProfileRepository;
 import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,6 +34,9 @@ class UserProfileServiceImplTest {
     UserRepository userRepository;
 
     @Mock
+    UserProfileRepository userProfileRepository;
+
+    @Mock
     JpaUserProfileRepository jpaUserProfileRepository;
 
     @Mock
@@ -50,6 +54,7 @@ class UserProfileServiceImplTest {
     void setUp() {
         userProfileService = new UserProfileServiceImpl(
                 userRepository,
+                userProfileRepository,
                 jpaUserProfileRepository,
                 jpaUserGradeHistoryRepository,
                 new UserProfileValidator(),

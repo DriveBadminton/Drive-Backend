@@ -11,6 +11,7 @@ import com.gumraze.drive.drive_backend.user.entity.UserGradeHistory;
 import com.gumraze.drive.drive_backend.user.entity.UserProfile;
 import com.gumraze.drive.drive_backend.user.repository.JpaUserGradeHistoryRepository;
 import com.gumraze.drive.drive_backend.user.repository.JpaUserProfileRepository;
+import com.gumraze.drive.drive_backend.user.repository.UserProfileRepository;
 import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserProfileServiceImpl implements UserProfileService{
     private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
     private final JpaUserProfileRepository jpaUserProfileRepository;
     private final JpaUserGradeHistoryRepository jpaUserGradeHistoryRepository;
     private final UserProfileValidator validator;
@@ -107,7 +109,7 @@ public class UserProfileServiceImpl implements UserProfileService{
         // 프로필 조회, 없으면 null 반환
         UserProfile profile = null;
         if (user.getStatus() == UserStatus.ACTIVE) {
-            profile = jpaUserProfileRepository.findById(userId).orElse(null);
+            profile = userProfileRepository.findByUserId(userId).orElse(null);
         }
 
         // 사용자 상태 + 프로필 정보가 있으면 DTO로 반환
