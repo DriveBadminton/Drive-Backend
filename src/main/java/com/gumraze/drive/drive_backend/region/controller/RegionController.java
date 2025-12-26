@@ -1,6 +1,7 @@
 package com.gumraze.drive.drive_backend.region.controller;
 
 import com.gumraze.drive.drive_backend.common.api.ApiResponse;
+import com.gumraze.drive.drive_backend.common.api.ResultCode;
 import com.gumraze.drive.drive_backend.region.dto.RegionDistrictResponseDto;
 import com.gumraze.drive.drive_backend.region.dto.RegionProvinceResponseDto;
 import com.gumraze.drive.drive_backend.region.service.RegionService;
@@ -33,7 +34,10 @@ public class RegionController {
                 ))
                 .toList();
 
-        return ResponseEntity.ok(ApiResponse.success(body));
+        ResultCode code = ResultCode.OK;
+        return ResponseEntity
+                .status(code.httpStatus())
+                .body(ApiResponse.success(code, body));
     }
 
     @GetMapping(value = "/{provinceId}/districts")
@@ -46,6 +50,10 @@ public class RegionController {
                         d.getName()
                 ))
                 .toList();
-        return ResponseEntity.ok(ApiResponse.success(body));
+
+        ResultCode code = ResultCode.OK;
+        return ResponseEntity
+                .status(code.httpStatus())
+                .body(ApiResponse.success(code, body));
     }
 }
