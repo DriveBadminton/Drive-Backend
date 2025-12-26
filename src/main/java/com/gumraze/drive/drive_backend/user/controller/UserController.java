@@ -5,9 +5,7 @@ import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateResponseDto;
 import com.gumraze.drive.drive_backend.user.dto.UserProfilePrefillResponseDto;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
-import com.gumraze.drive.drive_backend.user.repository.JpaUserProfileRepository;
 import com.gumraze.drive.drive_backend.user.service.UserProfileService;
-import com.gumraze.drive.drive_backend.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -27,9 +25,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Users", description = "사용자 프로필 API")
 public class UserController {
 
-    private final UserService userService;
     private final UserProfileService userProfileService;
-    private final JpaUserProfileRepository jpaUserProfileRepository;
 
     @GetMapping("/me")
     @Operation(
@@ -48,16 +44,16 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserProfileResponseDto>> me(
             Authentication authentication
     ) {
+        // 인증 정보에서 userId 조회
         Long userId = (Long) authentication.getPrincipal();
 
-        return userService.findById(userId)
-                .map(user -> {
-                    var profile = jpaUserProfileRepository.findById(userId).orElse(null);
-                    var responseDto = UserProfileResponseDto.from(user, profile);
-                    return ResponseEntity.ok(ApiResponse.success("내 프로필 조회 성공", responseDto));
-                })
-                .orElseGet(() -> ResponseEntity.status(404)
-                        .body(ApiResponse.error("NOT_FOUND", "사용자를 찾을 수 없습니다.")));
+        // userId로 프로필 조회
+        UserProfileResponseDto profile = userProfileService.getMyProfile(userId);
+
+        // 프로필이 존재하면, 프로필 조회 성공
+        return ResponseEntity.ok(
+                ApiResponse.success("내 프로필 조회 성공", profile)
+        );
     }
 
     @PostMapping("/profile")
