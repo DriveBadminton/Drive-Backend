@@ -26,7 +26,7 @@ oauth:
     user-info-uri: https://kapi.kakao.com/v2/user/me
 
 server:
-  port: ${HOST_APP_PORT:-8080}
+  port: 8080
 
 logging:
   level:
