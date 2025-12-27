@@ -43,7 +43,7 @@ public class KaKaoOAuthClient implements OAuthClient, ProviderAwareOAuthClient {
         // Kakao Access token -> Kakao User ID
         KakaoUserResponse userResponse = restClient.get()
                 .uri(properties.userInfoUri())
-                .header("Authorization", "Bearer " + tokenResponse)
+                .header("Authorization", "Bearer " + tokenResponse.accessToken())
                 .retrieve()
                 .body(KakaoUserResponse.class);
 
