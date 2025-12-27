@@ -24,10 +24,9 @@ oauth:
     client-secret: ${KAKAO_CLIENT_SECRET}
     token-uri: https://kauth.kakao.com/oauth/token
     user-info-uri: https://kapi.kakao.com/v2/user/me
-    grant-type: authorization_code
 
 server:
-  port: 8080
+  port: ${HOST_APP_PORT:-8080}
 
 logging:
   level:
