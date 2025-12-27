@@ -1,5 +1,6 @@
 package com.gumraze.drive.drive_backend.common.api;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Optional;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -18,6 +20,8 @@ public class GlobalExceptionHandler {
                 .map(err -> String.format("%s: %s", err.getField(), err.getDefaultMessage()))
                 .orElse(ResultCode.VALIDATION_ERROR.defaultMessage());
 
+        log.warn("[검증 실패]: {}", message);
+
         ResultCode code = ResultCode.VALIDATION_ERROR;
         return ResponseEntity
                 .status(code.httpStatus())
@@ -26,6 +30,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
+        log.warn("[잘못된 인자]: {}", ex.getMessage());
+
         ResultCode code = ResultCode.INVALID_ARGUMENT;
         return ResponseEntity
                 .status(code.httpStatus())
@@ -34,9 +40,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneric(Exception ex) {
+        log.error("[예상치 못한 에러]", ex);
+
         ResultCode code = ResultCode.INTERNAL_SERVER_ERROR;
         return ResponseEntity
                 .status(code.httpStatus())
-                .body(ApiResponse.failure(code));
+                .body(ApiResponse.failure(code, ResultCode.INTERNAL_SERVER_ERROR.defaultMessage()));
     }
 }
