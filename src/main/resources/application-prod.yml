@@ -8,5 +8,5 @@ spring:
     hibernate:
       ddl-auto: none
 
-  server:
-    forward-headers-strategy: framework
+server:
+  forward-headers-strategy: framework
