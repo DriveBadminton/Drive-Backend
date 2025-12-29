@@ -142,7 +142,7 @@ class AuthRefreshIntegrationTest {
         // given
         // 로그인 수행
         OAuthLoginRequestDto request = new OAuthLoginRequestDto(
-                AuthProvider.GOOGLE,
+                AuthProvider.DUMMY,
                 "auth_code",
                 "https://test.com"
         );

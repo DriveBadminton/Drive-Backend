@@ -19,6 +19,8 @@ jwt:
     expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION_MS}
 
 oauth:
+  allowed-providers:
+    - KAKAO
   kakao:
     client-id: ${KAKAO_CLIENT_ID}
     client-secret: ${KAKAO_CLIENT_SECRET}

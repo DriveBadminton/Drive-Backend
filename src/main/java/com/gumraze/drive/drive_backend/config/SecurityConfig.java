@@ -5,6 +5,7 @@ import com.gumraze.drive.drive_backend.auth.security.JwtAuthenticationFilter;
 import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenValidator;
 import com.gumraze.drive.drive_backend.common.api.ApiResponse;
 import com.gumraze.drive.drive_backend.common.api.ResultCode;
+import com.gumraze.drive.drive_backend.common.logging.ApiLoggingFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -36,6 +37,11 @@ public class SecurityConfig {
             JwtAccessTokenValidator jwtAccessTokenValidator
     ) {
         return new JwtAuthenticationFilter(jwtAccessTokenValidator);
+    }
+
+    @Bean
+    public ApiLoggingFilter apiLoggingFilter() {
+        return new ApiLoggingFilter();
     }
 
     @Bean
@@ -87,7 +93,7 @@ public class SecurityConfig {
                         // POST 요청 처리
                         .requestMatchers(
                                 HttpMethod.POST,
-                                "users/profile/**"
+                                "/users/profile/**"
                         ).permitAll()
 
                         .anyRequest().authenticated()
@@ -97,7 +103,12 @@ public class SecurityConfig {
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
-                );
+                )
+                .addFilterAfter(
+                        apiLoggingFilter(),     // 로깅 추가
+                        JwtAuthenticationFilter.class
+                )
+        ;
 
         return http.build();
     }
