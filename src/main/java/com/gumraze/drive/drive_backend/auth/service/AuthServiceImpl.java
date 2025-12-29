@@ -1,6 +1,7 @@
 package com.gumraze.drive.drive_backend.auth.service;
 
 import com.gumraze.drive.drive_backend.auth.dto.OAuthLoginRequestDto;
+import com.gumraze.drive.drive_backend.auth.oauth.OAuthAllowedProvidersProperties;
 import com.gumraze.drive.drive_backend.auth.oauth.OAuthClientResolver;
 import com.gumraze.drive.drive_backend.auth.repository.UserAuthRepository;
 import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenGenerator;
@@ -17,22 +18,29 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
     private final OAuthClientResolver oAuthClientResolver;
+    private final OAuthAllowedProvidersProperties allowedProviders;
 
     public AuthServiceImpl(
             JwtAccessTokenGenerator jwtAccessTokenGenerator,
             UserAuthRepository userAuthRepository,
             UserRepository userRepository,
             RefreshTokenService refreshTokenService,
-            OAuthClientResolver oAuthClientResolver) {
+            OAuthClientResolver oAuthClientResolver,
+            OAuthAllowedProvidersProperties allowedProviders) {
         this.jwtAccessTokenGenerator = jwtAccessTokenGenerator;
         this.userAuthRepository = userAuthRepository;
         this.userRepository = userRepository;
         this.refreshTokenService = refreshTokenService;
         this.oAuthClientResolver = oAuthClientResolver;
+        this.allowedProviders = allowedProviders;
     }
 
     @Override
     public OAuthLoginResult login(OAuthLoginRequestDto request) {
+        if (!allowedProviders.getAllowedProviders().contains(request.getProvider())) {
+            throw new IllegalArgumentException("허용되지 않는 provider" + request.getProvider());
+        }
+
         // OAuth Provider 사용자 식별
         String providerUserId = oAuthClientResolver
                 .resolve(request.getProvider())
@@ -87,4 +95,5 @@ public class AuthServiceImpl implements AuthService {
     public void logout(String refreshToken) {
         refreshTokenService.deleteByPlainToken(refreshToken);
     }
+
 }
