@@ -18,7 +18,8 @@ public class UserProfileResponseDto {
     UserRole role;
     UserStatus status;
 
-    Grade grade;
+    Grade regionalGrade;
+    Grade nationalGrade;
     String provinceName;
     String districtName;
 
@@ -33,7 +34,8 @@ public class UserProfileResponseDto {
                 .id(user.getId())
                 .role(user.getRole())
                 .status(user.getStatus())
-                .grade(profile != null ? profile.getGrade() : null)
+                .regionalGrade(profile != null ? profile.getRegionalGrade() : null)
+                .nationalGrade(profile != null ? profile.getNationalGrade() : null)
                 .provinceName(province != null ? province.getName() : null)
                 .districtName(district != null ? district.getName() : null)
                 .build();
