@@ -31,14 +31,21 @@ public class UserAuthRepositoryImpl implements UserAuthRepository {
                 .findById(userId)
                 .orElseThrow();
 
-        UserAuth userAuth =
-                new UserAuth(user, provider, userInfo.providerUserId());
+        UserAuth userAuth = UserAuth.builder()
+                .user(user)
+                .provider(provider)
+                .providerUserId(userInfo.providerUserId())
+                .build();
 
+        userAuth.updateFromOAuth(userInfo);
         jpaUserAuthRepository.save(userAuth);
     }
 
     @Override
     public void updateProfile(AuthProvider provider, OAuthUserInfo userInfo) {
+        // 동일 provider와 id가 있으면 최신 프로필로 갱신
+        jpaUserAuthRepository.findByProviderAndProviderUserId(provider, userInfo.providerUserId())
+                .ifPresent(userAuth -> userAuth.updateFromOAuth(userInfo));
 
     }
 }
