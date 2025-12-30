@@ -30,9 +30,11 @@ public class UserProfile {
     private LocalDateTime birth;
     private boolean birthVisible;
 
-    // JPA에서 enum 타입 필드를 DB에 어떻게 저장할지 저장하는 어노테이션
+    // 지역급수, 전국급수
     @Enumerated(EnumType.STRING)
-    private Grade grade;
+    private Grade regionalGrade;
+    @Enumerated(EnumType.STRING)
+    private Grade nationalGrade;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "district_id")
@@ -47,12 +49,14 @@ public class UserProfile {
     public UserProfile(
             Long id,
             String nickname,
-            Grade grade,
+            Grade regionalGrade,
+            Grade nationalGrade,
             RegionDistrict regionDistrict
     ) {
         this.id = id;
         this.nickname = nickname;
-        this.grade = grade;
+        this.regionalGrade = regionalGrade;
+        this.nationalGrade = nationalGrade;
         this.regionDistrict = regionDistrict;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
@@ -60,11 +64,13 @@ public class UserProfile {
 
     public void updateProfile(
             String nickname,
-            Grade grade,
+            Grade regionalGrade,
+            Grade nationalGrade,
             RegionDistrict regionDistrict
     ) {
         this.nickname = nickname;
-        this.grade = grade;
+        this.regionalGrade = regionalGrade;
+        this.nationalGrade = nationalGrade;
         this.regionDistrict = regionDistrict;
         this.updatedAt = LocalDateTime.now();
     }
