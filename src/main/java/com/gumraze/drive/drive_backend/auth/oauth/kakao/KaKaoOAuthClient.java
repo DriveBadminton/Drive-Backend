@@ -2,9 +2,11 @@ package com.gumraze.drive.drive_backend.auth.oauth.kakao;
 
 import com.gumraze.drive.drive_backend.auth.constants.AuthProvider;
 import com.gumraze.drive.drive_backend.auth.oauth.OAuthClient;
+import com.gumraze.drive.drive_backend.auth.oauth.OAuthUserInfo;
 import com.gumraze.drive.drive_backend.auth.oauth.ProviderAwareOAuthClient;
 import com.gumraze.drive.drive_backend.auth.oauth.kakao.dto.KakaoTokenResponse;
 import com.gumraze.drive.drive_backend.auth.oauth.kakao.dto.KakaoUserResponse;
+import com.gumraze.drive.drive_backend.user.constants.Gender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -27,9 +29,9 @@ public class KaKaoOAuthClient implements OAuthClient, ProviderAwareOAuthClient {
     }
 
     @Override
-    public String getProviderUserId(String authorizationCode, String redirectUri) {
+    public OAuthUserInfo getOAuthUserInfo(String authorizationCode, String redirectUri) {
         try {
-            // Authorization Code -> Kakao Access Token
+            // Authorization Code를 카카오 액세스 토큰으로 교환 -> Kakao Access Token
             KakaoTokenResponse tokenResponse = restClient.post()
                     .uri(properties.tokenUri())
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -62,12 +64,44 @@ public class KaKaoOAuthClient implements OAuthClient, ProviderAwareOAuthClient {
                     userResponse
             );
 
-            return userResponse.id().toString();
+            KakaoUserResponse.KakaoAccount account =
+                    userResponse == null
+                            ? null
+                            : userResponse.kakaoAccount();
+            KakaoUserResponse.Profile profile =
+                    account == null
+                            ? null
+                            : account.profile();
+
+            // 응답 매핑
+            String email = account == null ? null : account.email();
+            String nickname = profile == null ? null : profile.nickname();
+            String profileImageUrl = profile == null ? null : profile.profileImageUrl();
+            String thumbnailImageUrl = profile == null ? null : profile.thumbnailImageUrl();
+            Gender gender = null;
+            if (account != null && account.gender() != null) {
+                gender = Gender.valueOf(account.gender().toUpperCase());
+            }
+            boolean emailVerified =
+                    account != null && Boolean.TRUE.equals(account.isEmailValid());
+
+            return new OAuthUserInfo(
+                    userResponse.id().toString(),
+                    email,
+                    nickname,
+                    profileImageUrl,
+                    thumbnailImageUrl,
+                    gender,
+                    account == null ? null : account.ageRange(),
+                    account == null ? null : account.birthday(),
+                    emailVerified,
+                    false   // 카카오 응답에는 phoneNumberVerified 정보가 없음
+            );
         } catch (RestClientResponseException e) {
             log.warn("[KAKAO][ERROR] status = {}, body = {}",
-                    e.getRawStatusCode(),
-                    e.getResponseBodyAsString()
-            );
+                  e.getStatusCode().value(),
+                  e.getResponseBodyAsString()
+          );
             throw e;
         }
     }
