@@ -8,8 +8,19 @@ import org.springframework.stereotype.Component;
 @Profile({"local", "test"})
 public class DummyOAuthClient implements OAuthClient, ProviderAwareOAuthClient {
     @Override
-    public String getProviderUserId(String authorizationCode, String redirectUri) {
-        return "dummy-oauth-user-id";
+    public OAuthUserInfo getOAuthUserInfo(String authorizationCode, String redirectUri) {
+        return new OAuthUserInfo(
+                "dummy-oauth-user-id",
+                null,
+                "dummy-oauth-user-name",
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                false
+        );
     }
 
     @Override
