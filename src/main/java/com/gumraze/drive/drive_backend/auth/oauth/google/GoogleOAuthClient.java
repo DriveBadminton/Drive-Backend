@@ -26,6 +26,15 @@ public class GoogleOAuthClient implements OAuthClient, ProviderAwareOAuthClient 
     }
 
 
+    /**
+     * Exchange a Google authorization code for an access token, retrieve the corresponding Google user
+     * information, and map it to an OAuthUserInfo instance.
+     *
+     * @param authorizationCode the authorization code received from Google's OAuth 2.0 flow
+     * @param redirectUri       the redirect URI used in the OAuth 2.0 exchange
+     * @return an OAuthUserInfo populated with the provider user id (sub), email, name, profile image(s),
+     *         email verification status, and other provider-specific fields (unused fields are null or false)
+     */
     @Override
     public OAuthUserInfo getOAuthUserInfo(String authorizationCode, String redirectUri) {
         // Authorization Code를 구글의 액세스 토큰으로 교환
@@ -49,6 +58,13 @@ public class GoogleOAuthClient implements OAuthClient, ProviderAwareOAuthClient 
         );
     }
 
+    /**
+     * Exchange an OAuth authorization code for Google's token response.
+     *
+     * @param authorizationCode the authorization code received from Google's authorization endpoint
+     * @param redirectUri       the redirect URI that was used in the authorization request
+     * @return                  a GoogleTokenResponse containing the access token and related token fields
+     */
     private GoogleTokenResponse requestAccessToken(
             String authorizationCode,
             String redirectUri
