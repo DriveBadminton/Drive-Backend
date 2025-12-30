@@ -32,8 +32,11 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         properties = new JwtProperties(
-                "test-secret-key-test-secret-key-test-secret-key",
-                1800000L
+                new JwtProperties.AccessToken(
+                        "test-secret-key-test-secret-key-test-secret-key",
+                        1_800_000L
+                ),
+                new JwtProperties.RefreshToken(5L) // hours 기준이면 5시간
         );
 
         jwtAccessTokenGenerator = new JwtAccessTokenGenerator(properties);
