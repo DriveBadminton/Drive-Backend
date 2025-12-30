@@ -30,9 +30,11 @@ public class UserProfile {
     private LocalDateTime birth;
     private boolean birthVisible;
 
-    // JPA에서 enum 타입 필드를 DB에 어떻게 저장할지 저장하는 어노테이션
+    // 지역급수, 전국급수
     @Enumerated(EnumType.STRING)
-    private Grade grade;
+    private Grade regionalGrade;
+    @Enumerated(EnumType.STRING)
+    private Grade nationalGrade;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "district_id")
@@ -44,27 +46,51 @@ public class UserProfile {
     private LocalDateTime createdAt;    // 계정 생성 시점이 아닌 프로필 생성 시점
     private LocalDateTime updatedAt;
 
+    /**
+     * Create a UserProfile with the given identity and profile attributes.
+     *
+     * Initializes identifier, display name, regional and national grades, and region district.
+     * Also sets `createdAt` and `updatedAt` to the current time.
+     *
+     * @param id             the primary key for the profile (may be null for transient instances)
+     * @param nickname       the display name for the user
+     * @param regionalGrade  the regional grade enum value
+     * @param nationalGrade  the national grade enum value
+     * @param regionDistrict the region district associated with the profile
+     */
     public UserProfile(
             Long id,
             String nickname,
-            Grade grade,
+            Grade regionalGrade,
+            Grade nationalGrade,
             RegionDistrict regionDistrict
     ) {
         this.id = id;
         this.nickname = nickname;
-        this.grade = grade;
+        this.regionalGrade = regionalGrade;
+        this.nationalGrade = nationalGrade;
         this.regionDistrict = regionDistrict;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
+    /**
+     * Update profile fields and refresh the profile's last-updated timestamp.
+     *
+     * @param nickname       the new display name for the profile
+     * @param regionalGrade  the new regional grade to assign to the profile
+     * @param nationalGrade  the new national grade to assign to the profile
+     * @param regionDistrict the new region district to associate with the profile
+     */
     public void updateProfile(
             String nickname,
-            Grade grade,
+            Grade regionalGrade,
+            Grade nationalGrade,
             RegionDistrict regionDistrict
     ) {
         this.nickname = nickname;
-        this.grade = grade;
+        this.regionalGrade = regionalGrade;
+        this.nationalGrade = nationalGrade;
         this.regionDistrict = regionDistrict;
         this.updatedAt = LocalDateTime.now();
     }

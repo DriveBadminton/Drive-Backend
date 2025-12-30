@@ -58,6 +58,13 @@ public class UserController {
                 .body(ApiResponse.success(code, "내 프로필 조회 성공", profile));
     }
 
+    /**
+     * Create a user profile from the provided request and mark the account as ACTIVE.
+     *
+     * @param authentication the authenticated principal whose ID is used as the owner of the new profile
+     * @param request the profile creation payload
+     * @return an ApiResponse containing a UserProfileCreateResponseDto with the created user's ID and a success message
+     */
     @PostMapping("/me/profile")
     @Operation(
             summary = "프로필 생성",
@@ -71,7 +78,8 @@ public class UserController {
                                             {
                                               "nickname": "kim",
                                               "districtId": 1,
-                                              "grade": "초심",
+                                              "regionalGrade": "초심",
+                                              "nationalGrade": "초심",
                                               "birth": "19980925"
                                               "gender": "MALE"
                                             }

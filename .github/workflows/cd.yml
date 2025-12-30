@@ -2,15 +2,13 @@
 name: CD - EC2 배포
 
 on:
-  workflow_run:
-    workflows: ["CI - 이미지 빌드 및 푸시"]
-    types:
-      - completed
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   deploy:
     name: EC2 배포
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
     runs-on: ubuntu-latest
     steps:
       - name: SSH로 배포
@@ -28,4 +26,5 @@ jobs:
             git pull --ff-only
             echo "$GHCR_PASSWORD" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
             docker compose pull
-            docker compose up -d
+            docker compose up -d --remove-orphans
+            docker image prune -af

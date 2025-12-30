@@ -2,8 +2,11 @@ package com.gumraze.drive.drive_backend.auth.token;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties(prefix = "jwt.access-token")
+@ConfigurationProperties(prefix = "jwt")
 public record JwtProperties(
-        String secret,
-        long expirationMs
-) { }
+        AccessToken accessToken,
+        RefreshToken refreshToken
+) {
+    public record AccessToken(String secret, long expirationMs) {}
+    public record RefreshToken(long expirationHours) {}
+}

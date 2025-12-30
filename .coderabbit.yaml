@@ -1,0 +1,13 @@
+reviews:
+  auto_review: true
+  review_status: COMMENT
+  tone: professional
+  level: concise
+
+  language: ko
+
+instructions:
+  - 모든 코드 리뷰 코멘트는 반드시 한국어로 작성할 것  
+  - 한국 개발자가 이해하기 쉬운 용어를 사용할 것
+  - 불필요한 영어 표현은 피할 것
+  - 코드 리뷰 코멘트는 최대한 간결하고 명확하게 작성할 것

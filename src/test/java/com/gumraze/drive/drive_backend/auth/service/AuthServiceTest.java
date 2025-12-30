@@ -3,9 +3,11 @@ package com.gumraze.drive.drive_backend.auth.service;
 import com.gumraze.drive.drive_backend.auth.constants.AuthProvider;
 import com.gumraze.drive.drive_backend.auth.dto.OAuthLoginRequestDto;
 import com.gumraze.drive.drive_backend.auth.oauth.OAuthAllowedProvidersProperties;
+import com.gumraze.drive.drive_backend.auth.oauth.OAuthUserInfo;
 import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenGenerator;
 import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenValidator;
 import com.gumraze.drive.drive_backend.auth.token.JwtProperties;
+import com.gumraze.drive.drive_backend.user.constants.Gender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,12 +32,21 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         properties = new JwtProperties(
-                "test-secret-key-test-secret-key-test-secret-key",
-                1800000L
+                new JwtProperties.AccessToken(
+                        "test-secret-key-test-secret-key-test-secret-key",
+                        1_800_000L
+                ),
+                new JwtProperties.RefreshToken(5L) // hours 기준이면 5시간
         );
 
         jwtAccessTokenGenerator = new JwtAccessTokenGenerator(properties);
-        fakeOAuthClient = new FakeOAuthClient("oauth-user-123");
+        fakeOAuthClient = new FakeOAuthClient(
+                new OAuthUserInfo(
+                        "oauth-user-123",
+                        null, null, null, null, null, null, null,
+                        false, false
+                )
+        );
         oAuthClientResolver = new FakeOAuthClientResolver();
         oAuthClientResolver.register(AuthProvider.DUMMY, fakeOAuthClient);
         userAuthRepository = new FakeUserAuthRepository();
@@ -151,7 +162,11 @@ class AuthServiceTest {
         // given
         userAuthRepository.save(
                 AuthProvider.DUMMY,
-                "oauth-user-123",
+                new OAuthUserInfo(
+                        "oauth-user-123",
+                        null, null, null, null, null, null, null,
+                        false, false
+                ),
                 10L
         );
 
@@ -176,7 +191,13 @@ class AuthServiceTest {
             new FakeUserAuthRepository();
 
         FakeOAuthClient fakeOAuthClient =
-                new FakeOAuthClient("oauth-user-123");
+                new FakeOAuthClient(
+                        new OAuthUserInfo(
+                                "oauth-user-123",
+                                null, null, null, null, null, null, null,
+                                false, false
+                        )
+                );
 
         FakeUserRepository userRepository =
                 new FakeUserRepository();
@@ -268,5 +289,62 @@ class AuthServiceTest {
                 // then: 예외 발생
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("허용되지 않는 provider");
+    }
+
+    @Test
+    @DisplayName("OAuth 로그인 시 user_auth에 닉네임/이메일/프로필이 저장됨")
+    void save_oauth_profile_fields_on_login() {
+        // given: OAuth 응답에 프로필 정보다 포함됨.
+        FakeOAuthClient fakeOAuthClient = new FakeOAuthClient(
+                new OAuthUserInfo(
+                        "kakao-123",
+                        "user@kakao.com",
+                        "홍길동",
+                        "http://profile-image.com",
+                        "http://thumb-image.com",
+                        Gender.MALE,
+                        "20~29",
+                        "01-15",
+                        true,
+                        true
+                        )
+        );
+
+        FakeOAuthClientResolver resolver = new FakeOAuthClientResolver();
+        resolver.register(AuthProvider.KAKAO, fakeOAuthClient);
+
+        RefreshTokenService refreshTokenService = new FakeRefreshTokenService();
+
+        OAuthAllowedProvidersProperties allowedProps = new OAuthAllowedProvidersProperties();
+        allowedProps.setAllowedProviders(List.of(AuthProvider.KAKAO));
+
+        AuthService service = new AuthServiceImpl(
+                jwtAccessTokenGenerator,
+                userAuthRepository,
+                userRepository,
+                refreshTokenService,
+                resolver,
+                allowedProps
+        );
+
+        OAuthLoginRequestDto requestDto = OAuthLoginRequestDto.builder()
+                .provider(AuthProvider.KAKAO)
+                .authorizationCode("test-code")
+                .redirectUri("https://test.com")
+                .build();
+
+        // when: 로그인 시
+        service.login(requestDto);
+
+        // then: user_auth에 닉네임/이메일/프로필이 저장됨
+        OAuthUserInfo saved = userAuthRepository.findByProviderAndProviderUserId(
+                AuthProvider.KAKAO,
+                "kakao-123"
+        ).orElseThrow();
+
+        assertThat(saved.email()).isEqualTo("user@kakao.com");
+        assertThat(saved.nickname()).isEqualTo("홍길동");
+        assertThat(saved.profileImageUrl()).isEqualTo("http://profile-image.com");
+        assertThat(saved.thumbnailImageUrl()).isEqualTo("http://thumb-image.com");
     }
 }

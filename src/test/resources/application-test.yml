@@ -17,6 +17,8 @@ jwt:
   access-token:
     secret: THIS_IS_A_TEST_SECRET_KEY_THAT_IS_LONG_ENOUGH_32BYTES_MINIMUM
     expiration-ms: 3600000
+  refresh-token:
+    expiration-hours: 5
 
 oauth:
   allowed-providers: dummy, kakao

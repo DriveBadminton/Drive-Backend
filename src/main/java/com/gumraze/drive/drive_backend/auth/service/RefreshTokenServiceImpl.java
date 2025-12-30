@@ -2,6 +2,7 @@ package com.gumraze.drive.drive_backend.auth.service;
 
 import com.gumraze.drive.drive_backend.auth.entity.RefreshToken;
 import com.gumraze.drive.drive_backend.auth.repository.JpaRefreshTokenRepository;
+import com.gumraze.drive.drive_backend.auth.token.JwtProperties;
 import com.gumraze.drive.drive_backend.auth.token.RefreshTokenGenerator;
 import com.gumraze.drive.drive_backend.user.entity.User;
 import com.gumraze.drive.drive_backend.user.repository.JpaUserRepository;
@@ -19,7 +20,15 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     private final JpaRefreshTokenRepository jpaRefreshTokenRepository;
     private final RefreshTokenGenerator refreshTokenGenerator;
     private final JpaUserRepository jpaUserRepository;
+    private final JwtProperties properties;
 
+    /**
+     * Rotate the refresh token for the specified user and return the newly generated plaintext token.
+     *
+     * @param userId the user's identifier (primary key) whose refresh token will be rotated
+     * @return the newly generated plaintext refresh token
+     * @throws NoSuchElementException if no user exists with the given id
+     */
     @Override
     public String rotate(Long userId) {
         // 사용자 id 조회
@@ -35,7 +44,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         RefreshToken refreshToken = new RefreshToken(
                 user,
                 refreshTokenGenerator.hash(token),
-                LocalDateTime.now().plusDays(5)
+                LocalDateTime.now().plusHours(properties.refreshToken().expirationHours())
         );
 
         jpaRefreshTokenRepository.save(refreshToken);

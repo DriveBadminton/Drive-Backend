@@ -5,6 +5,7 @@ import com.gumraze.drive.drive_backend.auth.dto.OAuthLoginResponseDto;
 import com.gumraze.drive.drive_backend.auth.dto.OAuthRefreshTokenResponseDto;
 import com.gumraze.drive.drive_backend.auth.service.AuthService;
 import com.gumraze.drive.drive_backend.auth.service.OAuthLoginResult;
+import com.gumraze.drive.drive_backend.auth.token.JwtProperties;
 import com.gumraze.drive.drive_backend.common.api.ApiResponse;
 import com.gumraze.drive.drive_backend.common.api.ResultCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,8 +30,21 @@ import java.time.Duration;
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtProperties properties;
 
-    // OAuth 로그인 API
+    /**
+     * Handles OAuth login and issues service access and refresh tokens.
+     *
+     * <p>Authenticates the user via the provided OAuthLoginRequestDto, returns an ApiResponse
+     * containing the user's ID and access token, and sets a secure, HTTP-only
+     * "refresh_token" cookie scoped to /auth with SameSite=Strict and max age determined
+     * by JWT refresh token expiration configuration.</p>
+     *
+     * @param request the OAuth login request payload (provider, authorization code, redirect URI)
+     * @return a ResponseEntity whose body is an ApiResponse containing an OAuthLoginResponseDto;
+     *         the response includes a Set-Cookie header for the refresh token and uses the HTTP
+     *         status from ResultCode.OAUTH_LOGIN_SUCCESS
+     */
     @PostMapping("/login")
     @Operation(
             summary = "OAuth 로그인",
@@ -70,7 +84,7 @@ public class AuthController {
                         .httpOnly(true)
                         .secure(true)
                         .path("/auth")
-                        .maxAge(Duration.ofDays(5))
+                        .maxAge(Duration.ofHours(properties.refreshToken().expirationHours()))
                         .sameSite("Strict")
                         .build();
 
@@ -84,6 +98,13 @@ public class AuthController {
                 .body(ApiResponse.success(code, response));
     }
 
+    /**
+     * Refreshes access and refresh tokens using the provided refresh token cookie.
+     *
+     * @param refreshToken the refresh token read from the "refresh_token" cookie
+     * @return a ResponseEntity containing an ApiResponse with the new access token and user ID, and a Set-Cookie header with the updated refresh token
+     * @throws IllegalArgumentException if the refresh token is missing or blank
+     */
     @PostMapping("/refresh")
     @Operation(
             summary = "Access 토큰 리프레시",
@@ -110,7 +131,7 @@ public class AuthController {
                         .httpOnly(true)
                         .secure(true)
                         .path("/auth")
-                        .maxAge(Duration.ofDays(5))
+                        .maxAge(Duration.ofHours(properties.refreshToken().expirationHours()))
                         .sameSite("Strict")
                         .build();
 

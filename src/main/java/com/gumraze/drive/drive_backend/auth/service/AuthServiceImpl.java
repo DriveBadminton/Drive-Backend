@@ -3,6 +3,7 @@ package com.gumraze.drive.drive_backend.auth.service;
 import com.gumraze.drive.drive_backend.auth.dto.OAuthLoginRequestDto;
 import com.gumraze.drive.drive_backend.auth.oauth.OAuthAllowedProvidersProperties;
 import com.gumraze.drive.drive_backend.auth.oauth.OAuthClientResolver;
+import com.gumraze.drive.drive_backend.auth.oauth.OAuthUserInfo;
 import com.gumraze.drive.drive_backend.auth.repository.UserAuthRepository;
 import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenGenerator;
 import com.gumraze.drive.drive_backend.user.repository.UserRepository;
@@ -35,23 +36,29 @@ public class AuthServiceImpl implements AuthService {
         this.allowedProviders = allowedProviders;
     }
 
+    /**
+     * Authenticates or registers a user via the specified OAuth provider and issues new access and refresh tokens.
+     *
+     * @param request contains the OAuth provider, authorization code, and redirect URI required to obtain provider user info
+     * @return an OAuthLoginResult containing the resolved local user ID, a newly generated access token, and a rotated refresh token
+     * @throws IllegalArgumentException if the provider from the request is not allowed
+     */
     @Override
     public OAuthLoginResult login(OAuthLoginRequestDto request) {
         if (!allowedProviders.getAllowedProviders().contains(request.getProvider())) {
             throw new IllegalArgumentException("허용되지 않는 provider" + request.getProvider());
         }
 
-        // OAuth Provider 사용자 식별
-        String providerUserId = oAuthClientResolver
+        // OAuth Provider 사용자 식별 + 프로필 정보
+        OAuthUserInfo userInfo = oAuthClientResolver
                 .resolve(request.getProvider())
-                .getProviderUserId(request.getAuthorizationCode(), request.getRedirectUri());
-
+                .getOAuthUserInfo(request.getAuthorizationCode(), request.getRedirectUri());
 
         // 우리 서비스의 사용자 확인
         Long userId = userAuthRepository
                 .findUserId(
                         request.getProvider(),
-                        providerUserId
+                        userInfo.providerUserId()
                 )
                 .orElseGet(() -> {
                     // 신규 사용자 생성
@@ -60,11 +67,17 @@ public class AuthServiceImpl implements AuthService {
                     // 신규 사용자 저장
                     userAuthRepository.save(
                             request.getProvider(),
-                            providerUserId,
+                            userInfo,
                             newUserId
                     );
                     return newUserId;
                 });
+
+        // 기존 사용자라면 프로필 갱신 -> 사용자의 최신 프로필이 업데이트 되면 해당 업데이트된 프로필을 가져옴
+        userAuthRepository.updateProfile(
+                request.getProvider(),
+                userInfo
+        );
 
         // Access 토큰 발급 (userId 기반)
         String accessToken = jwtAccessTokenGenerator.generateAccessToken(userId);

@@ -17,6 +17,8 @@ jwt:
   access-token:
     secret: ${JWT_ACCESS_TOKEN_SECRET}
     expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION_MS}
+  refresh-token:
+    expiration-hours: ${JWT_REFRESH_TOKEN_EXPIRATION_HOURS}
 
 oauth:
   allowed-providers:

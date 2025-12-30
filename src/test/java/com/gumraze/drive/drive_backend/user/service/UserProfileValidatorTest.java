@@ -26,6 +26,7 @@ class UserProfileValidatorTest {
                 null,
                 null,
                 null,
+                null,
                 "19980925",
                 Gender.MALE
         );
@@ -43,6 +44,7 @@ class UserProfileValidatorTest {
         // given
         UserProfileCreateRequest request = new UserProfileCreateRequest(
                 "   ",
+                null,
                 null,
                 null,
                 "19980925",
@@ -65,6 +67,7 @@ class UserProfileValidatorTest {
                 null,
                 null,
                 null,
+                null,
                 Gender.MALE
         );
 
@@ -82,6 +85,7 @@ class UserProfileValidatorTest {
         // given: 프로필 생성
         UserProfileCreateRequest request = new UserProfileCreateRequest(
                 "Kim",
+                null,
                 null,
                 null,
                 "19980925",
@@ -110,6 +114,7 @@ class UserProfileValidatorTest {
         // given & when: birth가 blank인 프로필 생성
         UserProfileCreateRequest request = new UserProfileCreateRequest(
                 "Kim",
+                null,
                 null,
                 null,
                 "   ",

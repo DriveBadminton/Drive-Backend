@@ -2,6 +2,7 @@ services:
   db:
     image: postgres:16
     container_name: drive-postgres
+    mem_limit: 512m
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -16,10 +17,16 @@ services:
       timeout: 5s
       retries: 30
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   app:
     image: ghcr.io/drivebadminton/drive-backend:latest
     container_name: drive-backend
+    mem_limit: 512m
     depends_on:
       db:
         condition: service_healthy
@@ -30,13 +37,20 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       JWT_ACCESS_TOKEN_SECRET: ${JWT_ACCESS_TOKEN_SECRET}
       JWT_ACCESS_TOKEN_EXPIRATION_MS: ${JWT_ACCESS_TOKEN_EXPIRATION_MS}
+      JWT_REFRESH_TOKEN_EXPIRATION_HOURS: ${JWT_REFRESH_TOKEN_EXPIRATION_HOURS}
       KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
       KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx256m"
     ports:
       - "${HOST_APP_PORT:-8080}:8080"
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   db-data:

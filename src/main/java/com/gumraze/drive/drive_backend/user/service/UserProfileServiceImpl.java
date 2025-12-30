@@ -2,6 +2,8 @@ package com.gumraze.drive.drive_backend.user.service;
 
 import com.gumraze.drive.drive_backend.region.entity.RegionDistrict;
 import com.gumraze.drive.drive_backend.region.service.RegionService;
+import com.gumraze.drive.drive_backend.user.constants.Grade;
+import com.gumraze.drive.drive_backend.user.constants.GradeType;
 import com.gumraze.drive.drive_backend.user.constants.UserStatus;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
 import com.gumraze.drive.drive_backend.user.dto.UserProfilePrefillResponseDto;
@@ -31,6 +33,15 @@ public class UserProfileServiceImpl implements UserProfileService{
     private final UserNicknameProvider userNicknameProvider;
     private final UserGradeHistoryRepository userGradeHistoryRepository;
 
+    /**
+     * Creates and persists a user profile for the given user, saves regional and national grade history entries when provided,
+     * sets the profile's birth and gender, and marks the associated user as ACTIVE.
+     *
+     * @param userId  the identifier of the user for whom the profile will be created
+     * @param request the profile creation request containing nickname, district id, birth, gender, and grade information
+     * @throws IllegalArgumentException if a profile already exists for the user, the user does not exist, the district cannot be resolved,
+     *                                  the nickname is null or blank, or any validator check fails
+     */
     @Override
     public void createProfile(Long userId, UserProfileCreateRequest request) {
         if (userProfileRepository.existsById(userId)) {
@@ -56,17 +67,26 @@ public class UserProfileServiceImpl implements UserProfileService{
             throw new IllegalArgumentException("nickname이 필요합니다.");
         }
 
+        Grade regional = request.regionalGrade();
+        Grade national = request.nationalGrade();
+
         UserProfile profile = new UserProfile(
                 userId,
                 resolvedNickname,
-                request.grade(),
+                regional,
+                national,
                 regionDist.get()
         );
 
         // grade 저장
-        if (request.grade() != null) {
+        if (regional != null) {
             userGradeHistoryRepository.save(
-                    new UserGradeHistory(user, request.grade())
+                    new UserGradeHistory(user, regional, GradeType.REGIONAL)
+            );
+        }
+        if (national != null) {
+            userGradeHistoryRepository.save(
+                    new UserGradeHistory(user, national, GradeType.NATIONAL)
             );
         }
 

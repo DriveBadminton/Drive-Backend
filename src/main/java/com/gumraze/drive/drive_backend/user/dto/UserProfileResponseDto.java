@@ -18,10 +18,19 @@ public class UserProfileResponseDto {
     UserRole role;
     UserStatus status;
 
-    Grade grade;
+    Grade regionalGrade;
+    Grade nationalGrade;
     String provinceName;
     String districtName;
 
+    /**
+     * Create a UserProfileResponseDto populated from a User and an optional UserProfile.
+     *
+     * @param user    the source User whose id, role, and status will populate the DTO
+     * @param profile the optional UserProfile; when null (or when its region/province are null),
+     *                regionalGrade, nationalGrade, provinceName, and districtName will be null
+     * @return        a UserProfileResponseDto containing user fields and profile-derived grades and region names
+     */
     public static UserProfileResponseDto from(
             User user,
             UserProfile profile
@@ -33,7 +42,8 @@ public class UserProfileResponseDto {
                 .id(user.getId())
                 .role(user.getRole())
                 .status(user.getStatus())
-                .grade(profile != null ? profile.getGrade() : null)
+                .regionalGrade(profile != null ? profile.getRegionalGrade() : null)
+                .nationalGrade(profile != null ? profile.getNationalGrade() : null)
                 .provinceName(province != null ? province.getName() : null)
                 .districtName(district != null ? district.getName() : null)
                 .build();

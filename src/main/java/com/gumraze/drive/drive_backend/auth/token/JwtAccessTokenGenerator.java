@@ -15,12 +15,26 @@ public class JwtAccessTokenGenerator implements TokenProvider {
     private final SecretKey secretKey;
     private final long expirationMs;
 
+    /**
+     * Creates a JwtAccessTokenGenerator configured from the given JwtProperties.
+     *
+     * Initializes the HS256 signing key from properties.accessToken().secret() and sets the token
+     * expiration duration from properties.accessToken().expirationMs().
+     *
+     * @param properties configuration holding the access token secret and expiration in milliseconds
+     */
     public JwtAccessTokenGenerator(JwtProperties properties) {
         // HS256 알고리즘에 맞는 키를 생성함.
-        secretKey = Keys.hmacShaKeyFor(properties.secret().getBytes());
-        expirationMs = properties.expirationMs();
+        secretKey = Keys.hmacShaKeyFor(properties.accessToken().secret().getBytes());
+        expirationMs = properties.accessToken().expirationMs();
     }
 
+    /**
+     * Generate a JWT access token for the specified user.
+     *
+     * @param userId the user identifier to set as the token subject (`sub`)
+     * @return the signed JWT access token as a compact string containing `sub`, `iat`, and `exp` claims
+     */
     @Override
     public String generateAccessToken(Long userId) {
         Instant now = Instant.now();

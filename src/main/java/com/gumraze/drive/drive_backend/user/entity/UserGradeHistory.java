@@ -1,6 +1,7 @@
 package com.gumraze.drive.drive_backend.user.entity;
 
 import com.gumraze.drive.drive_backend.user.constants.Grade;
+import com.gumraze.drive.drive_backend.user.constants.GradeType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -24,11 +25,27 @@ public class UserGradeHistory {
     @Enumerated(EnumType.STRING)
     private Grade grade;
 
-    private LocalDateTime changed_at;
+    @Enumerated(EnumType.STRING)
+    private GradeType gradeType;
 
-    public UserGradeHistory(User user, Grade grade) {
+    @Column(name = "changed_at")
+    private LocalDateTime changedAt;
+
+    /**
+     * Create a record of a user's grade change and timestamp the change.
+     *
+     * @param user the user whose grade changed
+     * @param grade the new grade assigned to the user
+     * @param gradeType the nature of the grade change (e.g., how or why the grade was changed)
+     */
+    public UserGradeHistory(
+            User user,
+            Grade grade,
+            GradeType gradeType
+    ) {
         this.user = user;
         this.grade = grade;
-        this.changed_at = LocalDateTime.now();
+        this.gradeType = gradeType;
+        this.changedAt = LocalDateTime.now();
     }
 }

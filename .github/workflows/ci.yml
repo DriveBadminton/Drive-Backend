@@ -3,8 +3,9 @@ name: CI - 이미지 빌드 및 푸시
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "dev", "main" ]
   pull_request:
+    branches: [ "main" ]
 
 permissions:
   contents: read
