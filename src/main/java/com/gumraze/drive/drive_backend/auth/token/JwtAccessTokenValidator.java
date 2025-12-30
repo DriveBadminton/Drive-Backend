@@ -13,10 +13,24 @@ public class JwtAccessTokenValidator {
 
     private final SecretKey secretKey;
 
+    /**
+     * Create a JwtAccessTokenValidator and initialize the HMAC secret key used to verify access tokens.
+     *
+     * @param properties configuration containing the access token settings; the HMAC-SHA key is derived from properties.accessToken().secret()
+     */
     public JwtAccessTokenValidator(JwtProperties properties) {
         this.secretKey = Keys.hmacShaKeyFor(properties.accessToken().secret().getBytes());
     }
 
+    /**
+     * Validate a JWT access token and extract the user ID from its subject.
+     *
+     * If the token is valid and its subject can be parsed as a `Long`, the returned
+     * Optional contains that user ID; otherwise the returned Optional is empty.
+     *
+     * @param accessToken the JWT access token string to validate
+     * @return the user ID parsed from the token's subject if validation succeeds, `Optional.empty()` otherwise
+     */
     public Optional<Long> validateAndGetUserId(String accessToken) {
         try {
             Claims claims = Jwts.parserBuilder()

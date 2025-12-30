@@ -20,6 +20,12 @@ public class KaKaoOAuthClient implements OAuthClient, ProviderAwareOAuthClient {
     private final RestClient restClient;
     private final KakaoOAuthProperties properties;
 
+    /**
+     * Create a KaKaoOAuthClient configured with the provided HTTP client builder and Kakao OAuth properties.
+     *
+     * @param restClient a RestClient.Builder used to construct the RestClient for outgoing HTTP requests
+     * @param properties KakaoOAuthProperties containing Kakao endpoint URIs and client credentials
+     */
     public KaKaoOAuthClient(
             RestClient.Builder restClient,
             KakaoOAuthProperties properties
@@ -28,6 +34,15 @@ public class KaKaoOAuthClient implements OAuthClient, ProviderAwareOAuthClient {
         this.properties = properties;
     }
 
+    /**
+     * Obtain the authenticated Kakao user's information from an authorization code.
+     *
+     * Exchanges the provided authorization code for a Kakao access token and retrieves the user's profile, mapping available fields (id, email, nickname, profile images, gender, age range, birthday, and email verification) into an OAuthUserInfo.
+     *
+     * @param authorizationCode the authorization code received from Kakao after user authorization
+     * @param redirectUri       the redirect URI used in the authorization request
+     * @return an OAuthUserInfo populated with the user's id, email, nickname, profileImageUrl, thumbnailImageUrl, gender, ageRange, birthday, emailVerified, and phoneNumberVerified (set to `false` if not provided by Kakao)
+     */
     @Override
     public OAuthUserInfo getOAuthUserInfo(String authorizationCode, String redirectUri) {
         try {

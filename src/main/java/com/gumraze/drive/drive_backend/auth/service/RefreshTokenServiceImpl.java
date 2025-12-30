@@ -22,6 +22,13 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     private final JpaUserRepository jpaUserRepository;
     private final JwtProperties properties;
 
+    /**
+     * Rotate the refresh token for the specified user and return the newly generated plaintext token.
+     *
+     * @param userId the user's identifier (primary key) whose refresh token will be rotated
+     * @return the newly generated plaintext refresh token
+     * @throws NoSuchElementException if no user exists with the given id
+     */
     @Override
     public String rotate(Long userId) {
         // 사용자 id 조회

@@ -67,7 +67,15 @@ public class UserAuth {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // 최소 필수값만 받는 빌더로 지정
+    /**
+     * Create a new UserAuth that links a User to an external authentication provider.
+     *
+     * Initializes the creation and update timestamps to the current time.
+     *
+     * @param user the owning User entity
+     * @param provider the authentication provider
+     * @param providerUserId the identifier of the user issued by the authentication provider
+     */
     @Builder
     public UserAuth(
         User user,
@@ -81,6 +89,15 @@ public class UserAuth {
         this.updatedAt = LocalDateTime.now();
     }
 
+    /**
+     * Update this UserAuth with contact and profile attributes from the given OAuth user information.
+     *
+     * <p>The method replaces email, nickname, profile and thumbnail image URLs, gender, age range,
+     * birthday, email verification flag, and phone number verification flag with values from
+     * {@code userInfo}, and sets {@code updatedAt} to the current time.</p>
+     *
+     * @param userInfo source of OAuth-provided user attributes used to refresh this authentication record
+     */
     public void updateFromOAuth(OAuthUserInfo userInfo) {
         this.email = userInfo.email();
         this.nickname = userInfo.nickname();

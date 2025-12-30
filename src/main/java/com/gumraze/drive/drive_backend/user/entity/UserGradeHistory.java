@@ -31,6 +31,13 @@ public class UserGradeHistory {
     @Column(name = "changed_at")
     private LocalDateTime changedAt;
 
+    /**
+     * Create a record of a user's grade change and timestamp the change.
+     *
+     * @param user the user whose grade changed
+     * @param grade the new grade assigned to the user
+     * @param gradeType the nature of the grade change (e.g., how or why the grade was changed)
+     */
     public UserGradeHistory(
             User user,
             Grade grade,
