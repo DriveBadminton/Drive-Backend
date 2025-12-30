@@ -67,6 +67,7 @@ class UserProfileServiceImplTest {
                 "kim",
                 2L,
                 Grade.A,
+                Grade.A,
                 "19980925",
                 Gender.MALE
         );
@@ -93,6 +94,7 @@ class UserProfileServiceImplTest {
         UserProfileCreateRequest request = new UserProfileCreateRequest(
                 "kim",
                 2L,
+                Grade.A,
                 Grade.A,
                 "19980925",
                 Gender.MALE
@@ -122,6 +124,7 @@ class UserProfileServiceImplTest {
                 "kim",
                 2L,
                 Grade.A,
+                Grade.A,
                 "19980925",
                 Gender.MALE
         );
@@ -150,6 +153,7 @@ class UserProfileServiceImplTest {
         UserProfileCreateRequest request = new UserProfileCreateRequest(
                 "kim",
                 2L,
+                Grade.A,
                 Grade.A,
                 "19980925",
                 Gender.MALE
@@ -184,6 +188,7 @@ class UserProfileServiceImplTest {
                 "kim",
                 2L,
                 Grade.A,
+                Grade.A,
                 "19980925",
                 Gender.MALE
         );
@@ -217,6 +222,7 @@ class UserProfileServiceImplTest {
                 "kim",
                 2L,
                 Grade.A,
+                null,
                 "19980925",
                 Gender.MALE
         );
@@ -247,6 +253,7 @@ class UserProfileServiceImplTest {
                 "kim",
                 2L,
                 null,
+                null,
                 "19980925",
                 Gender.MALE
         );
@@ -276,6 +283,7 @@ class UserProfileServiceImplTest {
         UserProfileCreateRequest request = new UserProfileCreateRequest(
                 "kim",
                 2L,
+                Grade.A,
                 Grade.A,
                 "19980925",
                 Gender.MALE
@@ -310,6 +318,7 @@ class UserProfileServiceImplTest {
                 null,
                 2L,
                 Grade.A,
+                Grade.A,
                 "19980925",
                 Gender.MALE
         );
@@ -335,6 +344,7 @@ class UserProfileServiceImplTest {
         UserProfileCreateRequest request = new UserProfileCreateRequest(
                 "requestNick",
                 2L,
+                Grade.A,
                 Grade.A,
                 "19980925",
                 Gender.MALE

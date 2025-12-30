@@ -42,7 +42,8 @@ public class UserControllerTest {
                 .id(1L)
                 .role(UserRole.USER)
                 .status(UserStatus.PENDING)
-                .grade(null)
+                .regionalGrade(null)
+                .nationalGrade(null)
                 .provinceName(null)
                 .districtName(null)
                 .build();
@@ -62,7 +63,8 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.data.id").value(responseDto.getId()))
                 .andExpect(jsonPath("$.data.status").value(UserStatus.PENDING.name()))
                 .andExpect(jsonPath("$.data.role").value(UserRole.USER.name()))
-                .andExpect(jsonPath("$.data.grade").value(nullValue()))
+                .andExpect(jsonPath("$.data.regionalGrade").value(nullValue()))
+                .andExpect(jsonPath("$.data.nationalGrade").value(nullValue()))
                 .andExpect(jsonPath("$.data.provinceName").value(nullValue()))
                 .andExpect(jsonPath("$.data.districtName").value(nullValue()));
     }
