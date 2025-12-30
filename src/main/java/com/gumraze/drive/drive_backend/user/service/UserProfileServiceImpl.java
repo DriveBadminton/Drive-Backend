@@ -2,6 +2,8 @@ package com.gumraze.drive.drive_backend.user.service;
 
 import com.gumraze.drive.drive_backend.region.entity.RegionDistrict;
 import com.gumraze.drive.drive_backend.region.service.RegionService;
+import com.gumraze.drive.drive_backend.user.constants.Grade;
+import com.gumraze.drive.drive_backend.user.constants.GradeType;
 import com.gumraze.drive.drive_backend.user.constants.UserStatus;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
 import com.gumraze.drive.drive_backend.user.dto.UserProfilePrefillResponseDto;
@@ -56,17 +58,26 @@ public class UserProfileServiceImpl implements UserProfileService{
             throw new IllegalArgumentException("nickname이 필요합니다.");
         }
 
+        Grade regional = request.regionalGrade();
+        Grade national = request.nationalGrade();
+
         UserProfile profile = new UserProfile(
                 userId,
                 resolvedNickname,
-                request.grade(),
+                regional,
+                national,
                 regionDist.get()
         );
 
         // grade 저장
-        if (request.grade() != null) {
+        if (regional != null) {
             userGradeHistoryRepository.save(
-                    new UserGradeHistory(user, request.grade())
+                    new UserGradeHistory(user, regional, GradeType.REGIONAL)
+            );
+        }
+        if (national != null) {
+            userGradeHistoryRepository.save(
+                    new UserGradeHistory(user, national, GradeType.NATIONAL)
             );
         }
 

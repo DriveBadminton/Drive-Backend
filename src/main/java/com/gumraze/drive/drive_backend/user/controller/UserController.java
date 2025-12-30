@@ -71,7 +71,8 @@ public class UserController {
                                             {
                                               "nickname": "kim",
                                               "districtId": 1,
-                                              "grade": "초심",
+                                              "regionalGrade": "초심",
+                                              "nationalGrade": "초심",
                                               "birth": "19980925"
                                               "gender": "MALE"
                                             }
