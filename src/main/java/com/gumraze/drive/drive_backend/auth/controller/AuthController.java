@@ -5,6 +5,7 @@ import com.gumraze.drive.drive_backend.auth.dto.OAuthLoginResponseDto;
 import com.gumraze.drive.drive_backend.auth.dto.OAuthRefreshTokenResponseDto;
 import com.gumraze.drive.drive_backend.auth.service.AuthService;
 import com.gumraze.drive.drive_backend.auth.service.OAuthLoginResult;
+import com.gumraze.drive.drive_backend.auth.token.JwtProperties;
 import com.gumraze.drive.drive_backend.common.api.ApiResponse;
 import com.gumraze.drive.drive_backend.common.api.ResultCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,6 +30,7 @@ import java.time.Duration;
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtProperties properties;
 
     // OAuth 로그인 API
     @PostMapping("/login")
@@ -70,7 +72,7 @@ public class AuthController {
                         .httpOnly(true)
                         .secure(true)
                         .path("/auth")
-                        .maxAge(Duration.ofDays(5))
+                        .maxAge(Duration.ofHours(properties.refreshToken().expirationHours()))
                         .sameSite("Strict")
                         .build();
 
@@ -110,7 +112,7 @@ public class AuthController {
                         .httpOnly(true)
                         .secure(true)
                         .path("/auth")
-                        .maxAge(Duration.ofDays(5))
+                        .maxAge(Duration.ofHours(properties.refreshToken().expirationHours()))
                         .sameSite("Strict")
                         .build();
 

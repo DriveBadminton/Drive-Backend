@@ -17,8 +17,8 @@ public class JwtAccessTokenGenerator implements TokenProvider {
 
     public JwtAccessTokenGenerator(JwtProperties properties) {
         // HS256 알고리즘에 맞는 키를 생성함.
-        secretKey = Keys.hmacShaKeyFor(properties.secret().getBytes());
-        expirationMs = properties.expirationMs();
+        secretKey = Keys.hmacShaKeyFor(properties.accessToken().secret().getBytes());
+        expirationMs = properties.accessToken().expirationMs();
     }
 
     @Override

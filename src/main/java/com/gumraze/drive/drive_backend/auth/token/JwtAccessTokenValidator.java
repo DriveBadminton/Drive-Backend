@@ -14,7 +14,7 @@ public class JwtAccessTokenValidator {
     private final SecretKey secretKey;
 
     public JwtAccessTokenValidator(JwtProperties properties) {
-        this.secretKey = Keys.hmacShaKeyFor(properties.secret().getBytes());
+        this.secretKey = Keys.hmacShaKeyFor(properties.accessToken().secret().getBytes());
     }
 
     public Optional<Long> validateAndGetUserId(String accessToken) {
