@@ -6,6 +6,7 @@ import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenValidator;
 import com.gumraze.drive.drive_backend.common.api.ApiResponse;
 import com.gumraze.drive.drive_backend.common.api.ResultCode;
 import com.gumraze.drive.drive_backend.common.logging.ApiLoggingFilter;
+import com.gumraze.drive.drive_backend.common.security.BotBlockFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -42,6 +43,11 @@ public class SecurityConfig {
     @Bean
     public ApiLoggingFilter apiLoggingFilter() {
         return new ApiLoggingFilter();
+    }
+
+    @Bean
+    public BotBlockFilter botBlockFilter() {
+        return new BotBlockFilter();
     }
 
     @Bean
@@ -97,6 +103,11 @@ public class SecurityConfig {
                         ).permitAll()
 
                         .anyRequest().authenticated()
+                )
+                // 봇 차단
+                .addFilterBefore(
+                        botBlockFilter(),
+                        UsernamePasswordAuthenticationFilter.class
                 )
 
                 // JWT 필터 등록
