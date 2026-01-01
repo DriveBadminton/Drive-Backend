@@ -15,9 +15,12 @@ import java.util.Optional;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    /* =========================
-     *  Validation Exception
-     * ========================= */
+    /**
+     * Handles validation failures from controller method arguments and maps them to a standardized error response.
+     *
+     * @param ex the MethodArgumentNotValidException containing binding results and field validation errors
+     * @return a ResponseEntity containing a failure ApiResponse<Void> with the validation ResultCode and a message formatted as "<field>: <message>" when a field error exists, or the default validation message otherwise
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidationException(
             MethodArgumentNotValidException ex
@@ -35,9 +38,11 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.failure(code, message));
     }
 
-    /* =========================
-     *  Illegal Argument
-     * ========================= */
+    /**
+     * Handle an IllegalArgumentException by returning a failure response indicating an invalid argument.
+     *
+     * @return a ResponseEntity containing a failure ApiResponse with the `INVALID_ARGUMENT` result code and the exception's message; the HTTP status is taken from that result code
+     */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(
             IllegalArgumentException ex
@@ -50,9 +55,18 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.failure(code, ex.getMessage()));
     }
 
-    /* =========================
-     *  Generic Exception (중요)
-     * ========================= */
+    /**
+     * Handle uncaught exceptions and map them to HTTP responses based on the request's Accept header.
+     *
+     * <p>If the request's Accept header is absent or does not include "application/json", this method
+     * blocks JSON responses and returns a 400 Bad Request with no body. For requests that accept JSON,
+     * it returns an error ApiResponse with the INTERNAL_SERVER_ERROR status.</p>
+     *
+     * @param ex the uncaught exception
+     * @param request the HTTP request; the Accept header is inspected to decide whether to return JSON
+     * @return a ResponseEntity: 400 Bad Request with no body for non-JSON requests, or a response
+     *         with the INTERNAL_SERVER_ERROR HTTP status and a failure ApiResponse body for JSON requests
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleGeneric(
             Exception ex,

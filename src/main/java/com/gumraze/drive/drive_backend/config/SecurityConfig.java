@@ -40,16 +40,39 @@ public class SecurityConfig {
         return new JwtAuthenticationFilter(jwtAccessTokenValidator);
     }
 
+    /**
+     * Creates an ApiLoggingFilter that logs API request and response details.
+     *
+     * @return an ApiLoggingFilter instance for recording API call request and response information
+     */
     @Bean
     public ApiLoggingFilter apiLoggingFilter() {
         return new ApiLoggingFilter();
     }
 
+    /**
+     * Creates a BotBlockFilter used to detect and block bot-like traffic.
+     *
+     * @return the configured BotBlockFilter instance
+     */
     @Bean
     public BotBlockFilter botBlockFilter() {
         return new BotBlockFilter();
     }
 
+    /**
+     * Configures the web security rules, filters, and exception handling, and returns the configured SecurityFilterChain.
+     *
+     * <p>The configuration enables CORS (using the application's CorsConfigurationSource), disables CSRF,
+     * enforces stateless session management, maps authentication/authorization errors to JSON error responses,
+     * defines route authorization rules (including public endpoints and role-protected /users/me),
+     * and registers the BotBlockFilter, JwtAuthenticationFilter, and ApiLoggingFilter in the correct order.</p>
+     *
+     * @param http the HttpSecurity to configure
+     * @param jwtAuthenticationFilter the JWT authentication filter used to validate access tokens
+     * @return the built SecurityFilterChain reflecting the configured security rules and filters
+     * @throws Exception if an error occurs while configuring or building the security chain
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,

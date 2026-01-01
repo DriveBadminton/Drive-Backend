@@ -24,6 +24,15 @@ public class BotBlockFilter extends OncePerRequestFilter {
             "/autodiscover"
     );
 
+    /**
+     * Decides whether this request should skip the bot-blocking filter.
+     *
+     * Skips filtering for CORS preflight requests (HTTP OPTIONS) and for requests
+     * whose request URI does not start with any of the configured blocked prefixes.
+     *
+     * @param request the HTTP request to evaluate
+     * @return `true` if the request should bypass the filter (OPTIONS or URI does not start with any blocked prefixes), `false` otherwise
+     */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         // CORS preflight 허용
@@ -35,6 +44,13 @@ public class BotBlockFilter extends OncePerRequestFilter {
         return BLOCKED_PATH_PREFIXES.stream().noneMatch(uri::startsWith);
     }
 
+    /**
+     * Enforces bot-blocking by logging the request and terminating processing with HTTP 404.
+     *
+     * <p>Logs a warning containing the HTTP method, request URI, and client IP, sets the
+     * response status to 404 (NOT FOUND), and does not continue the filter chain. Non-GET
+     * requests to the root path ("/") are handled in the same way and are explicitly blocked.
+     */
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
