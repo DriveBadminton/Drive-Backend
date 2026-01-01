@@ -26,6 +26,11 @@ public class BotBlockFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
+        // CORS preflight 허용
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
+
         String uri = request.getRequestURI();
         return BLOCKED_PATH_PREFIXES.stream().noneMatch(uri::startsWith);
     }
@@ -36,6 +41,21 @@ public class BotBlockFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
+
+        // 루트 POST/PUT/DELETE 차단
+        if ("/".equals(request.getRequestURI())
+                && !"GET".equalsIgnoreCase(request.getMethod())) {
+
+            log.warn(
+                "[BOT 차단: ROOT] method={}, uri={}, ip={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                request.getRemoteAddr()
+            );
+
+            response.setStatus(HttpStatus.NOT_FOUND.value());
+            return;
+        }
 
         log.warn(
             "[BOT 차단] method={}, uri={}, ip={}",
