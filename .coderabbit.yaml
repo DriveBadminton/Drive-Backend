@@ -4,7 +4,7 @@ reviews:
   tone: professional
   level: concise
 
-  language: ko
+language: ko
 
 instructions: |
   - 모든 코드 리뷰 코멘트는 반드시 한국어로 작성할 것  
