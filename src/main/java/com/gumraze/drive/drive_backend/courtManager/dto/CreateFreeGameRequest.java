@@ -23,9 +23,4 @@ public class CreateFreeGameRequest {
 
     private List<Long> managerIds;
     private List<ParticipantCreateRequest> participants;
-
-
-
-
-
 }
