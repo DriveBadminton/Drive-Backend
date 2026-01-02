@@ -1,0 +1,32 @@
+package com.gumraze.drive.drive_backend.courtManager.entity;
+
+import com.gumraze.drive.drive_backend.user.entity.User;
+import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(
+        name = "court_game_managers",
+        uniqueConstraints = @UniqueConstraint(
+                columnNames = {"game_id", "user_id"}
+        )
+)
+public class CourtGameManager {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "game_id", nullable = false)
+    private CourtGame game;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    protected CourtGameManager() {}
+}
