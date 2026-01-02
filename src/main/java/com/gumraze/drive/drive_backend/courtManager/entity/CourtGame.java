@@ -5,10 +5,14 @@ import com.gumraze.drive.drive_backend.courtManager.constants.GameType;
 import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
 import com.gumraze.drive.drive_backend.user.entity.User;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
+@Getter
 @Entity
+@AllArgsConstructor
 @Table(name = "court_games")
 public class CourtGame {
     @Id
@@ -24,15 +28,15 @@ public class CourtGame {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "game_type", nullable = false)
-    private GameType gameType;
+    private GameType gameType = GameType.FREE;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "game_status", nullable = false)
-    private GameStatus gameStatus;
+    private GameStatus gameStatus = GameStatus.NOT_STARTED;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "match_record_mode", nullable = false)
-    private MatchRecordMode matchRecordMode;
+    private MatchRecordMode matchRecordMode = MatchRecordMode.STATUS_ONLY;
 
     @Column(name = "share_code", length = 64)
     private String shareCode;
@@ -43,5 +47,4 @@ public class CourtGame {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    protected CourtGame() {}
 }
