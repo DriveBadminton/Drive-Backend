@@ -37,12 +37,13 @@ class FreeGameServiceImplTest {
     FreeGameServiceImpl freeGameService;
 
     @Test
-    @DisplayName("필수 입력 값들이 모두 입력되면, 자유게임 생성 성공")
-    void createFreeGame_withRequiredFields_returnsGameId() {
+    @DisplayName("자유게임 생성 성공 시 gameId 반환")
+    void createFreeGame_success_returnsGameId() {
         // given: title, courtCount
         CreateFreeGameRequest request = CreateFreeGameRequest.builder()
                 .title("자유게임 1")        // title 입력
                 .courtCount(1)            // courtCount 입력
+                .roundCount(1)
                 .build();
 
 
