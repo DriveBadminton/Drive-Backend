@@ -17,7 +17,7 @@ public class CreateFreeGameRequest {
     private MatchRecordMode matchRecordMode;                // 매치 기록 모드: RESULT/STATUS_ONLY
 
     private Integer courtCount;                             // 코트 수
-    private Integer roundCount;                             // 라운드 수(null 허용)
+    private Integer roundCount;                             // 라운드 수
 
     private List<Long> managerIds;                          // 게임 공동 운영자(최대 2명, null 허용)
 
