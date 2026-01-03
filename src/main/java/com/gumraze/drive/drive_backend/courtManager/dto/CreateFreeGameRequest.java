@@ -13,14 +13,15 @@ import java.util.List;
 @Setter
 @Builder
 public class CreateFreeGameRequest {
-    private String title;
+    private String title;                                   // 게임 제목
 
     @Enumerated(EnumType.STRING)
-    private MatchRecordMode matchRecordMode;
+    private MatchRecordMode matchRecordMode;                // 매치 기록 모드: RESULT/STATUS_ONLY
 
-    private Integer courtCount;
-    private Integer roundCount;
+    private Integer courtCount;                             // 코트 수
+    private Integer roundCount;                             // 라운드 수(null 허용)
 
-    private List<Long> managerIds;
-    private List<ParticipantCreateRequest> participants;
+    private List<Long> managerIds;                          // 게임 공동 운영자(최대 2명)
+    
+    private List<ParticipantCreateRequest> participants;    // 게임 참가자(null 허용)
 }

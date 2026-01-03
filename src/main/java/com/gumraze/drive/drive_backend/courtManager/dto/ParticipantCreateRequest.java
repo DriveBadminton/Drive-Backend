@@ -15,13 +15,13 @@ public class ParticipantCreateRequest {
     private Long userId; // 우리 서비스의 사용자인 경우에만 수집
 
     @NotBlank
-    private String name;
+    private String name;            // 참가자 이름
 
     @NotNull
-    private Gender gender;
+    private Gender gender;          // 참가자 성별
 
     @NotNull
-    private Grade grade;
+    private Grade grade;            // 참가자 급수
 
-    private Integer ageGroup; // (선택) 연령대
+    private Integer ageGroup;       // (선택) 연령대
 }
