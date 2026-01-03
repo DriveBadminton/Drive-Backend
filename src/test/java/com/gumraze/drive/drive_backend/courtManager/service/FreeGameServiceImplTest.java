@@ -7,7 +7,6 @@ import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameRequest;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameResponse;
 import com.gumraze.drive.drive_backend.courtManager.entity.CourtGame;
 import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameRepository;
-import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,9 +28,6 @@ import static org.mockito.Mockito.when;
 class FreeGameServiceImplTest {
     @Mock
     CourtGameRepository courtGameRepository;
-
-    @Mock
-    UserRepository userRepository;
 
     @InjectMocks
     FreeGameServiceImpl freeGameService;
