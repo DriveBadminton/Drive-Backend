@@ -19,8 +19,10 @@ public class FreeGameServiceImpl implements FreeGameService {
     }
 
     @Override
-    public CreateFreeGameResponse createFreeGame(CreateFreeGameRequest request) {
-
+    public CreateFreeGameResponse createFreeGame(
+            Long userId,
+            CreateFreeGameRequest request
+    ) {
         // matchRecordMode가 null이면, 기본값으로 설정
         MatchRecordMode matchRecordMode = request.getMatchRecordMode();
         if (matchRecordMode == null) {

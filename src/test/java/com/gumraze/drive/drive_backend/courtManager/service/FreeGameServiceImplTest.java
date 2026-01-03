@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -64,7 +65,7 @@ class FreeGameServiceImplTest {
                 .thenReturn(savedGame);
 
         // when: createFreeGame() 호출함.
-        CreateFreeGameResponse createdGame = freeGameService.createFreeGame(request);
+        CreateFreeGameResponse createdGame = freeGameService.createFreeGame(1L, request);
 
         // then: 반환값을 검증함.
         assertNotNull(createdGame);
@@ -87,7 +88,7 @@ class FreeGameServiceImplTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when: createFreeGame() 호출함.
-        freeGameService.createFreeGame(request);
+        freeGameService.createFreeGame(1L, request);
 
         // 내부 전달값 capture
         ArgumentCaptor<CourtGame> captor = ArgumentCaptor.forClass(CourtGame.class);
@@ -116,7 +117,7 @@ class FreeGameServiceImplTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when: createFreeGame() 호출함.
-        freeGameService.createFreeGame(request);
+        freeGameService.createFreeGame(1L, request);
 
         // 내부 전달값 capture
         ArgumentCaptor<CourtGame> captor = ArgumentCaptor.forClass(CourtGame.class);
@@ -145,7 +146,7 @@ class FreeGameServiceImplTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when: createFreeGame 호출했을 때
-        freeGameService.createFreeGame(request);
+        freeGameService.createFreeGame(1L, request);
 
         // save가 호출되었는지 검증
         ArgumentCaptor<CourtGame> captor = ArgumentCaptor.forClass(CourtGame.class);

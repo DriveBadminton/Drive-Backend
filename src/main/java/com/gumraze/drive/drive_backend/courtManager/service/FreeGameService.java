@@ -4,5 +4,5 @@ import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameRequest;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameResponse;
 
 public interface FreeGameService {
-    CreateFreeGameResponse createFreeGame(CreateFreeGameRequest request);
+    CreateFreeGameResponse createFreeGame(Long userId, CreateFreeGameRequest request);
 }
