@@ -27,6 +27,11 @@ public class FreeGameServiceImpl implements FreeGameService {
             matchRecordMode = MatchRecordMode.STATUS_ONLY;
         }
 
+        // 추가 관리자가 2명 이상이면 예외 발생
+        if (request.getManagerIds() != null && request.getManagerIds().size() > 2) {
+            throw new IllegalArgumentException("managerIds는 최대 2명까지 가능합니다.");
+        }
+
         // 엔티티 생성
         CourtGame courtGame = new CourtGame(
                 null,                       // id는 DB에서 생성

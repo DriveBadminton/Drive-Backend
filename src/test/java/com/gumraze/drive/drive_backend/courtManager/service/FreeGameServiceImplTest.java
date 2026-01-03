@@ -18,8 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -157,5 +156,21 @@ class FreeGameServiceImplTest {
         // then: GameType과, GameStatus가 기본값 FREE, NOT_STARTED로 저장됨.
         assertEquals(savedCourtGame.getGameType(), GameType.FREE);
         assertEquals(savedCourtGame.getGameStatus(), GameStatus.NOT_STARTED);
+    }
+
+    @Test()
+    @DisplayName("managerIds가 2명 초과이면 예외 발생")
+    void createFreeGame_withTooManyManagers_throwsException() {
+        // given: managerIds가 3명인 자유게임 생성 요청
+        CreateFreeGameRequest request = CreateFreeGameRequest.builder()
+                .title("자유게임1")
+                .matchRecordMode(MatchRecordMode.STATUS_ONLY)
+                .courtCount(1)
+                .managerIds(List.of(1L, 2L, 3L))
+                .build();
+
+        // when & then: createFreeGame을 요청 시, IllegalArgumentException 발생
+        // IllegalArgumentException -> type은 일치하나 값이 틀린 경우의 예외
+        assertThrows(IllegalArgumentException.class, () -> freeGameService.createFreeGame(1L, request));
     }
 }
