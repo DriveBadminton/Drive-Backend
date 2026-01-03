@@ -11,6 +11,7 @@ import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -70,5 +71,90 @@ class FreeGameServiceImplTest {
         assertEquals(createdGame.getGameId(), savedGame.getId());
         // save가 호출되었는지 검증
         verify(courtGameRepository).save(any(CourtGame.class));
+    }
+
+    @Test
+    @DisplayName("MatchRecordMode가 null 일시, 기본값인 STATUS_ONLY로 설정됨.")
+    void createFreeGame_withNoMatchRecordMode_returnsStatusOnly() {
+        // given: title, courtCount만 입력되고, matchRecordMode는 입력되지 않음.
+        CreateFreeGameRequest request = CreateFreeGameRequest.builder()
+                .title("자유게임1")
+                .courtCount(1)
+                .build();
+
+        // 저장값 stub
+        when(courtGameRepository.save(any(CourtGame.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // when: createFreeGame() 호출함.
+        freeGameService.createFreeGame(request);
+
+        // 내부 전달값 capture
+        ArgumentCaptor<CourtGame> captor = ArgumentCaptor.forClass(CourtGame.class);
+        // 내부 전달값 저장
+        verify(courtGameRepository).save(captor.capture());
+
+        CourtGame savedCourtGame = captor.getValue();
+
+        // then
+        // MatchRecordMode 검증
+        assertEquals(savedCourtGame.getMatchRecordMode(), MatchRecordMode.STATUS_ONLY);
+    }
+
+    @Test()
+    @DisplayName("matchRecordMode가 RESULT일시 그대로 저장됨.")
+    void createFreeGame_withResultMatchRecordMode_returnsResult() {
+        // given: title, courtCount만 입력되고, matchRecordMode는 입력되지 않음.
+        CreateFreeGameRequest request = CreateFreeGameRequest.builder()
+                .title("자유게임1")
+                .courtCount(1)
+                .matchRecordMode(MatchRecordMode.RESULT)
+                .build();
+
+        // 저장값 stub
+        when(courtGameRepository.save(any(CourtGame.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // when: createFreeGame() 호출함.
+        freeGameService.createFreeGame(request);
+
+        // 내부 전달값 capture
+        ArgumentCaptor<CourtGame> captor = ArgumentCaptor.forClass(CourtGame.class);
+        // 내부 전달값 저장
+        verify(courtGameRepository).save(captor.capture());
+
+        CourtGame savedCourtGame = captor.getValue();
+
+        // then
+        // MatchRecordMode 검증
+        assertEquals(savedCourtGame.getMatchRecordMode(), MatchRecordMode.RESULT);
+    }
+
+    @Test()
+    @DisplayName("GameType과 GameStatus가 기본값 FREE, NOT_STARTED로 저장됨.")
+    void createFreeGame_withDefaultGameTypeAndStatus_returnsDefault() {
+        // given: 필수 입력값들만 입력이 됨.
+        CreateFreeGameRequest request = CreateFreeGameRequest.builder()
+                .title("자유게임1")
+                .matchRecordMode(MatchRecordMode.STATUS_ONLY)
+                .courtCount(1)
+                .build();
+
+        // 저장값 stub
+        when(courtGameRepository.save(any(CourtGame.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // when: createFreeGame 호출했을 때
+        freeGameService.createFreeGame(request);
+
+        // save가 호출되었는지 검증
+        ArgumentCaptor<CourtGame> captor = ArgumentCaptor.forClass(CourtGame.class);
+        // 내부 전달값 저장
+        verify(courtGameRepository).save(captor.capture());
+        CourtGame savedCourtGame = captor.getValue();
+
+        // then: GameType과, GameStatus가 기본값 FREE, NOT_STARTED로 저장됨.
+        assertEquals(savedCourtGame.getGameType(), GameType.FREE);
+        assertEquals(savedCourtGame.getGameStatus(), GameStatus.NOT_STARTED);
     }
 }
