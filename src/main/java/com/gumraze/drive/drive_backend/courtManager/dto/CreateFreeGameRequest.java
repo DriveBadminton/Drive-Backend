@@ -21,7 +21,7 @@ public class CreateFreeGameRequest {
     private Integer courtCount;                             // 코트 수
     private Integer roundCount;                             // 라운드 수(null 허용)
 
-    private List<Long> managerIds;                          // 게임 공동 운영자(최대 2명)
-    
+    private List<Long> managerIds;                          // 게임 공동 운영자(최대 2명, null 허용)
+
     private List<ParticipantCreateRequest> participants;    // 게임 참가자(null 허용)
 }
