@@ -7,6 +7,7 @@ import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameRequest;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameResponse;
 import com.gumraze.drive.drive_backend.courtManager.entity.CourtGame;
 import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameRepository;
+import com.gumraze.drive.drive_backend.user.constants.GradeType;
 import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -51,6 +52,7 @@ class FreeGameServiceImplTest {
                 1L,                     // gameId 1로 stub
                 request.getTitle(),        // title 설정
                 null,                      // 게임 생성 유저의 id
+                GradeType.NATIONAL,
                 GameType.FREE,             // 자유게임(기본값)
                 GameStatus.NOT_STARTED,    // 시작전(기본값)
                 MatchRecordMode.STATUS_ONLY,     // STATUS_ONLY 기본값

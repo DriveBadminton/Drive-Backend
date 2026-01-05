@@ -7,6 +7,7 @@ import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameRequest;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameResponse;
 import com.gumraze.drive.drive_backend.courtManager.entity.CourtGame;
 import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameRepository;
+import com.gumraze.drive.drive_backend.user.constants.GradeType;
 import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -64,6 +65,7 @@ public class FreeGameServiceImpl implements FreeGameService {
                 null,                       // id는 DB에서 생성
                 request.getTitle(),
                 null,                  // organizer 미구현
+                GradeType.NATIONAL,             // 아직 미구현
                 GameType.FREE,
                 GameStatus.NOT_STARTED,
                 matchRecordMode,
