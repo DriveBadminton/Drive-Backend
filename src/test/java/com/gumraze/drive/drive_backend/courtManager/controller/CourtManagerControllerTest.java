@@ -9,6 +9,7 @@ import com.gumraze.drive.drive_backend.courtManager.dto.ParticipantCreateRequest
 import com.gumraze.drive.drive_backend.courtManager.service.FreeGameService;
 import com.gumraze.drive.drive_backend.user.constants.Gender;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
+import com.gumraze.drive.drive_backend.user.constants.GradeType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +63,7 @@ class CourtManagerControllerTest {
         // request 객체 생성
         CreateFreeGameRequest request = CreateFreeGameRequest.builder()
                 .title("자유게임1")
+                .gradeType(GradeType.NATIONAL)
                 .courtCount(2)
                 .roundCount(3)
                 .build();
@@ -195,6 +197,7 @@ class CourtManagerControllerTest {
         CreateFreeGameRequest request = CreateFreeGameRequest.builder()
                 .title("자유게임 1")
                 .courtCount(2)
+                .gradeType(GradeType.NATIONAL)
                 .roundCount(3)
                 .participants(
                         List.of(
