@@ -9,4 +9,6 @@ public interface UserRepository {
     Long createUser();
 
     Optional<User> findById(Long id);
+
+    boolean existsById(Long userId);
 }
