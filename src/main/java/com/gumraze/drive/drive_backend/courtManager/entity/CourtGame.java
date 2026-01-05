@@ -47,4 +47,5 @@ public class CourtGame {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    protected CourtGame() {}
 }

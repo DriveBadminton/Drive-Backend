@@ -18,6 +18,9 @@ public class CourtFreeGameSetting {
     @Column(name = "court_count", nullable = false)
     private Integer courtCount;
 
+    @Column(name = "round_count", nullable = false)
+    private Integer roundCount;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

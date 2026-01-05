@@ -21,12 +21,16 @@ public class CourtGameParticipant {
     @JoinColumn(name = "game_id", nullable = false)
     private CourtGame game;
 
+    // 비회원 참가 허용
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(nullable = false)
-    private String name;
+    @Column(name = "original_name", nullable = false)
+    private String originalName;
+
+    @Column(name = "display_name", nullable = false)
+    private String displayName;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
