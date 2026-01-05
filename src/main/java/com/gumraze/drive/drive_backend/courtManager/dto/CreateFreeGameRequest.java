@@ -1,6 +1,7 @@
 package com.gumraze.drive.drive_backend.courtManager.dto;
 
 import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
+import com.gumraze.drive.drive_backend.user.constants.GradeType;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.validation.Valid;
@@ -21,6 +22,9 @@ public class CreateFreeGameRequest {
 
     @Enumerated(EnumType.STRING)
     private MatchRecordMode matchRecordMode;                // 매치 기록 모드: RESULT/STATUS_ONLY
+
+    @NotNull
+    private GradeType gradeType;                            // 게임 참가자들의 급수 형식
 
     @NotNull @Min(1)
     private Integer courtCount;                             // 코트 수
