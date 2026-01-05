@@ -5,7 +5,10 @@ import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenValidator;
 import com.gumraze.drive.drive_backend.config.SecurityConfig;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameRequest;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameResponse;
+import com.gumraze.drive.drive_backend.courtManager.dto.ParticipantCreateRequest;
 import com.gumraze.drive.drive_backend.courtManager.service.FreeGameService;
+import com.gumraze.drive.drive_backend.user.constants.Gender;
+import com.gumraze.drive.drive_backend.user.constants.Grade;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -74,5 +78,220 @@ class CourtManagerControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value("CREATED"))
                 .andExpect(jsonPath("$.data.gameId").value(101));
+    }
+
+    @Test
+    @DisplayName("자유게임 생성 시, title 누락")
+    void createFreeGame_without_title() throws Exception {
+        // given: 자유 게임 생성 시, title 누락
+        // request 객체 생성
+        CreateFreeGameRequest request = CreateFreeGameRequest.builder()
+                .title(null)
+                .courtCount(2)
+                .roundCount(3)
+                .build();
+
+        String body = objectMapper.writeValueAsString(request);
+
+        // 유효한 token
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.of(1L));
+
+        // when: 자유 게임 생성 호출
+        // then: VALIDATION_ERROR 발생
+        mockMvc.perform(post("/games")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer token")
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+        ;
+    }
+
+    @Test
+    @DisplayName("자유게임 생성 시, courtCount 누락")
+    void createFreeGame_without_courtCount() throws Exception {
+        // given: 자유게임 생성 시, courtCount 누락
+        // request
+        CreateFreeGameRequest request = CreateFreeGameRequest.builder()
+                .title("테스트 게임")
+                .roundCount(3)
+                .build();
+
+        String body = objectMapper.writeValueAsString(request);
+
+        // 유효한 토큰
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.of(1L));
+
+        // when & then: 자유게임 생성 호출 시 VALIDATION_ERROR 발생
+        mockMvc.perform(post("/games")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer token")
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+        ;
+    }
+
+    @Test
+    @DisplayName("자유게임 생성 시, roundCount 누락 테스트")
+    void createFreeGame_without_roundCount() throws Exception {
+        // given: 자유게임 생성 시, roundCount 누락
+        // request
+        CreateFreeGameRequest request = CreateFreeGameRequest.builder()
+                .title("테스트 게임")
+                .courtCount(2)
+                .build();
+
+        String body = objectMapper.writeValueAsString(request);
+
+        // 유효한 토큰
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.of(1L));
+
+        // when & then: 자유게임 생성 호출 시 VALIDATION_ERROR 발생
+        mockMvc.perform(post("/games")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer token")
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+        ;
+    }
+
+    @Test
+    @DisplayName("자유게임 생성 시, courtCount, roundCount 누락 테스트")
+    void createFreeGame_without_courtCount_and_roundCount() throws Exception {
+        // given: 자유게임 생성 시, courtCount, roundCount 누락
+        CreateFreeGameRequest request = CreateFreeGameRequest.builder()
+                .title("자유게임 1")
+                .build();
+
+        String body = objectMapper.writeValueAsString(request);
+
+        // jwt 검증
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.of(1L));
+
+        // when & then: 자유게임 생성 호출 시 VALIDATION_ERROR 발생
+        mockMvc.perform(post("/games")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer token")
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+        ;
+    }
+
+    @Test
+    @DisplayName("자유게임 생성 시, participant가 존재할 때 최소 필수 항목이 존재하면 성공 테스트")
+    void createFreeGame_with_participant() throws Exception {
+        // given: 자유게임 생성 시, 참가자가 존재할 때 -> 최소 필드 값이 존재하면 성공
+        CreateFreeGameRequest request = CreateFreeGameRequest.builder()
+                .title("자유게임 1")
+                .courtCount(2)
+                .roundCount(3)
+                .participants(
+                        List.of(
+                        ParticipantCreateRequest.builder()
+                                .name("참가자 1")
+                                .gender(Gender.MALE)
+                                .grade(Grade.ROOKIE)
+                                .ageGroup(20)
+                                .build()
+                        )
+                )
+                .build();
+
+        String body = objectMapper.writeValueAsString(request);
+
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+            .thenReturn(Optional.of(1L));
+
+        // when & then
+        mockMvc.perform(post("/games")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer token")
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.code").value("CREATED"))
+        ;
+    }
+
+    @Test
+    @DisplayName("자유게임 생성 시, participant가 존재할 때 최소 필수 항목 없는 경우 실패 테스트")
+    void createFreeGame_with_participant_without_gender() throws Exception {
+        // given: 참가자는 있지만, gender가 없는 경우
+        CreateFreeGameRequest request = CreateFreeGameRequest.builder()
+                .title("자유게임 1")
+                .courtCount(2)
+                .roundCount(3)
+                .participants(
+                        List.of(
+                        ParticipantCreateRequest.builder()
+                                .name("참가자 1")
+                                .grade(Grade.ROOKIE)
+                                .ageGroup(20)
+                                .build()
+                        )
+                )
+                .build();
+
+        String body = objectMapper.writeValueAsString(request);
+
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.of(1L));
+
+        // when & then
+        mockMvc.perform(post("/games")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer token")
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+        ;
+    }
+
+    @Test
+    @DisplayName("자유게임 생성 시, 사용자 인증 누락 실패 테스트")
+    void createFreeGame_without_token() throws Exception {
+        // given: 참가자는 있지만, gender가 없는 경우
+        CreateFreeGameRequest request = CreateFreeGameRequest.builder()
+                .title("자유게임 1")
+                .courtCount(2)
+                .roundCount(3)
+                .participants(
+                        List.of(
+                        ParticipantCreateRequest.builder()
+                                .name("참가자 1")
+                                .gender(Gender.MALE)
+                                .grade(Grade.ROOKIE)
+                                .ageGroup(20)
+                                .build()
+                        )
+                )
+                .build();
+
+        String body = objectMapper.writeValueAsString(request);
+
+        // 비어있는 토큰 설정
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.empty());
+
+        // when & then
+        mockMvc.perform(post("/games")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"))
+        ;
     }
 }
