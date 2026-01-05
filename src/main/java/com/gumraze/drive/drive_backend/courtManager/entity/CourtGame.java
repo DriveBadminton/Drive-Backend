@@ -3,6 +3,7 @@ package com.gumraze.drive.drive_backend.courtManager.entity;
 import com.gumraze.drive.drive_backend.courtManager.constants.GameStatus;
 import com.gumraze.drive.drive_backend.courtManager.constants.GameType;
 import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
+import com.gumraze.drive.drive_backend.user.constants.GradeType;
 import com.gumraze.drive.drive_backend.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -24,7 +25,11 @@ public class CourtGame {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organizer_id", nullable = false)
-    private User organizer;
+    private User organizer;     // 게임을 생성한 유저
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "grade_type", nullable = false)
+    private GradeType gradeType;        // 참가자들의 급수 형식
 
     @Enumerated(EnumType.STRING)
     @Column(name = "game_type", nullable = false)
