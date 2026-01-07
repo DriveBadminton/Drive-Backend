@@ -34,15 +34,15 @@ public class CourtGame {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "game_type", nullable = false)
-    private GameType gameType = GameType.FREE;
+    private GameType gameType;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "game_status", nullable = false)
-    private GameStatus gameStatus = GameStatus.NOT_STARTED;
+    private GameStatus gameStatus;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "match_record_mode", nullable = false)
-    private MatchRecordMode matchRecordMode = MatchRecordMode.STATUS_ONLY;
+    private MatchRecordMode matchRecordMode;
 
     @Column(name = "share_code", length = 64)
     private String shareCode;
