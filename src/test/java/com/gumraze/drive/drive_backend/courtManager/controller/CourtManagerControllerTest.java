@@ -297,4 +297,61 @@ class CourtManagerControllerTest {
                 .andExpect(jsonPath("$.code").value("UNAUTHORIZED"))
         ;
     }
+
+    @Test
+    @DisplayName("자유게임 생성 시, GradeType이 비어있으면 실패 테스트")
+    void createFreeGame_without_gradeType() throws Exception {
+        // given: 자유게임 생성 시 gradeType이 비어있을 경우
+        CreateFreeGameRequest request = CreateFreeGameRequest.builder()
+                .title("자유게임")
+                .gradeType(null)
+                .courtCount(2)
+                .roundCount(3)
+                .build();
+
+        // 유효한 토큰
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.of(1L));
+
+        // mapping
+        String body = objectMapper.writeValueAsString(request);
+
+        // when & then: 자유게임 생성 시 400 에러 발생
+        mockMvc.perform(post("/games")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer token")
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+        ;
+    }
+
+    @Test
+    @DisplayName("자유게임 생성 시, GradeType에 틀린 값이 입력되면 실패 테스트")
+    void createFreeGame_with_invalid_gradeType() throws Exception {
+        // given: GradeType에 틀린 값이 입력될 경우
+        String body = """
+                {
+                  "title": "자유게임",
+                  "gradeType": "REGION",
+                  "courtCount": 2,
+                  "roundCount": 3
+                }
+                """;
+
+        // 유효 토큰 설정
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.of(1L));
+
+        // when & then: 자유게임 생성 시 400 에러 발생
+        mockMvc.perform(post("/games")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer token")
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+        ;
+    }
 }
