@@ -9,10 +9,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(
-        name = "court_free_game_matches",
+        name = "free_game_matche",
         uniqueConstraints = @UniqueConstraint(columnNames = {"round_id", "court_number"})
 )
-public class CourtFreeGameMatch {
+public class FreeGameMatch {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
