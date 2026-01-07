@@ -4,6 +4,7 @@ import com.gumraze.drive.drive_backend.courtManager.constants.GameStatus;
 import com.gumraze.drive.drive_backend.courtManager.constants.GameType;
 import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
 import com.gumraze.drive.drive_backend.user.constants.GradeType;
+import com.gumraze.drive.drive_backend.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,9 +25,9 @@ public class CourtGame {
     @Column(nullable = false)
     private String title;
 
-
-    @Column(name = "organizer_id", nullable = false)
-    private Long organizerId;     // 게임을 생성한 유저 id
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organizer_id", nullable = false)
+    private User organizer;     // 게임을 생성한 유저(FK)
 
     @Enumerated(EnumType.STRING)
     @Column(name = "grade_type", nullable = false)
