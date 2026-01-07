@@ -72,7 +72,7 @@ class CourtManagerControllerTest {
 
         // when: /games로 POST 요청을 보냄
         // then: 201과 응답 바디 구조/값이 일치하는지 확인
-        mockMvc.perform(post("/games")
+        mockMvc.perform(post("/free-games")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Authorization", "Bearer token")
                         .content(body))
@@ -101,7 +101,7 @@ class CourtManagerControllerTest {
 
         // when: 자유 게임 생성 호출
         // then: VALIDATION_ERROR 발생
-        mockMvc.perform(post("/games")
+        mockMvc.perform(post("/free-games")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Authorization", "Bearer token")
                         .content(body))
@@ -128,7 +128,7 @@ class CourtManagerControllerTest {
                 .thenReturn(Optional.of(1L));
 
         // when & then: 자유게임 생성 호출 시 VALIDATION_ERROR 발생
-        mockMvc.perform(post("/games")
+        mockMvc.perform(post("/free-games")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Authorization", "Bearer token")
                         .content(body))
@@ -155,7 +155,7 @@ class CourtManagerControllerTest {
                 .thenReturn(Optional.of(1L));
 
         // when & then: 자유게임 생성 호출 시 VALIDATION_ERROR 발생
-        mockMvc.perform(post("/games")
+        mockMvc.perform(post("/free-games")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Authorization", "Bearer token")
                         .content(body))
@@ -180,7 +180,7 @@ class CourtManagerControllerTest {
                 .thenReturn(Optional.of(1L));
 
         // when & then: 자유게임 생성 호출 시 VALIDATION_ERROR 발생
-        mockMvc.perform(post("/games")
+        mockMvc.perform(post("/free-games")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Authorization", "Bearer token")
                         .content(body))
@@ -217,7 +217,7 @@ class CourtManagerControllerTest {
             .thenReturn(Optional.of(1L));
 
         // when & then
-        mockMvc.perform(post("/games")
+        mockMvc.perform(post("/free-games")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Authorization", "Bearer token")
                         .content(body))
@@ -252,7 +252,7 @@ class CourtManagerControllerTest {
                 .thenReturn(Optional.of(1L));
 
         // when & then
-        mockMvc.perform(post("/games")
+        mockMvc.perform(post("/free-games")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Authorization", "Bearer token")
                         .content(body))
@@ -289,7 +289,7 @@ class CourtManagerControllerTest {
                 .thenReturn(Optional.empty());
 
         // when & then
-        mockMvc.perform(post("/games")
+        mockMvc.perform(post("/free-games")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isUnauthorized())
@@ -317,7 +317,7 @@ class CourtManagerControllerTest {
         String body = objectMapper.writeValueAsString(request);
 
         // when & then: 자유게임 생성 시 400 에러 발생
-        mockMvc.perform(post("/games")
+        mockMvc.perform(post("/free-games")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Authorization", "Bearer token")
                         .content(body))
@@ -345,7 +345,7 @@ class CourtManagerControllerTest {
                 .thenReturn(Optional.of(1L));
 
         // when & then: 자유게임 생성 시 400 에러 발생
-        mockMvc.perform(post("/games")
+        mockMvc.perform(post("/free-games")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Authorization", "Bearer token")
                         .content(body))

@@ -20,7 +20,7 @@ public class CourtManagerController {
 
     private final FreeGameService freeGameService;
 
-    @PostMapping("/games")
+    @PostMapping("/free-games")
     public ResponseEntity<ApiResponse<CreateFreeGameResponse>> createFreeGame(
             @AuthenticationPrincipal Long userId,
             @RequestBody @Valid CreateFreeGameRequest request
