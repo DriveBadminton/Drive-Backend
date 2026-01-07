@@ -12,7 +12,6 @@ import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameParticip
 import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameRepository;
 import com.gumraze.drive.drive_backend.user.constants.Gender;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
-import com.gumraze.drive.drive_backend.user.constants.GradeType;
 import com.gumraze.drive.drive_backend.user.entity.User;
 import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -70,18 +69,19 @@ public class FreeGameServiceImpl implements FreeGameService {
         }
 
         // 게임 정보 엔티티 생성
-        CourtGame courtGame = new CourtGame(
-                null,                       // id는 DB에서 생성
-                request.getTitle(),
-                null,                  // organizer 미구현
-                GradeType.NATIONAL,             // 아직 미구현
-                GameType.FREE,
-                GameStatus.NOT_STARTED,
-                matchRecordMode,
-                null,                   // share code 미구현
-                LocalDateTime.now(),
-                LocalDateTime.now()
-        );
+        CourtGame courtGame = CourtGame.builder()
+                .title(request.getTitle())
+                .organizer(null)
+                .gradeType(request.getGradeType())
+                // 기본값으로 FREE로 설정
+                // TODO: 추후 tournament 등 여러 게임 생성 예정
+                .gameType(GameType.FREE)
+                // 처음 생성 이전 항상 시작 전
+                .gameStatus(GameStatus.NOT_STARTED)
+                .matchRecordMode(matchRecordMode)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
 
         // 게임 기본 정보 우선 저장
         CourtGame savedGame = courtGameRepository.save(courtGame);

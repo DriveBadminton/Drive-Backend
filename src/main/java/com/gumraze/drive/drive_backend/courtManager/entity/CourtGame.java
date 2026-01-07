@@ -7,12 +7,14 @@ import com.gumraze.drive.drive_backend.user.constants.GradeType;
 import com.gumraze.drive.drive_backend.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Entity
+@Builder
 @AllArgsConstructor
 @Table(name = "court_games")
 public class CourtGame {

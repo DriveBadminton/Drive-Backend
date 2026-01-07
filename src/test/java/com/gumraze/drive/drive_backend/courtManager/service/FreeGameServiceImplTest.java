@@ -279,4 +279,56 @@ class FreeGameServiceImplTest {
         assertEquals("홍길동", saved.get(0).getDisplayName());
         assertEquals("홍길동A", saved.get(1).getDisplayName());
     }
+
+    @Test
+    @DisplayName("자유게임 생성 시, 참여자 목록이 있으면 참가자 저장을 호출한다.")
+    void createFreeGame_withParticipants_callsSaveParticipants() {
+        // given: 참여자 목록이 있는 게임을 생성함.
+        CreateFreeGameRequest request = CreateFreeGameRequest.builder()
+                .title("자유게임")
+                .matchRecordMode(MatchRecordMode.STATUS_ONLY)
+                .gradeType(GradeType.NATIONAL)
+                .courtCount(2)
+                .roundCount(2)
+                .participants(
+                        List.of(
+                                ParticipantCreateRequest.builder()
+                                        .originalName("박지성")
+                                        .gender(Gender.MALE)
+                                        .grade(Grade.A)
+                                        .ageGroup(20)
+                                        .build(),
+                                ParticipantCreateRequest.builder()
+                                        .originalName("손흥민")
+                                        .gender(Gender.MALE)
+                                        .grade(Grade.A)
+                                        .ageGroup(20)
+                                        .build()
+                        )
+                )
+                .build();
+
+        // stub
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(courtGameRepository.save(any(CourtGame.class)))
+                .thenReturn(
+                        new CourtGame(
+                                1L,
+                                "자유게임",
+                                null,
+                                GradeType.NATIONAL,
+                                GameType.FREE,
+                                GameStatus.NOT_STARTED,
+                                MatchRecordMode.STATUS_ONLY,
+                                null,
+                                LocalDateTime.now(),
+                                LocalDateTime.now()
+                        )
+                );
+        // when: 자유게임 생성이 호출되었을 때
+        freeGameService.createFreeGame(1L, request);
+
+        // then: 참가자 목록 저장이 호출됨
+        verify(courtGameParticipantRepository, times(2)).save(any(CourtGameParticipant.class));
+    }
 }
