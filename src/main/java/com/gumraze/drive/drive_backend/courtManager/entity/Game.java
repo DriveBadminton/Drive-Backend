@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @Table(name = "court_games")
-public class CourtGame {
+public class Game {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -56,5 +56,5 @@ public class CourtGame {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    protected CourtGame() {}
+    protected Game() {}
 }

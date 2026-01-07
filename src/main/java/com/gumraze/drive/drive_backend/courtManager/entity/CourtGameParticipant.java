@@ -26,7 +26,7 @@ public class CourtGameParticipant {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "game_id", nullable = false)
-    private CourtGame game;
+    private Game game;
 
     // 비회원 참가 허용
     @ManyToOne(fetch = FetchType.LAZY)

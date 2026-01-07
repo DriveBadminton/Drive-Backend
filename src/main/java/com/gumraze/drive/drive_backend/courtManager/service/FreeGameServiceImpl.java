@@ -6,9 +6,9 @@ import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameRequest;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameResponse;
 import com.gumraze.drive.drive_backend.courtManager.dto.ParticipantCreateRequest;
-import com.gumraze.drive.drive_backend.courtManager.entity.CourtGame;
 import com.gumraze.drive.drive_backend.courtManager.entity.CourtGameParticipant;
 import com.gumraze.drive.drive_backend.courtManager.entity.FreeGameSetting;
+import com.gumraze.drive.drive_backend.courtManager.entity.Game;
 import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameParticipantRepository;
 import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameRepository;
 import com.gumraze.drive.drive_backend.courtManager.repository.FreeGameSettingRepository;
@@ -76,7 +76,7 @@ public class FreeGameServiceImpl implements FreeGameService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 userId입니다. :" + userId));
 
         // 게임 정보 엔티티 생성
-        CourtGame courtGame = CourtGame.builder()
+        Game game = Game.builder()
                 .title(request.getTitle())
                 .organizer(organizerId)
                 .gradeType(request.getGradeType())
@@ -91,7 +91,7 @@ public class FreeGameServiceImpl implements FreeGameService {
                 .build();
 
         // 게임 기본 정보 우선 저장
-        CourtGame savedGame = courtGameRepository.save(courtGame);
+        Game savedGame = courtGameRepository.save(game);
 
         // 자유게임 설정 저장
         FreeGameSetting freeGameSetting = FreeGameSetting.builder()

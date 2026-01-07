@@ -6,9 +6,9 @@ import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameRequest;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameResponse;
 import com.gumraze.drive.drive_backend.courtManager.dto.ParticipantCreateRequest;
-import com.gumraze.drive.drive_backend.courtManager.entity.CourtGame;
 import com.gumraze.drive.drive_backend.courtManager.entity.CourtGameParticipant;
 import com.gumraze.drive.drive_backend.courtManager.entity.FreeGameSetting;
+import com.gumraze.drive.drive_backend.courtManager.entity.Game;
 import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameParticipantRepository;
 import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameRepository;
 import com.gumraze.drive.drive_backend.courtManager.repository.FreeGameSettingRepository;
@@ -67,7 +67,7 @@ class FreeGameServiceImplTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(organizer));
 
         // 게임 저장 결과 stub
-        CourtGame savedGame = new CourtGame(
+        Game savedGame = new Game(
                 1L,                     // gameId 1로 stub
                 request.getTitle(),        // title 설정
                 organizer,                      // 게임 생성 유저의 id
@@ -81,7 +81,7 @@ class FreeGameServiceImplTest {
         );
 
         // 생성한 게임 저장
-        when(courtGameRepository.save(any(CourtGame.class)))
+        when(courtGameRepository.save(any(Game.class)))
                 .thenReturn(savedGame);
 
 
@@ -92,7 +92,7 @@ class FreeGameServiceImplTest {
         assertNotNull(createdGame);
         assertEquals(createdGame.getGameId(), savedGame.getId());
         // save가 호출되었는지 검증
-        verify(courtGameRepository).save(any(CourtGame.class));
+        verify(courtGameRepository).save(any(Game.class));
     }
 
     @Test
@@ -105,7 +105,7 @@ class FreeGameServiceImplTest {
                 .build();
 
         // 저장값 stub
-        when(courtGameRepository.save(any(CourtGame.class)))
+        when(courtGameRepository.save(any(Game.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // 사용자 검증
@@ -117,15 +117,15 @@ class FreeGameServiceImplTest {
         freeGameService.createFreeGame(1L, request);
 
         // 내부 전달값 capture
-        ArgumentCaptor<CourtGame> captor = ArgumentCaptor.forClass(CourtGame.class);
+        ArgumentCaptor<Game> captor = ArgumentCaptor.forClass(Game.class);
         // 내부 전달값 저장
         verify(courtGameRepository).save(captor.capture());
 
-        CourtGame savedCourtGame = captor.getValue();
+        Game savedGame = captor.getValue();
 
         // then
         // MatchRecordMode 검증
-        assertEquals(savedCourtGame.getMatchRecordMode(), MatchRecordMode.STATUS_ONLY);
+        assertEquals(savedGame.getMatchRecordMode(), MatchRecordMode.STATUS_ONLY);
     }
 
     @Test
@@ -140,7 +140,7 @@ class FreeGameServiceImplTest {
                 .build();
 
         // 저장값 stub
-        when(courtGameRepository.save(any(CourtGame.class)))
+        when(courtGameRepository.save(any(Game.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // 사용자 검증
@@ -151,15 +151,15 @@ class FreeGameServiceImplTest {
         freeGameService.createFreeGame(1L, request);
 
         // 내부 전달값 capture
-        ArgumentCaptor<CourtGame> captor = ArgumentCaptor.forClass(CourtGame.class);
+        ArgumentCaptor<Game> captor = ArgumentCaptor.forClass(Game.class);
         // 내부 전달값 저장
         verify(courtGameRepository).save(captor.capture());
 
-        CourtGame savedCourtGame = captor.getValue();
+        Game savedGame = captor.getValue();
 
         // then
         // MatchRecordMode 검증
-        assertEquals(savedCourtGame.getMatchRecordMode(), MatchRecordMode.RESULT);
+        assertEquals(savedGame.getMatchRecordMode(), MatchRecordMode.RESULT);
     }
 
     @Test
@@ -174,7 +174,7 @@ class FreeGameServiceImplTest {
                 .build();
 
         // 저장값 stub
-        when(courtGameRepository.save(any(CourtGame.class)))
+        when(courtGameRepository.save(any(Game.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // 사용자 검증
@@ -185,14 +185,14 @@ class FreeGameServiceImplTest {
         freeGameService.createFreeGame(1L, request);
 
         // save가 호출되었는지 검증
-        ArgumentCaptor<CourtGame> captor = ArgumentCaptor.forClass(CourtGame.class);
+        ArgumentCaptor<Game> captor = ArgumentCaptor.forClass(Game.class);
         // 내부 전달값 저장
         verify(courtGameRepository).save(captor.capture());
-        CourtGame savedCourtGame = captor.getValue();
+        Game savedGame = captor.getValue();
 
         // then: GameType과, GameStatus가 기본값 FREE, NOT_STARTED로 저장됨.
-        assertEquals(savedCourtGame.getGameType(), GameType.FREE);
-        assertEquals(savedCourtGame.getGameStatus(), GameStatus.NOT_STARTED);
+        assertEquals(savedGame.getGameType(), GameType.FREE);
+        assertEquals(savedGame.getGameStatus(), GameStatus.NOT_STARTED);
     }
 
     @Test
@@ -266,9 +266,9 @@ class FreeGameServiceImplTest {
         when(userRepository.existsById(1L)).thenReturn(true);
         when(userRepository.findById(1L)).thenReturn(Optional.of(organizer));
 
-        when(courtGameRepository.save(any(CourtGame.class)))
+        when(courtGameRepository.save(any(Game.class)))
                 .thenReturn(
-                        new CourtGame(
+                        new Game(
                                 1L,
                                 "자유게임",
                                 organizer,
@@ -329,9 +329,9 @@ class FreeGameServiceImplTest {
         User organizer = mock(User.class);
         when(userRepository.existsById(1L)).thenReturn(true);
         when(userRepository.findById(1L)).thenReturn(Optional.of(organizer));
-        when(courtGameRepository.save(any(CourtGame.class)))
+        when(courtGameRepository.save(any(Game.class)))
                 .thenReturn(
-                        new CourtGame(
+                        new Game(
                                 1L,
                                 "자유게임",
                                 organizer,
@@ -369,17 +369,17 @@ class FreeGameServiceImplTest {
         when(organizer.getId()).thenReturn(userId);
         when(userRepository.existsById(1L)).thenReturn(true);
         when(userRepository.findById(1L)).thenReturn(Optional.of(organizer));
-        when(courtGameRepository.save(any(CourtGame.class)))
+        when(courtGameRepository.save(any(Game.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when: 자유게임을 생성했을 때
         freeGameService.createFreeGame(userId, request);
 
         // then: organizerId가 userId와 동일함.
-        ArgumentCaptor<CourtGame> captor = ArgumentCaptor.forClass(CourtGame.class);
+        ArgumentCaptor<Game> captor = ArgumentCaptor.forClass(Game.class);
         verify(courtGameRepository).save(captor.capture());
 
-        CourtGame saved = captor.getValue();
+        Game saved = captor.getValue();
         assertSame(organizer, saved.getOrganizer());
         assertEquals(userId, saved.getOrganizer().getId());
     }
@@ -400,7 +400,7 @@ class FreeGameServiceImplTest {
         when(userRepository.existsById(1L)).thenReturn(true);
         when(userRepository.findById(userId)).thenReturn(Optional.of(organizer));
 
-        CourtGame savedGame = CourtGame.builder()
+        Game savedGame = Game.builder()
                 .title("자유게임")
                 .organizer(organizer)
                 .gradeType(GradeType.NATIONAL)
@@ -411,7 +411,7 @@ class FreeGameServiceImplTest {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        when(courtGameRepository.save(any(CourtGame.class))).thenReturn(savedGame);
+        when(courtGameRepository.save(any(Game.class))).thenReturn(savedGame);
 
         // when
         freeGameService.createFreeGame(userId, request);

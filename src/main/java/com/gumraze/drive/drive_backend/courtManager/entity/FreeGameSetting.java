@@ -19,7 +19,7 @@ public class FreeGameSetting {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "game_id", nullable = false, unique = true)
-    private CourtGame game;
+    private Game game;
 
     @Column(name = "court_count", nullable = false)
     private Integer courtCount;
