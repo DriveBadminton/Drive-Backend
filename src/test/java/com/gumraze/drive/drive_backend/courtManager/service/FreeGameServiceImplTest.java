@@ -8,8 +8,10 @@ import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameResponse;
 import com.gumraze.drive.drive_backend.courtManager.dto.ParticipantCreateRequest;
 import com.gumraze.drive.drive_backend.courtManager.entity.CourtGame;
 import com.gumraze.drive.drive_backend.courtManager.entity.CourtGameParticipant;
+import com.gumraze.drive.drive_backend.courtManager.entity.FreeGameSetting;
 import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameParticipantRepository;
 import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameRepository;
+import com.gumraze.drive.drive_backend.courtManager.repository.FreeGameSettingRepository;
 import com.gumraze.drive.drive_backend.user.constants.Gender;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
 import com.gumraze.drive.drive_backend.user.constants.GradeType;
@@ -42,6 +44,9 @@ class FreeGameServiceImplTest {
 
     @Mock
     CourtGameParticipantRepository courtGameParticipantRepository;
+
+    @Mock
+    FreeGameSettingRepository freeGameSettingRepository;
 
     @InjectMocks
     FreeGameServiceImpl freeGameService;
@@ -377,5 +382,47 @@ class FreeGameServiceImplTest {
         CourtGame saved = captor.getValue();
         assertSame(organizer, saved.getOrganizer());
         assertEquals(userId, saved.getOrganizer().getId());
+    }
+
+    @Test
+    @DisplayName("자유게임 생성 시, free game setting 저장 호출")
+    void createFreeGame_savesFreeGameSetting() {
+        // given: 자유게임 생성 시, courtCount, roundCount를 저장이 되어야함.
+        Long userId = 1L;
+        CreateFreeGameRequest request = CreateFreeGameRequest.builder()
+                .title("자유게임")
+                .courtCount(2)
+                .roundCount(3)
+                .build();
+
+        // stub
+        User organizer = mock(User.class);
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(organizer));
+
+        CourtGame savedGame = CourtGame.builder()
+                .title("자유게임")
+                .organizer(organizer)
+                .gradeType(GradeType.NATIONAL)
+                .gameType(GameType.FREE)
+                .gameStatus(GameStatus.NOT_STARTED)
+                .matchRecordMode(MatchRecordMode.STATUS_ONLY)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        when(courtGameRepository.save(any(CourtGame.class))).thenReturn(savedGame);
+
+        // when
+        freeGameService.createFreeGame(userId, request);
+
+        // then
+        ArgumentCaptor<FreeGameSetting> captor = ArgumentCaptor.forClass(FreeGameSetting.class);
+        verify(freeGameSettingRepository).save(captor.capture());
+
+        FreeGameSetting savedSetting = captor.getValue();
+        assertEquals(request.getCourtCount(), savedSetting.getCourtCount());
+        assertEquals(request.getRoundCount(), savedSetting.getRoundCount());
+        assertEquals(savedGame, savedSetting.getGame());
     }
 }
