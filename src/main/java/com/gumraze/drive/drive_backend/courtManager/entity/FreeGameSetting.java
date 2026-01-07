@@ -1,12 +1,18 @@
 package com.gumraze.drive.drive_backend.courtManager.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
+@Getter
 @Entity
-@Table(name = "court_free_game_settings")
-public class CourtFreeGameSetting {
+@Builder
+@AllArgsConstructor
+@Table(name = "free_game_settings")
+public class FreeGameSetting {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,5 +33,5 @@ public class CourtFreeGameSetting {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    protected CourtFreeGameSetting() {}
+    protected FreeGameSetting() {}
 }
