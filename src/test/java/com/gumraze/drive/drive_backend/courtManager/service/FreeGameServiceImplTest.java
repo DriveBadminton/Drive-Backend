@@ -13,6 +13,7 @@ import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameReposito
 import com.gumraze.drive.drive_backend.user.constants.Gender;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
 import com.gumraze.drive.drive_backend.user.constants.GradeType;
+import com.gumraze.drive.drive_backend.user.entity.User;
 import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -54,12 +56,16 @@ class FreeGameServiceImplTest {
                 .roundCount(1)
                 .build();
 
+        // 사용자 검증
+        User organizer = mock(User.class);
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(organizer));
 
         // 게임 저장 결과 stub
         CourtGame savedGame = new CourtGame(
                 1L,                     // gameId 1로 stub
                 request.getTitle(),        // title 설정
-                null,                      // 게임 생성 유저의 id
+                organizer,                      // 게임 생성 유저의 id
                 GradeType.NATIONAL,
                 GameType.FREE,             // 자유게임(기본값)
                 GameStatus.NOT_STARTED,    // 시작전(기본값)
@@ -73,8 +79,6 @@ class FreeGameServiceImplTest {
         when(courtGameRepository.save(any(CourtGame.class)))
                 .thenReturn(savedGame);
 
-        // 사용자 검증
-        when(userRepository.existsById(1L)).thenReturn(true);
 
         // when: createFreeGame() 호출함.
         CreateFreeGameResponse createdGame = freeGameService.createFreeGame(1L, request);
@@ -100,7 +104,9 @@ class FreeGameServiceImplTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // 사용자 검증
+        User organizer = mock(User.class);
         when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(organizer));
 
         // when: createFreeGame() 호출함.
         freeGameService.createFreeGame(1L, request);
@@ -134,6 +140,7 @@ class FreeGameServiceImplTest {
 
         // 사용자 검증
         when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(mock(User.class)));
 
         // when: createFreeGame() 호출함.
         freeGameService.createFreeGame(1L, request);
@@ -167,6 +174,7 @@ class FreeGameServiceImplTest {
 
         // 사용자 검증
         when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(mock(User.class)));
 
         // when: createFreeGame 호출했을 때
         freeGameService.createFreeGame(1L, request);
@@ -248,13 +256,17 @@ class FreeGameServiceImplTest {
                 ))
                 .build();
 
+        // stub
+        User organizer = mock(User.class);
         when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(organizer));
+
         when(courtGameRepository.save(any(CourtGame.class)))
                 .thenReturn(
                         new CourtGame(
                                 1L,
                                 "자유게임",
-                                null,
+                                organizer,
                                 GradeType.REGIONAL,
                                 GameType.FREE,
                                 GameStatus.NOT_STARTED,
@@ -332,5 +344,38 @@ class FreeGameServiceImplTest {
 
         // then: 참가자 목록 저장이 호출됨
         verify(courtGameParticipantRepository, times(2)).save(any(CourtGameParticipant.class));
+    }
+
+    @Test
+    @DisplayName("자유게임 생성 시 organizerId가 저장된다")
+    void createFreeGame_setsOrganizerId() {
+        // given: 게임을 생성한 User가 organizerId에 등록됨.
+        Long userId = 1L;
+
+        CreateFreeGameRequest request = CreateFreeGameRequest.builder()
+                .title("자유게임")
+                .gradeType(GradeType.NATIONAL)
+                .courtCount(2)
+                .roundCount(3)
+                .build();
+
+        // stub
+        User organizer = mock(User.class);
+        when(organizer.getId()).thenReturn(userId);
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(organizer));
+        when(courtGameRepository.save(any(CourtGame.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // when: 자유게임을 생성했을 때
+        freeGameService.createFreeGame(userId, request);
+
+        // then: organizerId가 userId와 동일함.
+        ArgumentCaptor<CourtGame> captor = ArgumentCaptor.forClass(CourtGame.class);
+        verify(courtGameRepository).save(captor.capture());
+
+        CourtGame saved = captor.getValue();
+        assertSame(organizer, saved.getOrganizer());
+        assertEquals(userId, saved.getOrganizer().getId());
     }
 }
