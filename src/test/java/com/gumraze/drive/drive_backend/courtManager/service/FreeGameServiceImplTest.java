@@ -6,9 +6,9 @@ import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameRequest;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameResponse;
 import com.gumraze.drive.drive_backend.courtManager.dto.ParticipantCreateRequest;
-import com.gumraze.drive.drive_backend.courtManager.entity.CourtGameParticipant;
 import com.gumraze.drive.drive_backend.courtManager.entity.FreeGameSetting;
 import com.gumraze.drive.drive_backend.courtManager.entity.Game;
+import com.gumraze.drive.drive_backend.courtManager.entity.GameParticipant;
 import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameParticipantRepository;
 import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameRepository;
 import com.gumraze.drive.drive_backend.courtManager.repository.FreeGameSettingRepository;
@@ -281,18 +281,18 @@ class FreeGameServiceImplTest {
                                 LocalDateTime.now()
                         )
                 );
-        when(courtGameParticipantRepository.save(any(CourtGameParticipant.class)))
+        when(courtGameParticipantRepository.save(any(GameParticipant.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when: createFreeGame 호출 시
         freeGameService.createFreeGame(1L, request);
 
         // then: displayName이 다르게 설정되어야함.
-        ArgumentCaptor<CourtGameParticipant> captor = ArgumentCaptor.forClass(CourtGameParticipant.class);
+        ArgumentCaptor<GameParticipant> captor = ArgumentCaptor.forClass(GameParticipant.class);
 
         verify(courtGameParticipantRepository, times(2)).save(captor.capture());
 
-        List<CourtGameParticipant> saved = captor.getAllValues();
+        List<GameParticipant> saved = captor.getAllValues();
         assertEquals("홍길동", saved.get(0).getDisplayName());
         assertEquals("홍길동A", saved.get(1).getDisplayName());
     }
@@ -348,7 +348,7 @@ class FreeGameServiceImplTest {
         freeGameService.createFreeGame(1L, request);
 
         // then: 참가자 목록 저장이 호출됨
-        verify(courtGameParticipantRepository, times(2)).save(any(CourtGameParticipant.class));
+        verify(courtGameParticipantRepository, times(2)).save(any(GameParticipant.class));
     }
 
     @Test

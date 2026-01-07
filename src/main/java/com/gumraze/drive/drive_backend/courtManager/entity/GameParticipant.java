@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
         name = "court_game_participants",
         uniqueConstraints = @UniqueConstraint(columnNames = {"game_id", "user_id"})
 )
-public class CourtGameParticipant {
+public class GameParticipant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -58,5 +58,5 @@ public class CourtGameParticipant {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    protected CourtGameParticipant() {}
+    protected GameParticipant() {}
 }

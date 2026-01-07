@@ -26,19 +26,19 @@ public class CourtFreeGameMatch {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_a_player1_id")
-    private CourtGameParticipant teamAPlayer1;
+    private GameParticipant teamAPlayer1;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_a_player2_id")
-    private CourtGameParticipant teamAPlayer2;
+    private GameParticipant teamAPlayer2;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_b_player1_id")
-    private CourtGameParticipant teamBPlayer1;
+    private GameParticipant teamBPlayer1;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_b_player2_id")
-    private CourtGameParticipant teamBPlayer2;
+    private GameParticipant teamBPlayer2;
 
     @Enumerated(EnumType.STRING)
     private MatchType matchType;

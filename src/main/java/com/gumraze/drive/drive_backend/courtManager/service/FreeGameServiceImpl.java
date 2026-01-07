@@ -6,9 +6,9 @@ import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameRequest;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameResponse;
 import com.gumraze.drive.drive_backend.courtManager.dto.ParticipantCreateRequest;
-import com.gumraze.drive.drive_backend.courtManager.entity.CourtGameParticipant;
 import com.gumraze.drive.drive_backend.courtManager.entity.FreeGameSetting;
 import com.gumraze.drive.drive_backend.courtManager.entity.Game;
+import com.gumraze.drive.drive_backend.courtManager.entity.GameParticipant;
 import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameParticipantRepository;
 import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameRepository;
 import com.gumraze.drive.drive_backend.courtManager.repository.FreeGameSettingRepository;
@@ -130,7 +130,7 @@ public class FreeGameServiceImpl implements FreeGameService {
                             );
                 }
 
-                CourtGameParticipant toSave = CourtGameParticipant.builder()
+                GameParticipant toSave = GameParticipant.builder()
                         .game(savedGame)
                         .user(participantUser)
                         .originalName(participant.getOriginalName())
