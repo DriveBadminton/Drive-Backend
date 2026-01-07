@@ -5,8 +5,13 @@ import com.gumraze.drive.drive_backend.courtManager.constants.GameType;
 import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameRequest;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameResponse;
+import com.gumraze.drive.drive_backend.courtManager.dto.ParticipantCreateRequest;
 import com.gumraze.drive.drive_backend.courtManager.entity.CourtGame;
+import com.gumraze.drive.drive_backend.courtManager.entity.CourtGameParticipant;
+import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameParticipantRepository;
 import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameRepository;
+import com.gumraze.drive.drive_backend.user.constants.Gender;
+import com.gumraze.drive.drive_backend.user.constants.Grade;
 import com.gumraze.drive.drive_backend.user.constants.GradeType;
 import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -32,6 +37,9 @@ class FreeGameServiceImplTest {
 
     @Mock
     UserRepository userRepository;
+
+    @Mock
+    CourtGameParticipantRepository courtGameParticipantRepository;
 
     @InjectMocks
     FreeGameServiceImpl freeGameService;
@@ -213,5 +221,62 @@ class FreeGameServiceImplTest {
                 () -> freeGameService.createFreeGame(1L, request));
 
         verify(courtGameRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("동일 정보를 가진 참가자는 displayName을 접미사로 구분함.")
+    void createFreeGame_withDuplicateParticipantDisplayName() {
+        // given: 두 참가자의 기본 정보가 동일함.
+        CreateFreeGameRequest request = CreateFreeGameRequest.builder()
+                .title("자유게임")
+                .courtCount(1)
+                .roundCount(1)
+                // 두 참가자가 동일 정보를 가지고 있음.
+                .participants(List.of(
+                        ParticipantCreateRequest.builder()
+                                .originalName("홍길동")
+                                .gender(Gender.MALE)
+                                .grade(Grade.A)
+                                .ageGroup(20)
+                                .build(),
+                        ParticipantCreateRequest.builder()
+                                .originalName("홍길동")
+                                .gender(Gender.MALE)
+                                .grade(Grade.A)
+                                .ageGroup(20)
+                                .build()
+                ))
+                .build();
+
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(courtGameRepository.save(any(CourtGame.class)))
+                .thenReturn(
+                        new CourtGame(
+                                1L,
+                                "자유게임",
+                                null,
+                                GradeType.REGIONAL,
+                                GameType.FREE,
+                                GameStatus.NOT_STARTED,
+                                MatchRecordMode.STATUS_ONLY,
+                                null,
+                                LocalDateTime.now(),
+                                LocalDateTime.now()
+                        )
+                );
+        when(courtGameParticipantRepository.save(any(CourtGameParticipant.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // when: createFreeGame 호출 시
+        freeGameService.createFreeGame(1L, request);
+
+        // then: displayName이 다르게 설정되어야함.
+        ArgumentCaptor<CourtGameParticipant> captor = ArgumentCaptor.forClass(CourtGameParticipant.class);
+
+        verify(courtGameParticipantRepository, times(2)).save(captor.capture());
+
+        List<CourtGameParticipant> saved = captor.getAllValues();
+        assertEquals("홍길동", saved.get(0).getDisplayName());
+        assertEquals("홍길동A", saved.get(1).getDisplayName());
     }
 }

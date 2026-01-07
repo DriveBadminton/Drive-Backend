@@ -5,21 +5,30 @@ import com.gumraze.drive.drive_backend.courtManager.constants.GameType;
 import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameRequest;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameResponse;
+import com.gumraze.drive.drive_backend.courtManager.dto.ParticipantCreateRequest;
 import com.gumraze.drive.drive_backend.courtManager.entity.CourtGame;
+import com.gumraze.drive.drive_backend.courtManager.entity.CourtGameParticipant;
+import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameParticipantRepository;
 import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameRepository;
+import com.gumraze.drive.drive_backend.user.constants.Gender;
+import com.gumraze.drive.drive_backend.user.constants.Grade;
 import com.gumraze.drive.drive_backend.user.constants.GradeType;
+import com.gumraze.drive.drive_backend.user.entity.User;
 import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Service
 public class FreeGameServiceImpl implements FreeGameService {
 
     private final CourtGameRepository courtGameRepository;
+    private final CourtGameParticipantRepository courtGameParticipantRepository;
     private final UserRepository userRepository;
 
     @Override
@@ -60,7 +69,7 @@ public class FreeGameServiceImpl implements FreeGameService {
             }
         }
 
-        // 엔티티 생성
+        // 게임 정보 엔티티 생성
         CourtGame courtGame = new CourtGame(
                 null,                       // id는 DB에서 생성
                 request.getTitle(),
@@ -74,9 +83,64 @@ public class FreeGameServiceImpl implements FreeGameService {
                 LocalDateTime.now()
         );
 
-        // 저장
+        // 게임 기본 정보 우선 저장
         CourtGame savedGame = courtGameRepository.save(courtGame);
 
+        // 참가자가 있는 경우, 참가자 정보 저장
+        // 참가자 규칙
+        List<ParticipantCreateRequest> participants = request.getParticipants();
+        if (participants != null) {
+            Map<ParticipantKey, Integer> duplicateCount = new HashMap<>();
+
+            for (ParticipantCreateRequest participant : participants) {
+                ParticipantKey key = new ParticipantKey(
+                        participant.getOriginalName(),
+                        participant.getGender(),
+                        participant.getGrade(),
+                        participant.getAgeGroup()
+                );
+
+                int count = duplicateCount.getOrDefault(key, 0);
+                String displayName = (count == 0)
+                        ? participant.getOriginalName()
+                        : participant.getOriginalName() + suffix(count);
+
+                duplicateCount.put(key, count + 1);
+
+                User participantUser = null;
+                if (participant.getUserId() != null) {
+                    participantUser = userRepository.findById(participant.getUserId())
+                            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 userId입니다." + participant.getUserId())
+                            );
+                }
+
+                CourtGameParticipant toSave = CourtGameParticipant.builder()
+                        .game(savedGame)
+                        .user(participantUser)
+                        .originalName(participant.getOriginalName())
+                        .displayName(displayName)
+                        .gender(participant.getGender())
+                        .grade(participant.getGrade())
+                        .ageGroup(participant.getAgeGroup())
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .build();
+
+                courtGameParticipantRepository.save(toSave);
+            }
+        }
         return CreateFreeGameResponse.from(savedGame);
+    }
+
+    private String suffix(int count) {
+        return String.valueOf((char) ('A' + count - 1));
+    }
+
+    private record ParticipantKey(
+            String originalName,
+            Gender gender,
+            Grade grade,
+            Integer ageGroup
+    ) {
     }
 }

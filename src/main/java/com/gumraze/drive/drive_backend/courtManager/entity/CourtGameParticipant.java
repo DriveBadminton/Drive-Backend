@@ -5,10 +5,16 @@ import com.gumraze.drive.drive_backend.user.constants.Grade;
 import com.gumraze.drive.drive_backend.user.entity.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Getter
+@Builder
+@AllArgsConstructor
 @Table(
         name = "court_game_participants",
         uniqueConstraints = @UniqueConstraint(columnNames = {"game_id", "user_id"})
