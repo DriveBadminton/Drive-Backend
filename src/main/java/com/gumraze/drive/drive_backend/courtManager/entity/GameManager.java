@@ -7,12 +7,12 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(
-        name = "court_game_managers",
+        name = "game_managers",
         uniqueConstraints = @UniqueConstraint(
                 columnNames = {"game_id", "user_id"}
         )
 )
-public class CourtGameManager {
+public class GameManager {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,5 +28,5 @@ public class CourtGameManager {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    protected CourtGameManager() {}
+    protected GameManager() {}
 }
