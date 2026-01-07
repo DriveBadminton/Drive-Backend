@@ -9,9 +9,9 @@ import com.gumraze.drive.drive_backend.courtManager.dto.ParticipantCreateRequest
 import com.gumraze.drive.drive_backend.courtManager.entity.FreeGameSetting;
 import com.gumraze.drive.drive_backend.courtManager.entity.Game;
 import com.gumraze.drive.drive_backend.courtManager.entity.GameParticipant;
-import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameRepository;
 import com.gumraze.drive.drive_backend.courtManager.repository.FreeGameSettingRepository;
 import com.gumraze.drive.drive_backend.courtManager.repository.GameParticipantRepository;
+import com.gumraze.drive.drive_backend.courtManager.repository.GameRepository;
 import com.gumraze.drive.drive_backend.user.constants.Gender;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
 import com.gumraze.drive.drive_backend.user.entity.User;
@@ -28,7 +28,7 @@ import java.util.Map;
 @Service
 public class FreeGameServiceImpl implements FreeGameService {
 
-    private final CourtGameRepository courtGameRepository;
+    private final GameRepository gameRepository;
     private final GameParticipantRepository gameParticipantRepository;
     private final FreeGameSettingRepository freeGameSettingRepository;
     private final UserRepository userRepository;
@@ -91,7 +91,7 @@ public class FreeGameServiceImpl implements FreeGameService {
                 .build();
 
         // 게임 기본 정보 우선 저장
-        Game savedGame = courtGameRepository.save(game);
+        Game savedGame = gameRepository.save(game);
 
         // 자유게임 설정 저장
         FreeGameSetting freeGameSetting = FreeGameSetting.builder()
