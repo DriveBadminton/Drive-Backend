@@ -4,6 +4,7 @@ import com.gumraze.drive.drive_backend.user.constants.Gender;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
 import com.gumraze.drive.drive_backend.user.entity.User;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 
@@ -26,9 +27,11 @@ public class CourtGameParticipant {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @NotNull
     @Column(name = "original_name", nullable = false)
     private String originalName;
 
+    @NotNull
     @Column(name = "display_name", nullable = false)
     private String displayName;
 

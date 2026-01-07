@@ -202,7 +202,7 @@ class CourtManagerControllerTest {
                 .participants(
                         List.of(
                         ParticipantCreateRequest.builder()
-                                .name("참가자 1")
+                                .originalName("참가자 1")
                                 .gender(Gender.MALE)
                                 .grade(Grade.ROOKIE)
                                 .ageGroup(20)
@@ -238,7 +238,7 @@ class CourtManagerControllerTest {
                 .participants(
                         List.of(
                         ParticipantCreateRequest.builder()
-                                .name("참가자 1")
+                                .originalName("참가자 1")
                                 .grade(Grade.ROOKIE)
                                 .ageGroup(20)
                                 .build()
@@ -273,7 +273,7 @@ class CourtManagerControllerTest {
                 .participants(
                         List.of(
                         ParticipantCreateRequest.builder()
-                                .name("참가자 1")
+                                .originalName("참가자 1")
                                 .gender(Gender.MALE)
                                 .grade(Grade.ROOKIE)
                                 .ageGroup(20)
