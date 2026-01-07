@@ -28,4 +28,9 @@ public class UserRepositoryImpl implements UserRepository {
     public Optional<User> findById(Long id) {
         return jpaUserRepository.findById(id);
     }
+
+    @Override
+    public boolean existsById(Long userId) {
+        return jpaUserRepository.existsById(userId);
+    }
 }

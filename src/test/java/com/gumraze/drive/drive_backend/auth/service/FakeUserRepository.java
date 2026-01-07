@@ -27,6 +27,11 @@ public class FakeUserRepository implements UserRepository {
         );
     }
 
+    @Override
+    public boolean existsById(Long userId) {
+        return true;
+    }
+
     public boolean isCreateCalled() {
         return createCalled;
     }

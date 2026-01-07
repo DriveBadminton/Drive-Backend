@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -50,8 +51,19 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.failure(code, ex.getMessage()));
     }
 
+    // JSON 파싱 실패(예: 잘못된 값)를 400 VALIDATION_ERROR로 처리
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+        log.warn("[요청 파싱 실패]: {}", ex.getMessage());
+
+        ResultCode code = ResultCode.VALIDATION_ERROR;
+        return ResponseEntity
+                .status(code.httpStatus())
+                .body(ApiResponse.failure(code, ex.getMessage()));
+    }
+
     /* =========================
-     *  Generic Exception (중요)
+     *  Generic Exceptions
      * ========================= */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleGeneric(
