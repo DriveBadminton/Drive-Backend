@@ -19,7 +19,7 @@ public class CourtFreeGameMatch {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "round_id", nullable = false)
-    private CourtFreeGameRound round;
+    private FreeGameRound round;
 
     @Column(name = "court_number", nullable = false)
     private Integer courtNumber;

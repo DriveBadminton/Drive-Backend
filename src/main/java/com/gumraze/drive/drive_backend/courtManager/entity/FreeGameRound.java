@@ -7,10 +7,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(
-        name = "court_free_game_rounds",
+        name = "free_game_round",
         uniqueConstraints = @UniqueConstraint(columnNames = {"game_id", "round_number"})
 )
-public class CourtFreeGameRound {
+public class FreeGameRound {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -34,5 +34,5 @@ public class CourtFreeGameRound {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    protected CourtFreeGameRound() {}
+    protected FreeGameRound() {}
 }
