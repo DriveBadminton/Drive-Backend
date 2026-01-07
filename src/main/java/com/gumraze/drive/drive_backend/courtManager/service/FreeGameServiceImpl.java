@@ -68,10 +68,14 @@ public class FreeGameServiceImpl implements FreeGameService {
             }
         }
 
+        // organizer 조회
+        User organizerId = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 userId입니다. :" + userId));
+
         // 게임 정보 엔티티 생성
         CourtGame courtGame = CourtGame.builder()
                 .title(request.getTitle())
-                .organizer(null)
+                .organizer(organizerId)
                 .gradeType(request.getGradeType())
                 // 기본값으로 FREE로 설정
                 // TODO: 추후 tournament 등 여러 게임 생성 예정
