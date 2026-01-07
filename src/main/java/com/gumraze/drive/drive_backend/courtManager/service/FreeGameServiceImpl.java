@@ -9,9 +9,9 @@ import com.gumraze.drive.drive_backend.courtManager.dto.ParticipantCreateRequest
 import com.gumraze.drive.drive_backend.courtManager.entity.FreeGameSetting;
 import com.gumraze.drive.drive_backend.courtManager.entity.Game;
 import com.gumraze.drive.drive_backend.courtManager.entity.GameParticipant;
-import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameParticipantRepository;
 import com.gumraze.drive.drive_backend.courtManager.repository.CourtGameRepository;
 import com.gumraze.drive.drive_backend.courtManager.repository.FreeGameSettingRepository;
+import com.gumraze.drive.drive_backend.courtManager.repository.GameParticipantRepository;
 import com.gumraze.drive.drive_backend.user.constants.Gender;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
 import com.gumraze.drive.drive_backend.user.entity.User;
@@ -29,7 +29,7 @@ import java.util.Map;
 public class FreeGameServiceImpl implements FreeGameService {
 
     private final CourtGameRepository courtGameRepository;
-    private final CourtGameParticipantRepository courtGameParticipantRepository;
+    private final GameParticipantRepository gameParticipantRepository;
     private final FreeGameSettingRepository freeGameSettingRepository;
     private final UserRepository userRepository;
 
@@ -142,7 +142,7 @@ public class FreeGameServiceImpl implements FreeGameService {
                         .updatedAt(LocalDateTime.now())
                         .build();
 
-                courtGameParticipantRepository.save(toSave);
+                gameParticipantRepository.save(toSave);
             }
         }
         return CreateFreeGameResponse.from(savedGame);
