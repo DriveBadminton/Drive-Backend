@@ -70,7 +70,7 @@ class CourtManagerControllerTest {
 
         String body = objectMapper.writeValueAsString(request);
 
-        // when: /games로 POST 요청을 보냄
+        // when: /free-games로 POST 요청을 보냄
         // then: 201과 응답 바디 구조/값이 일치하는지 확인
         mockMvc.perform(post("/free-games")
                         .contentType(MediaType.APPLICATION_JSON)
