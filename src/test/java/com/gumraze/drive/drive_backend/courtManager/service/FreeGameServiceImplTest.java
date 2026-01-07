@@ -309,13 +309,15 @@ class FreeGameServiceImplTest {
                 .build();
 
         // stub
+        User organizer = mock(User.class);
         when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(organizer));
         when(courtGameRepository.save(any(CourtGame.class)))
                 .thenReturn(
                         new CourtGame(
                                 1L,
                                 "자유게임",
-                                null,
+                                organizer,
                                 GradeType.NATIONAL,
                                 GameType.FREE,
                                 GameStatus.NOT_STARTED,
