@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(
-        name = "free_game_matche",
+        name = "free_game_match",
         uniqueConstraints = @UniqueConstraint(columnNames = {"round_id", "court_number"})
 )
 public class FreeGameMatch {
