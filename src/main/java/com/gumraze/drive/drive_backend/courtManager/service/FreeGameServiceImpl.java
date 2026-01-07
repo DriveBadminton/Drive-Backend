@@ -71,7 +71,7 @@ public class FreeGameServiceImpl implements FreeGameService {
         // 게임 정보 엔티티 생성
         CourtGame courtGame = CourtGame.builder()
                 .title(request.getTitle())
-                .organizer(null)
+                .organizerId(null)
                 .gradeType(request.getGradeType())
                 // 기본값으로 FREE로 설정
                 // TODO: 추후 tournament 등 여러 게임 생성 예정
