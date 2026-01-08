@@ -5,6 +5,7 @@ import com.gumraze.drive.drive_backend.courtManager.constants.GameType;
 import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameRequest;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameResponse;
+import com.gumraze.drive.drive_backend.courtManager.dto.FreeGameDetailResponse;
 import com.gumraze.drive.drive_backend.courtManager.dto.ParticipantCreateRequest;
 import com.gumraze.drive.drive_backend.courtManager.entity.FreeGameSetting;
 import com.gumraze.drive.drive_backend.courtManager.entity.Game;
@@ -146,6 +147,17 @@ public class FreeGameServiceImpl implements FreeGameService {
             }
         }
         return CreateFreeGameResponse.from(savedGame);
+    }
+
+    @Override
+    public FreeGameDetailResponse getFreeGameDetail(Long gameId) {
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게임입니다. gameId: " + gameId));
+
+        FreeGameSetting setting = freeGameSettingRepository.findByGameId(gameId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게임 세팅입니다. gameId: " + gameId));
+
+        return FreeGameDetailResponse.from(game, setting);
     }
 
     private String suffix(int count) {

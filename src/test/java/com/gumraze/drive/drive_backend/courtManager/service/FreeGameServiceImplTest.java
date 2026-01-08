@@ -5,6 +5,7 @@ import com.gumraze.drive.drive_backend.courtManager.constants.GameType;
 import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameRequest;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameResponse;
+import com.gumraze.drive.drive_backend.courtManager.dto.FreeGameDetailResponse;
 import com.gumraze.drive.drive_backend.courtManager.dto.ParticipantCreateRequest;
 import com.gumraze.drive.drive_backend.courtManager.entity.FreeGameSetting;
 import com.gumraze.drive.drive_backend.courtManager.entity.Game;
@@ -424,5 +425,54 @@ class FreeGameServiceImplTest {
         assertEquals(request.getCourtCount(), savedSetting.getCourtCount());
         assertEquals(request.getRoundCount(), savedSetting.getRoundCount());
         assertEquals(savedGame, savedSetting.getGame());
+    }
+
+    @Test
+    @DisplayName("자유게임 상세 조회 성공 시 기본 정보와 설정을 매핑하여 반환함")
+    void getFreeGameDetail_success() {
+        // given: 생성된 게임이 존재함.
+        Long gameId = 1L;
+        User organizer = mock(User.class);
+        when(organizer.getId()).thenReturn(99L);
+
+        Game game = Game.builder()
+                .id(gameId)
+                .title("자유게임")
+                .organizer(organizer)
+                .gradeType(GradeType.NATIONAL)
+                .gameType(GameType.FREE)
+                .gameStatus(GameStatus.NOT_STARTED)
+                .matchRecordMode(MatchRecordMode.STATUS_ONLY)
+                .shareCode(null)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        FreeGameSetting setting = FreeGameSetting.builder()
+                .game(game)
+                .courtCount(2)
+                .roundCount(3)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        when(gameRepository.findById(gameId)).thenReturn(Optional.of(game));
+        when(freeGameSettingRepository.findByGameId(gameId)).thenReturn(Optional.of(setting));
+
+        // when: getFreeGameDetail 호출 시 response가 채워짐
+        FreeGameDetailResponse response = freeGameService.getFreeGameDetail(gameId);
+
+        // then
+        assertEquals(gameId, response.getGameId());
+        assertEquals(game.getTitle(), response.getTitle());
+        assertEquals(game.getGameType(), response.getGameType());
+        assertEquals(game.getGameStatus(), response.getGameStatus());
+        assertEquals(game.getMatchRecordMode(), response.getMatchRecordMode());
+        assertEquals(game.getGradeType(), response.getGradeType());
+        assertEquals(setting.getCourtCount(), response.getCourtCount());
+        assertEquals(setting.getRoundCount(), response.getRoundCount());
+        assertEquals(game.getOrganizer().getId(), response.getOrganizerId());
+        // shareCode는 제외
+
     }
 }
