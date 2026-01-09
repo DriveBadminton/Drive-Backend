@@ -440,7 +440,6 @@ class CourtManagerControllerTest {
                 .gradeType(GradeType.NATIONAL)
                 .courtCount(2)
                 .roundCount(2)
-                .organizerId(gameId)
                 .build();
     }
 }
