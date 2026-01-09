@@ -3,6 +3,8 @@ package com.gumraze.drive.drive_backend.courtManager.repository;
 import com.gumraze.drive.drive_backend.courtManager.entity.FreeGameSetting;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface FreeGameSettingRepository extends JpaRepository<FreeGameSetting, Long> {
+import java.util.Optional;
 
+public interface FreeGameSettingRepository extends JpaRepository<FreeGameSetting, Long> {
+    Optional<FreeGameSetting> findByGameId(Long gameId);
 }

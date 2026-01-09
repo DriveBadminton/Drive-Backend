@@ -1,10 +1,13 @@
 package com.gumraze.drive.drive_backend.courtManager.service;
 
+import com.gumraze.drive.drive_backend.common.exception.ForbiddenException;
+import com.gumraze.drive.drive_backend.common.exception.NotFoundException;
 import com.gumraze.drive.drive_backend.courtManager.constants.GameStatus;
 import com.gumraze.drive.drive_backend.courtManager.constants.GameType;
 import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameRequest;
 import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameResponse;
+import com.gumraze.drive.drive_backend.courtManager.dto.FreeGameDetailResponse;
 import com.gumraze.drive.drive_backend.courtManager.dto.ParticipantCreateRequest;
 import com.gumraze.drive.drive_backend.courtManager.entity.FreeGameSetting;
 import com.gumraze.drive.drive_backend.courtManager.entity.Game;
@@ -18,6 +21,7 @@ import com.gumraze.drive.drive_backend.user.entity.User;
 import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -146,6 +150,23 @@ public class FreeGameServiceImpl implements FreeGameService {
             }
         }
         return CreateFreeGameResponse.from(savedGame);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public FreeGameDetailResponse getFreeGameDetail(Long userId, Long gameId) {
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new NotFoundException("존재하지 않는 게임입니다. gameId: " + gameId));
+
+        // 생성자만 조회 가능
+        if (!game.getOrganizer().getId().equals(userId)) {
+            throw new ForbiddenException("게임 생성자만 조회할 수 있습니다.");
+        }
+
+        FreeGameSetting setting = freeGameSettingRepository.findByGameId(gameId)
+                .orElseThrow(() -> new NotFoundException("존재하지 않는 게임 세팅입니다. gameId: " + gameId));
+
+        return FreeGameDetailResponse.from(game, setting);
     }
 
     private String suffix(int count) {
