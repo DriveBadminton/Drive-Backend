@@ -1,5 +1,6 @@
 package com.gumraze.drive.drive_backend.courtManager.service;
 
+import com.gumraze.drive.drive_backend.common.exception.ForbiddenException;
 import com.gumraze.drive.drive_backend.common.exception.NotFoundException;
 import com.gumraze.drive.drive_backend.courtManager.constants.GameStatus;
 import com.gumraze.drive.drive_backend.courtManager.constants.GameType;
@@ -153,9 +154,14 @@ public class FreeGameServiceImpl implements FreeGameService {
 
     @Override
     @Transactional(readOnly = true)
-    public FreeGameDetailResponse getFreeGameDetail(Long gameId) {
+    public FreeGameDetailResponse getFreeGameDetail(Long userId, Long gameId) {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 게임입니다. gameId: " + gameId));
+
+        // 생성자만 조회 가능
+        if (!game.getOrganizer().getId().equals(userId)) {
+            throw new ForbiddenException("게임 생성자만 조회할 수 있습니다.");
+        }
 
         FreeGameSetting setting = freeGameSettingRepository.findByGameId(gameId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 게임 세팅입니다. gameId: " + gameId));

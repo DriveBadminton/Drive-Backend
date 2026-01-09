@@ -7,5 +7,5 @@ import com.gumraze.drive.drive_backend.courtManager.dto.FreeGameDetailResponse;
 public interface FreeGameService {
     CreateFreeGameResponse createFreeGame(Long userId, CreateFreeGameRequest request);
 
-    FreeGameDetailResponse getFreeGameDetail(Long gameId);
+    FreeGameDetailResponse getFreeGameDetail(Long userId, Long gameId);
 }
