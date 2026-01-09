@@ -5,10 +5,7 @@ import com.gumraze.drive.drive_backend.common.exception.NotFoundException;
 import com.gumraze.drive.drive_backend.courtManager.constants.GameStatus;
 import com.gumraze.drive.drive_backend.courtManager.constants.GameType;
 import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
-import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameRequest;
-import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameResponse;
-import com.gumraze.drive.drive_backend.courtManager.dto.FreeGameDetailResponse;
-import com.gumraze.drive.drive_backend.courtManager.dto.ParticipantCreateRequest;
+import com.gumraze.drive.drive_backend.courtManager.dto.*;
 import com.gumraze.drive.drive_backend.courtManager.entity.FreeGameSetting;
 import com.gumraze.drive.drive_backend.courtManager.entity.Game;
 import com.gumraze.drive.drive_backend.courtManager.entity.GameParticipant;
@@ -167,6 +164,30 @@ public class FreeGameServiceImpl implements FreeGameService {
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 게임 세팅입니다. gameId: " + gameId));
 
         return FreeGameDetailResponse.from(game, setting);
+    }
+
+    @Override
+    @Transactional
+    public UpdateFreeGameResponse updateFreeGameInfo(Long userId, Long gameId, UpdateFreeGameRequest request) {
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new NotFoundException("존재하지 않는 게임입니다. gameId: " + gameId));
+
+        if (!game.getOrganizer().getId().equals(userId)) {
+            throw new ForbiddenException("게임 생성자만 수정할 수 있습니다.");
+        }
+
+        // manager 제외
+        if (request.getManagerIds() != null) {
+            throw new UnsupportedOperationException("매니저 수정 기능은 현재 미개발 상태입니다.");
+        }
+        // update 수행
+        game.updateBasicInfo(
+                request.getTitle(),
+                request.getMatchRecordMode(),
+                request.getGradeType()
+        );
+        gameRepository.save(game);
+        return UpdateFreeGameResponse.from(game);
     }
 
     private String suffix(int count) {
