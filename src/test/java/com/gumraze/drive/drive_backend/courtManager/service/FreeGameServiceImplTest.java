@@ -475,4 +475,21 @@ class FreeGameServiceImplTest {
         // shareCode는 제외
 
     }
+
+    @Test
+    @DisplayName("자유게임 상세 조회 시 존재하지 않는 gamdId면 예외 발생")
+    void getFreeGameDetail_withUnknownGameId_throwsException() {
+        // given
+        Long gameId = 99999L;
+        when(gameRepository.findById(gameId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThrows(IllegalArgumentException.class, () -> freeGameService.getFreeGameDetail(gameId));
+
+        // 서비스가 gameRepository.findById를 호출했는지 검증
+        verify(gameRepository).findById(gameId);
+
+        // game이 없는 경우에 freeGameSettingRepository는 호출하지 않음
+        verify(freeGameSettingRepository, never()).findByGameId(anyLong());
+    }
 }
