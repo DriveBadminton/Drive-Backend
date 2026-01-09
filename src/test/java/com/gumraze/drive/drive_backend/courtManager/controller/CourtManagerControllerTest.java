@@ -367,18 +367,7 @@ class CourtManagerControllerTest {
     void getFreeGameDetail_success() throws Exception {
         // given
         Long gameId = 1L;
-
-        FreeGameDetailResponse response = FreeGameDetailResponse.builder()
-                .gameId(gameId)
-                .title("자유게임")
-                .gameType(GameType.FREE)
-                .gameStatus(GameStatus.NOT_STARTED)
-                .matchRecordMode(MatchRecordMode.STATUS_ONLY)
-                .gradeType(GradeType.NATIONAL)
-                .courtCount(2)
-                .roundCount(3)
-                .organizerId(gameId)
-                .build();
+        FreeGameDetailResponse response = buildFreeGameDetailResponse(gameId);
 
         when(freeGameService.getFreeGameDetail(gameId)).thenReturn(response);
         when(jwtAccessTokenValidator.validateAndGetUserId("token"))
@@ -396,7 +385,7 @@ class CourtManagerControllerTest {
                 .andExpect(jsonPath("$.data.matchRecordMode").value("STATUS_ONLY"))
                 .andExpect(jsonPath("$.data.gradeType").value("NATIONAL"))
                 .andExpect(jsonPath("$.data.courtCount").value(2))
-                .andExpect(jsonPath("$.data.roundCount").value(3))
+                .andExpect(jsonPath("$.data.roundCount").value(2))
                 .andExpect(jsonPath("$.data.organizerId").value(1))
         ;
     }
@@ -406,25 +395,15 @@ class CourtManagerControllerTest {
     void getFreeGameDetail_without_token() throws Exception {
         // given
         Long gameId = 1L;
-
-        FreeGameDetailResponse response = FreeGameDetailResponse.builder()
-                .gameId(gameId)
-                .title("자유게임")
-                .gameType(GameType.FREE)
-                .gameStatus(GameStatus.NOT_STARTED)
-                .matchRecordMode(MatchRecordMode.STATUS_ONLY)
-                .gradeType(GradeType.NATIONAL)
-                .courtCount(2)
-                .roundCount(3)
-                .organizerId(gameId)
-                .build();
+        FreeGameDetailResponse response = buildFreeGameDetailResponse(gameId);
 
         when(freeGameService.getFreeGameDetail(gameId)).thenReturn(response);
         when(jwtAccessTokenValidator.validateAndGetUserId("token"))
                 .thenReturn(Optional.empty());
 
         // when & then
-        mockMvc.perform(get("/free-games/{gameId}", gameId))
+        mockMvc.perform(get("/free-games/{gameId}", gameId)
+                        .header("Authorization", "Bearer token"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value("UNAUTHORIZED"))
@@ -436,19 +415,6 @@ class CourtManagerControllerTest {
     void getFreeGameDetail_withUnknownGameId_returnError() throws Exception {
         // given
         Long gameId = 1L;
-
-        FreeGameDetailResponse response = FreeGameDetailResponse.builder()
-                .gameId(gameId)
-                .title("자유게임")
-                .gameType(GameType.FREE)
-                .gameStatus(GameStatus.NOT_STARTED)
-                .matchRecordMode(MatchRecordMode.STATUS_ONLY)
-                .gradeType(GradeType.NATIONAL)
-                .courtCount(2)
-                .roundCount(3)
-                .organizerId(gameId)
-                .build();
-
         when(freeGameService.getFreeGameDetail(gameId))
                 .thenThrow(new NotFoundException("게임이 존재하지 않습니다."));
         when(jwtAccessTokenValidator.validateAndGetUserId("token"))
@@ -458,7 +424,23 @@ class CourtManagerControllerTest {
                         .header("Authorization", "Bearer token"))
                 .andDo(print()) // 응답 로그 출력
                 .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value("NOT_FOUND"))
                 .andExpect(jsonPath("$.message").value("게임이 존재하지 않습니다."));
+    }
+
+    // Test Helper Method
+    private FreeGameDetailResponse buildFreeGameDetailResponse(Long gameId) {
+        return FreeGameDetailResponse.builder()
+                .gameId(gameId)
+                .title("자유게임")
+                .gameType(GameType.FREE)
+                .gameStatus(GameStatus.NOT_STARTED)
+                .matchRecordMode(MatchRecordMode.STATUS_ONLY)
+                .gradeType(GradeType.NATIONAL)
+                .courtCount(2)
+                .roundCount(2)
+                .organizerId(gameId)
+                .build();
     }
 }
