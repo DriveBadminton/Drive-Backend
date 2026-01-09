@@ -1,5 +1,6 @@
 package com.gumraze.drive.drive_backend.courtManager.service;
 
+import com.gumraze.drive.drive_backend.common.exception.NotFoundException;
 import com.gumraze.drive.drive_backend.courtManager.constants.GameStatus;
 import com.gumraze.drive.drive_backend.courtManager.constants.GameType;
 import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
@@ -19,6 +20,7 @@ import com.gumraze.drive.drive_backend.user.entity.User;
 import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -150,12 +152,13 @@ public class FreeGameServiceImpl implements FreeGameService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public FreeGameDetailResponse getFreeGameDetail(Long gameId) {
         Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게임입니다. gameId: " + gameId));
+                .orElseThrow(() -> new NotFoundException("존재하지 않는 게임입니다. gameId: " + gameId));
 
         FreeGameSetting setting = freeGameSettingRepository.findByGameId(gameId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게임 세팅입니다. gameId: " + gameId));
+                .orElseThrow(() -> new NotFoundException("존재하지 않는 게임 세팅입니다. gameId: " + gameId));
 
         return FreeGameDetailResponse.from(game, setting);
     }
