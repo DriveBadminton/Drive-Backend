@@ -6,6 +6,10 @@ reviews:
   auto_review:
     enabled: true
     auto_incremental_review: true
+    branches:
+      include:
+        - main
+        - dev
   review_status: true
   commit_status: true
   profile: "chill"
