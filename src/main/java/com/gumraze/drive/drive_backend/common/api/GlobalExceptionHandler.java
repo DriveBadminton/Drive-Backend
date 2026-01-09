@@ -1,5 +1,6 @@
 package com.gumraze.drive.drive_backend.common.api;
 
+import com.gumraze.drive.drive_backend.common.exception.ForbiddenException;
 import com.gumraze.drive.drive_backend.common.exception.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -69,6 +70,15 @@ public class GlobalExceptionHandler {
         log.warn("[존재하지 않는 리소스 요청]: {}", ex.getMessage());
 
         ResultCode code = ResultCode.NOT_FOUND;
+        return ResponseEntity
+                .status(code.httpStatus())
+                .body(ApiResponse.failure(code, ex.getMessage()));
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiResponse<Void>> handleForbidden(ForbiddenException ex) {
+        log.warn("[접근 권한 없음]: {}", ex.getMessage());
+        ResultCode code = ResultCode.FORBIDDEN;
         return ResponseEntity
                 .status(code.httpStatus())
                 .body(ApiResponse.failure(code, ex.getMessage()));
