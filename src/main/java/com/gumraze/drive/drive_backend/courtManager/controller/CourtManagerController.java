@@ -38,7 +38,7 @@ public class CourtManagerController {
             @AuthenticationPrincipal Long userId,
             @PathVariable Long gameId
     ) {
-        FreeGameDetailResponse response = freeGameService.getFreeGameDetail(gameId);
+        FreeGameDetailResponse response = freeGameService.getFreeGameDetail(userId, gameId);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

@@ -366,12 +366,13 @@ class CourtManagerControllerTest {
     @DisplayName("자유게임 상세 조회 성공 테스트")
     void getFreeGameDetail_success() throws Exception {
         // given
+        Long userId = 99L;
         Long gameId = 1L;
-        FreeGameDetailResponse response = buildFreeGameDetailResponse(gameId);
+        FreeGameDetailResponse response = buildFreeGameDetailResponse(userId, gameId);
 
-        when(freeGameService.getFreeGameDetail(gameId)).thenReturn(response);
+        when(freeGameService.getFreeGameDetail(userId, gameId)).thenReturn(response);
         when(jwtAccessTokenValidator.validateAndGetUserId("token"))
-                .thenReturn(Optional.of(1L));
+                .thenReturn(Optional.of(userId));
 
         mockMvc.perform(get("/free-games/{gameId}", gameId)
                         .header("Authorization", "Bearer token"))
@@ -386,7 +387,7 @@ class CourtManagerControllerTest {
                 .andExpect(jsonPath("$.data.gradeType").value("NATIONAL"))
                 .andExpect(jsonPath("$.data.courtCount").value(2))
                 .andExpect(jsonPath("$.data.roundCount").value(2))
-                .andExpect(jsonPath("$.data.organizerId").value(1))
+                .andExpect(jsonPath("$.data.organizerId").value(99))
         ;
     }
 
@@ -394,10 +395,11 @@ class CourtManagerControllerTest {
     @DisplayName("자유게임 상세 조회 시 인증 실패")
     void getFreeGameDetail_without_token() throws Exception {
         // given
+        Long userId = 99L;
         Long gameId = 1L;
-        FreeGameDetailResponse response = buildFreeGameDetailResponse(gameId);
+        FreeGameDetailResponse response = buildFreeGameDetailResponse(gameId, userId);
 
-        when(freeGameService.getFreeGameDetail(gameId)).thenReturn(response);
+        when(freeGameService.getFreeGameDetail(userId, gameId)).thenReturn(response);
         when(jwtAccessTokenValidator.validateAndGetUserId("token"))
                 .thenReturn(Optional.empty());
 
@@ -414,11 +416,12 @@ class CourtManagerControllerTest {
     @DisplayName("자유게임 상세 조회 시 존재하지 않는 gameId면 실패")
     void getFreeGameDetail_withUnknownGameId_returnError() throws Exception {
         // given
+        Long userId = 99L;
         Long gameId = 1L;
-        when(freeGameService.getFreeGameDetail(gameId))
+        when(freeGameService.getFreeGameDetail(userId, gameId))
                 .thenThrow(new NotFoundException("게임이 존재하지 않습니다."));
         when(jwtAccessTokenValidator.validateAndGetUserId("token"))
-                .thenReturn(Optional.of(1L));
+                .thenReturn(Optional.of(userId));
 
         mockMvc.perform(get("/free-games/{gameId}", gameId)
                         .header("Authorization", "Bearer token"))
@@ -430,7 +433,7 @@ class CourtManagerControllerTest {
     }
 
     // Test Helper Method
-    private FreeGameDetailResponse buildFreeGameDetailResponse(Long gameId) {
+    private FreeGameDetailResponse buildFreeGameDetailResponse(Long organizerId, Long gameId) {
         return FreeGameDetailResponse.builder()
                 .gameId(gameId)
                 .title("자유게임")
@@ -440,6 +443,7 @@ class CourtManagerControllerTest {
                 .gradeType(GradeType.NATIONAL)
                 .courtCount(2)
                 .roundCount(2)
+                .organizerId(organizerId)
                 .build();
     }
 }
