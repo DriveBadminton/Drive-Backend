@@ -2,7 +2,9 @@ package com.gumraze.drive.drive_backend.courtManager.dto;
 
 import com.gumraze.drive.drive_backend.courtManager.entity.Game;
 import lombok.Builder;
+import lombok.Getter;
 
+@Getter
 @Builder
 public class UpdateFreeGameResponse {
     private Long gameId;
