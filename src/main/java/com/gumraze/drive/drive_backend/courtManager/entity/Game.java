@@ -57,4 +57,15 @@ public class Game {
     private LocalDateTime updatedAt;
 
     protected Game() {}
+
+    public void updateBasicInfo(
+            String title,
+            MatchRecordMode matchRecordMode,
+            GradeType gradeType
+    ) {
+        this.title = title != null ? title : this.title;
+        this.matchRecordMode = matchRecordMode != null ? matchRecordMode : this.matchRecordMode;
+        this.gradeType = gradeType != null ? gradeType : this.gradeType;
+        this.updatedAt = LocalDateTime.now();
+    }
 }

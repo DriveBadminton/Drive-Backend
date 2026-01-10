@@ -5,10 +5,7 @@ import com.gumraze.drive.drive_backend.common.exception.NotFoundException;
 import com.gumraze.drive.drive_backend.courtManager.constants.GameStatus;
 import com.gumraze.drive.drive_backend.courtManager.constants.GameType;
 import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
-import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameRequest;
-import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameResponse;
-import com.gumraze.drive.drive_backend.courtManager.dto.FreeGameDetailResponse;
-import com.gumraze.drive.drive_backend.courtManager.dto.ParticipantCreateRequest;
+import com.gumraze.drive.drive_backend.courtManager.dto.*;
 import com.gumraze.drive.drive_backend.courtManager.entity.FreeGameSetting;
 import com.gumraze.drive.drive_backend.courtManager.entity.Game;
 import com.gumraze.drive.drive_backend.courtManager.entity.GameParticipant;
@@ -500,6 +497,68 @@ class FreeGameServiceImplTest {
 
         // when & then
         assertThrows(ForbiddenException.class, () -> freeGameService.getFreeGameDetail(userId, gameId));
+    }
+
+    @Test
+    @DisplayName("자유게임 기본 정보 수정 성공 테스트")
+    void updateFreeGameInfo_success() {
+        // given: 수정된 정보
+        UpdateFreeGameRequest request = buildUpdateFreeGameRequest();
+        Long gameId = 1L;
+        Long userId = 1L;
+        User organizer = mock(User.class);
+        when(organizer.getId()).thenReturn(userId);
+
+        Game game = buildGame(gameId, organizer);
+
+        // stub
+        when(gameRepository.findById(gameId)).thenReturn(Optional.of(game));
+        when(gameRepository.save(any(Game.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // when
+        UpdateFreeGameResponse response = freeGameService.updateFreeGameInfo(userId, gameId, request);
+
+        // then
+        ArgumentCaptor<Game> captor = ArgumentCaptor.forClass(Game.class);
+        verify(gameRepository).save(captor.capture());
+
+        Game savedGame = captor.getValue();
+        assertEquals(gameId, savedGame.getId());
+        assertEquals(request.getTitle(), savedGame.getTitle());
+        assertEquals(request.getGradeType(), savedGame.getGradeType());
+        assertEquals(request.getMatchRecordMode(), savedGame.getMatchRecordMode());
+    }
+
+    @Test
+    @DisplayName("자유게임 기본 정보 수정 시, 수정 권한 없을 시 실패 테스트 ")
+    void updateFreeGameInfo_withoutPermission_throwsForbidden() {
+        // given: 게임 생성자 이외의 생성자가 게임을 수정함.
+        Long userId = 1L;
+        Long gameId = 1L;
+        UpdateFreeGameRequest request = buildUpdateFreeGameRequest();
+        User organizer = mock(User.class);
+
+        // stub
+        Game game = buildGame(gameId, organizer);
+        when(gameRepository.findById(gameId)).thenReturn(Optional.of(game));
+        when(game.getOrganizer().getId()).thenReturn(3L);
+
+
+        // when & then: FORBIDDEN(수정 권한 없음) 발생
+        assertThrows(ForbiddenException.class, () -> freeGameService.updateFreeGameInfo(userId, gameId, request));
+    }
+
+    /*
+    Builder 메서드
+     */
+
+    private UpdateFreeGameRequest buildUpdateFreeGameRequest() {
+        return UpdateFreeGameRequest.builder()
+                .title("수정된 게임 제목")
+                .matchRecordMode(MatchRecordMode.RESULT)
+                .gradeType(GradeType.REGIONAL)
+                //.managerIds(List.of(1L, 2L)) //TODO: 현재 매니저 관련 기능 미개발, 개발 완료 시 처리
+                .build();
     }
 
     private Game buildGame(Long gameId, User organizer) {

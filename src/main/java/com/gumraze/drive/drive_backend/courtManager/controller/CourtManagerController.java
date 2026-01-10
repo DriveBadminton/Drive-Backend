@@ -2,9 +2,7 @@ package com.gumraze.drive.drive_backend.courtManager.controller;
 
 import com.gumraze.drive.drive_backend.common.api.ApiResponse;
 import com.gumraze.drive.drive_backend.common.api.ResultCode;
-import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameRequest;
-import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameResponse;
-import com.gumraze.drive.drive_backend.courtManager.dto.FreeGameDetailResponse;
+import com.gumraze.drive.drive_backend.courtManager.dto.*;
 import com.gumraze.drive.drive_backend.courtManager.service.FreeGameService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -43,5 +41,18 @@ public class CourtManagerController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(ResultCode.OK, "자유게임 상세 조회 성공", response));
+    }
+
+    @PatchMapping("/free-games/{gameId}")
+    public ResponseEntity<ApiResponse<UpdateFreeGameResponse>> updateFreeGameInfo(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long gameId,
+            @RequestBody @Valid UpdateFreeGameRequest request
+    ) {
+        UpdateFreeGameResponse response = freeGameService.updateFreeGameInfo(userId, gameId, request);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success(ResultCode.OK, "자유게임 기본 정보 수정 성공", response));
     }
 }
