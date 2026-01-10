@@ -529,6 +529,25 @@ class FreeGameServiceImplTest {
         assertEquals(request.getMatchRecordMode(), savedGame.getMatchRecordMode());
     }
 
+    @Test
+    @DisplayName("자유게임 기본 정보 수정 시, 수정 권한 없을 시 실패 테스트 ")
+    void updateFreeGameInfo_withoutPermission_throwsForbidden() {
+        // given: 게임 생성자 이외의 생성자가 게임을 수정함.
+        Long userId = 1L;
+        Long gameId = 1L;
+        UpdateFreeGameRequest request = buildUpdateFreeGameRequest();
+        User organizer = mock(User.class);
+
+        // stub
+        Game game = buildGame(gameId, organizer);
+        when(gameRepository.findById(gameId)).thenReturn(Optional.of(game));
+        when(game.getOrganizer().getId()).thenReturn(3L);
+
+
+        // when & then: FORBIDDEN(수정 권한 없음) 발생
+        assertThrows(ForbiddenException.class, () -> freeGameService.updateFreeGameInfo(userId, gameId, request));
+    }
+
     /*
     Builder 메서드
      */
