@@ -2,10 +2,12 @@ package com.gumraze.drive.drive_backend.courtManager.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenValidator;
+import com.gumraze.drive.drive_backend.common.exception.NotFoundException;
 import com.gumraze.drive.drive_backend.config.SecurityConfig;
-import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameRequest;
-import com.gumraze.drive.drive_backend.courtManager.dto.CreateFreeGameResponse;
-import com.gumraze.drive.drive_backend.courtManager.dto.ParticipantCreateRequest;
+import com.gumraze.drive.drive_backend.courtManager.constants.GameStatus;
+import com.gumraze.drive.drive_backend.courtManager.constants.GameType;
+import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
+import com.gumraze.drive.drive_backend.courtManager.dto.*;
 import com.gumraze.drive.drive_backend.courtManager.service.FreeGameService;
 import com.gumraze.drive.drive_backend.user.constants.Gender;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
@@ -25,7 +27,8 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -54,7 +57,7 @@ class CourtManagerControllerTest {
 
         // 서비스 응답을 stub
         when(freeGameService.createFreeGame(anyLong(), any()))
-            .thenReturn(response);
+                .thenReturn(response);
 
         // 토큰 검증을 stub
         when(jwtAccessTokenValidator.validateAndGetUserId("token"))
@@ -201,12 +204,12 @@ class CourtManagerControllerTest {
                 .roundCount(3)
                 .participants(
                         List.of(
-                        ParticipantCreateRequest.builder()
-                                .originalName("참가자 1")
-                                .gender(Gender.MALE)
-                                .grade(Grade.ROOKIE)
-                                .ageGroup(20)
-                                .build()
+                                ParticipantCreateRequest.builder()
+                                        .originalName("참가자 1")
+                                        .gender(Gender.MALE)
+                                        .grade(Grade.ROOKIE)
+                                        .ageGroup(20)
+                                        .build()
                         )
                 )
                 .build();
@@ -214,7 +217,7 @@ class CourtManagerControllerTest {
         String body = objectMapper.writeValueAsString(request);
 
         when(jwtAccessTokenValidator.validateAndGetUserId("token"))
-            .thenReturn(Optional.of(1L));
+                .thenReturn(Optional.of(1L));
 
         // when & then
         mockMvc.perform(post("/free-games")
@@ -237,11 +240,11 @@ class CourtManagerControllerTest {
                 .roundCount(3)
                 .participants(
                         List.of(
-                        ParticipantCreateRequest.builder()
-                                .originalName("참가자 1")
-                                .grade(Grade.ROOKIE)
-                                .ageGroup(20)
-                                .build()
+                                ParticipantCreateRequest.builder()
+                                        .originalName("참가자 1")
+                                        .grade(Grade.ROOKIE)
+                                        .ageGroup(20)
+                                        .build()
                         )
                 )
                 .build();
@@ -272,12 +275,12 @@ class CourtManagerControllerTest {
                 .roundCount(3)
                 .participants(
                         List.of(
-                        ParticipantCreateRequest.builder()
-                                .originalName("참가자 1")
-                                .gender(Gender.MALE)
-                                .grade(Grade.ROOKIE)
-                                .ageGroup(20)
-                                .build()
+                                ParticipantCreateRequest.builder()
+                                        .originalName("참가자 1")
+                                        .gender(Gender.MALE)
+                                        .grade(Grade.ROOKIE)
+                                        .ageGroup(20)
+                                        .build()
                         )
                 )
                 .build();
@@ -353,5 +356,150 @@ class CourtManagerControllerTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
         ;
+    }
+
+    @Test
+    @DisplayName("자유게임 상세 조회 성공 테스트")
+    void getFreeGameDetail_success() throws Exception {
+        // given
+        Long userId = 99L;
+        Long gameId = 1L;
+        FreeGameDetailResponse response = buildFreeGameDetailResponse(userId, gameId);
+
+        when(freeGameService.getFreeGameDetail(userId, gameId)).thenReturn(response);
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.of(userId));
+
+        mockMvc.perform(get("/free-games/{gameId}", gameId)
+                        .header("Authorization", "Bearer token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.code").value("OK"))
+                .andExpect(jsonPath("$.data.gameId").value(1))
+                .andExpect(jsonPath("$.data.title").value("자유게임"))
+                .andExpect(jsonPath("$.data.gameType").value("FREE"))
+                .andExpect(jsonPath("$.data.gameStatus").value("NOT_STARTED"))
+                .andExpect(jsonPath("$.data.matchRecordMode").value("STATUS_ONLY"))
+                .andExpect(jsonPath("$.data.gradeType").value("NATIONAL"))
+                .andExpect(jsonPath("$.data.courtCount").value(2))
+                .andExpect(jsonPath("$.data.roundCount").value(2))
+                .andExpect(jsonPath("$.data.organizerId").value(99))
+        ;
+    }
+
+    @Test
+    @DisplayName("자유게임 상세 조회 시 인증 실패")
+    void getFreeGameDetail_without_token() throws Exception {
+        // given
+        Long userId = 99L;
+        Long gameId = 1L;
+        FreeGameDetailResponse response = buildFreeGameDetailResponse(gameId, userId);
+
+        when(freeGameService.getFreeGameDetail(userId, gameId)).thenReturn(response);
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.empty());
+
+        // when & then
+        mockMvc.perform(get("/free-games/{gameId}", gameId)
+                        .header("Authorization", "Bearer token"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"))
+        ;
+    }
+
+    @Test
+    @DisplayName("자유게임 상세 조회 시 존재하지 않는 gameId면 실패")
+    void getFreeGameDetail_withUnknownGameId_returnError() throws Exception {
+        // given
+        Long userId = 99L;
+        Long gameId = 1L;
+        when(freeGameService.getFreeGameDetail(userId, gameId))
+                .thenThrow(new NotFoundException("게임이 존재하지 않습니다."));
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.of(userId));
+
+        mockMvc.perform(get("/free-games/{gameId}", gameId)
+                        .header("Authorization", "Bearer token"))
+                .andDo(print()) // 응답 로그 출력
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value("게임이 존재하지 않습니다."));
+    }
+
+    @Test
+    @DisplayName("자유게임 기본 정보 수정 성공 테스트")
+    void updateFreeGameInfo_success() throws Exception {
+        // given: 정상적인 요청 입력
+        Long gameId = 80L;
+        Long userId = 1L;
+
+        UpdateFreeGameRequest request = UpdateFreeGameRequest.builder()
+                .title("수정된 자유게임")
+                .matchRecordMode(MatchRecordMode.RESULT)
+                .gradeType(GradeType.REGIONAL)
+                .build();
+        String body = objectMapper.writeValueAsString(request);
+        UpdateFreeGameResponse response = UpdateFreeGameResponse.builder()
+                .gameId(gameId)
+                .build();
+
+        // stub
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.of(userId));
+        when(freeGameService.updateFreeGameInfo(anyLong(), anyLong(), any(UpdateFreeGameRequest.class)))
+                .thenReturn(response);
+
+        mockMvc.perform(patch("/free-games/{gameId}", gameId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer token")
+                        .content(body))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.code").value("OK"))
+                .andExpect(jsonPath("$.data.gameId").value(80))
+        ;
+    }
+
+    @Test
+    @DisplayName("자유게임 수정 시, token 검증")
+    void updateFreeGameInfo_without_token() throws Exception {
+        // given
+        Long gameId = 80L;
+        UpdateFreeGameRequest request = UpdateFreeGameRequest.builder()
+                .title("수정된 자유게임")
+                .matchRecordMode(MatchRecordMode.RESULT)
+                .gradeType(GradeType.REGIONAL)
+                .build();
+
+        String body = objectMapper.writeValueAsString(request);
+
+        // when & then
+        mockMvc.perform(patch("/free-games/{gameId}", gameId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"))
+        ;
+    }
+
+    /*
+     * Test Helper Method
+     */
+    private FreeGameDetailResponse buildFreeGameDetailResponse(Long organizerId, Long gameId) {
+        return FreeGameDetailResponse.builder()
+                .gameId(gameId)
+                .title("자유게임")
+                .gameType(GameType.FREE)
+                .gameStatus(GameStatus.NOT_STARTED)
+                .matchRecordMode(MatchRecordMode.STATUS_ONLY)
+                .gradeType(GradeType.NATIONAL)
+                .courtCount(2)
+                .roundCount(2)
+                .organizerId(organizerId)
+                .build();
     }
 }
