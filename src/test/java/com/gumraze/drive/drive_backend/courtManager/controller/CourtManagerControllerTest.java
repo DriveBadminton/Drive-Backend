@@ -463,6 +463,29 @@ class CourtManagerControllerTest {
         ;
     }
 
+    @Test
+    @DisplayName("자유게임 수정 시, token 검증")
+    void updateFreeGameInfo_without_token() throws Exception {
+        // given
+        Long gameId = 80L;
+        UpdateFreeGameRequest request = UpdateFreeGameRequest.builder()
+                .title("수정된 자유게임")
+                .matchRecordMode(MatchRecordMode.RESULT)
+                .gradeType(GradeType.REGIONAL)
+                .build();
+
+        String body = objectMapper.writeValueAsString(request);
+
+        // when & then
+        mockMvc.perform(patch("/free-games/{gameId}", gameId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"))
+        ;
+    }
+
     /*
      * Test Helper Method
      */
