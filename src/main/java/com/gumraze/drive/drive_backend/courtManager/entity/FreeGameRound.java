@@ -2,10 +2,12 @@ package com.gumraze.drive.drive_backend.courtManager.entity;
 
 import com.gumraze.drive.drive_backend.courtManager.constants.RoundStatus;
 import jakarta.persistence.*;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Getter
 @Table(
         name = "free_game_round",
         uniqueConstraints = @UniqueConstraint(columnNames = {"game_id", "round_number"})

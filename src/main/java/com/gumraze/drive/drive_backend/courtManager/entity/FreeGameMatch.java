@@ -1,13 +1,15 @@
 package com.gumraze.drive.drive_backend.courtManager.entity;
 
+import com.gumraze.drive.drive_backend.courtManager.constants.MatchResult;
 import com.gumraze.drive.drive_backend.courtManager.constants.MatchStatus;
 import com.gumraze.drive.drive_backend.courtManager.constants.MatchType;
-import com.gumraze.drive.drive_backend.courtManager.constants.WinnerTeam;
 import jakarta.persistence.*;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Getter
 @Table(
         name = "free_game_match",
         uniqueConstraints = @UniqueConstraint(columnNames = {"round_id", "court_number"})
@@ -47,7 +49,7 @@ public class FreeGameMatch {
     private MatchStatus matchStatus;
 
     @Enumerated(EnumType.STRING)
-    private WinnerTeam winnerTeam;
+    private MatchResult matchResult;
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;       // 코트 삭제 시 삭제된 코트를 표시하기 위함, 소프트 삭제용
