@@ -2,16 +2,10 @@ package com.gumraze.drive.drive_backend.courtManager.service;
 
 import com.gumraze.drive.drive_backend.common.exception.ForbiddenException;
 import com.gumraze.drive.drive_backend.common.exception.NotFoundException;
-import com.gumraze.drive.drive_backend.courtManager.constants.GameStatus;
-import com.gumraze.drive.drive_backend.courtManager.constants.GameType;
-import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
+import com.gumraze.drive.drive_backend.courtManager.constants.*;
 import com.gumraze.drive.drive_backend.courtManager.dto.*;
-import com.gumraze.drive.drive_backend.courtManager.entity.FreeGameSetting;
-import com.gumraze.drive.drive_backend.courtManager.entity.Game;
-import com.gumraze.drive.drive_backend.courtManager.entity.GameParticipant;
-import com.gumraze.drive.drive_backend.courtManager.repository.FreeGameSettingRepository;
-import com.gumraze.drive.drive_backend.courtManager.repository.GameParticipantRepository;
-import com.gumraze.drive.drive_backend.courtManager.repository.GameRepository;
+import com.gumraze.drive.drive_backend.courtManager.entity.*;
+import com.gumraze.drive.drive_backend.courtManager.repository.*;
 import com.gumraze.drive.drive_backend.user.constants.Gender;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
 import com.gumraze.drive.drive_backend.user.constants.GradeType;
@@ -47,6 +41,12 @@ class FreeGameServiceImplTest {
 
     @Mock
     FreeGameSettingRepository freeGameSettingRepository;
+
+    @Mock
+    FreeGameRoundRepository freeGameRoundRepository;
+
+    @Mock
+    FreeGameMatchRepository freeGameMatchRepository;
 
     @InjectMocks
     FreeGameServiceImpl freeGameService;
@@ -546,6 +546,72 @@ class FreeGameServiceImplTest {
 
         // when & then: FORBIDDEN(수정 권한 없음) 발생
         assertThrows(ForbiddenException.class, () -> freeGameService.updateFreeGameInfo(userId, gameId, request));
+    }
+
+    @Test
+    @DisplayName("자유게임 라운드/매치 조회 성공 테스트")
+    void getFreeGameRoundMatchResponse_success() {
+        // given
+        Long gameId = 10L;
+        Long userId = 1L;
+
+        // user stub
+        User organizer = mock(User.class);
+        when(organizer.getId()).thenReturn(userId);
+
+        // game stub
+        Game game = buildGame(gameId, organizer);
+        when(gameRepository.findById(gameId)).thenReturn(Optional.of(game));
+
+        // round 엔티티 stub
+        FreeGameRound round1 = mock(FreeGameRound.class);
+        when(round1.getId()).thenReturn(1L);
+        when(round1.getRoundNumber()).thenReturn(1);
+        when(round1.getRoundStatus()).thenReturn(RoundStatus.NOT_STARTED);
+
+        when(freeGameRoundRepository.findByGameIdOrderByRoundNumber(gameId))
+                .thenReturn(List.of(round1));
+
+        // participant stub
+        GameParticipant a1 = mock(GameParticipant.class);
+        GameParticipant a2 = mock(GameParticipant.class);
+        GameParticipant b1 = mock(GameParticipant.class);
+        GameParticipant b2 = mock(GameParticipant.class);
+        when(a1.getId()).thenReturn(1L);
+        when(a2.getId()).thenReturn(2L);
+        when(b1.getId()).thenReturn(3L);
+        when(b2.getId()).thenReturn(4L);
+
+        // match stub
+        FreeGameMatch m1 = mock(FreeGameMatch.class);
+        when(m1.getRound()).thenReturn(round1);
+        when(m1.getCourtNumber()).thenReturn(1);
+        when(m1.getTeamAPlayer1()).thenReturn(a1);
+        when(m1.getTeamAPlayer2()).thenReturn(a2);
+        when(m1.getTeamBPlayer1()).thenReturn(b1);
+        when(m1.getTeamBPlayer2()).thenReturn(b2);
+        when(m1.getMatchStatus()).thenReturn(MatchStatus.NOT_STARTED);
+        when(m1.getMatchResult()).thenReturn(null);
+        when(m1.getIsActive()).thenReturn(true);
+        when(freeGameMatchRepository.findByRoundIdInOrderByCourtNumber(List.of(1L)))
+                .thenReturn(List.of(m1));
+        when(m1.getMatchStatus()).thenReturn(MatchStatus.NOT_STARTED);
+
+
+        // when
+        FreeGameRoundMatchResponse response =
+                freeGameService.getFreeGameRoundMatchResponse(userId, gameId);
+
+        // then
+        assertEquals(gameId, response.getGameId());
+        assertEquals(1, response.getRounds().size());
+        assertEquals(1, response.getRounds().get(0).getMatches().size());
+        assertEquals(MatchResult.NULL,
+                response.getRounds().get(0).getMatches().get(0).getMatchResult());
+
+        verify(gameRepository).findById(gameId);
+        verify(freeGameRoundRepository).findByGameIdOrderByRoundNumber(gameId);
+        verify(freeGameMatchRepository).findByRoundIdInOrderByCourtNumber(List.of(1L));
     }
 
     /*

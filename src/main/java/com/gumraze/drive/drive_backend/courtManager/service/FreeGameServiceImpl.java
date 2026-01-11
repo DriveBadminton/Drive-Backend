@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -30,6 +31,8 @@ public class FreeGameServiceImpl implements FreeGameService {
     private final GameParticipantRepository gameParticipantRepository;
     private final FreeGameSettingRepository freeGameSettingRepository;
     private final UserRepository userRepository;
+    private final FreeGameRoundRepository freeGameRoundRepository;
+    private final FreeGameMatchRepository freeGameMatchRepository;
 
     @Override
     public CreateFreeGameResponse createFreeGame(
