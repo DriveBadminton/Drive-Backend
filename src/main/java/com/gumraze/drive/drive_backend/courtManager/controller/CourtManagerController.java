@@ -55,4 +55,16 @@ public class CourtManagerController {
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(ResultCode.OK, "자유게임 기본 정보 수정 성공", response));
     }
+
+    @GetMapping("/free-games/{gameId}/rounds-and-matches")
+    public ResponseEntity<ApiResponse<FreeGameRoundMatchResponse>> getFreeGameRoundMatchResponse(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long gameId
+    ) {
+        FreeGameRoundMatchResponse response = freeGameService.getFreeGameRoundMatchResponse(userId, gameId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success(ResultCode.OK, "자유게임 라운드 및 매치 정보 조회 성공", response));
+    }
 }
