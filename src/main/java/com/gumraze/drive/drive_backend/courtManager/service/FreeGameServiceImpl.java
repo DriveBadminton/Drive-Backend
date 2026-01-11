@@ -5,13 +5,10 @@ import com.gumraze.drive.drive_backend.common.exception.NotFoundException;
 import com.gumraze.drive.drive_backend.courtManager.constants.GameStatus;
 import com.gumraze.drive.drive_backend.courtManager.constants.GameType;
 import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
+import com.gumraze.drive.drive_backend.courtManager.constants.MatchResult;
 import com.gumraze.drive.drive_backend.courtManager.dto.*;
-import com.gumraze.drive.drive_backend.courtManager.entity.FreeGameSetting;
-import com.gumraze.drive.drive_backend.courtManager.entity.Game;
-import com.gumraze.drive.drive_backend.courtManager.entity.GameParticipant;
-import com.gumraze.drive.drive_backend.courtManager.repository.FreeGameSettingRepository;
-import com.gumraze.drive.drive_backend.courtManager.repository.GameParticipantRepository;
-import com.gumraze.drive.drive_backend.courtManager.repository.GameRepository;
+import com.gumraze.drive.drive_backend.courtManager.entity.*;
+import com.gumraze.drive.drive_backend.courtManager.repository.*;
 import com.gumraze.drive.drive_backend.user.constants.Gender;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
 import com.gumraze.drive.drive_backend.user.entity.User;
@@ -188,6 +185,70 @@ public class FreeGameServiceImpl implements FreeGameService {
         );
         gameRepository.save(game);
         return UpdateFreeGameResponse.from(game);
+    }
+
+    @Override
+    public FreeGameRoundMatchResponse getFreeGameRoundMatchResponse(Long userId, Long gameId) {
+        // gameId로 Game 조회
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new NotFoundException("존재하지 않는 게임입니다. gameId: " + gameId));
+
+        if (!game.getOrganizer().getId().equals(userId)) {
+            throw new ForbiddenException("게임의 주최자만 접근할 수 있습니다.");
+        }
+
+        // round 조회
+        List<FreeGameRound> rounds = freeGameRoundRepository.findByGameIdOrderByRoundNumber(gameId);
+
+        // round가 존재하지 않으면 빈 배열로 반환
+        if (rounds.isEmpty()) {
+            return FreeGameRoundMatchResponse.builder()
+                    .gameId(gameId)
+                    .rounds(List.of())
+                    .build();
+        }
+
+        // match 조회
+        List<Long> roundIds = rounds.stream()
+                .map(FreeGameRound::getId)
+                .toList();
+        List<FreeGameMatch> matches = freeGameMatchRepository.findByRoundIdInOrderByCourtNumber(roundIds);
+
+        // match를 roundID 기준으로 그룹화
+        Map<Long, List<FreeGameMatch>> matchesByRoundId = matches.stream()
+                .collect(Collectors.groupingBy(m -> m.getRound().getId()));
+
+        // DTO
+        List<FreeGameRoundResponse> roundResponses = rounds.stream()
+                .map(round -> {
+                    List<FreeGameMatch> roundMatches = matchesByRoundId.getOrDefault(round.getId(), List.of());
+                    List<FreeGameMatchResponse> matchResponses = roundMatches.stream()
+                            .map(match -> FreeGameMatchResponse.builder()
+                                    .courtNumber(match.getCourtNumber().longValue())
+                                    .teamAIds(List.of(
+                                            match.getTeamAPlayer1() != null ? match.getTeamAPlayer1().getId() : null,
+                                            match.getTeamAPlayer2() != null ? match.getTeamAPlayer2().getId() : null
+                                            ))
+                                    .teamBIds(List.of(
+                                            match.getTeamBPlayer1() != null ? match.getTeamBPlayer1().getId() : null,
+                                            match.getTeamBPlayer2() != null ? match.getTeamBPlayer2().getId() : null
+                                            ))
+                                    .matchStatus(match.getMatchStatus())
+                                    .matchResult(match.getMatchResult() != null ? match.getMatchResult() : MatchResult.NULL)
+                                    .isActive(match.getIsActive())
+                                    .build())
+                            .toList();
+                    return FreeGameRoundResponse.builder()
+                            .roundNumber(round.getRoundNumber().longValue())
+                            .roundStatus(round.getRoundStatus())
+                            .matches(matchResponses)
+                            .build();
+                })
+                .toList();
+        return FreeGameRoundMatchResponse.builder()
+                .gameId(gameId)
+                .rounds(roundResponses)
+                .build();
     }
 
     private String suffix(int count) {
