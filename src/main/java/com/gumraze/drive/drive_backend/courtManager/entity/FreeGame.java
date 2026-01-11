@@ -16,8 +16,8 @@ import java.time.LocalDateTime;
 @Entity
 @Builder
 @AllArgsConstructor
-@Table(name = "court_games")
-public class Game {
+@Table(name = "free_games")
+public class FreeGame {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -56,7 +56,7 @@ public class Game {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    protected Game() {}
+    protected FreeGame() {}
 
     public void updateBasicInfo(
             String title,

@@ -19,7 +19,7 @@ public class FreeGameRound {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "game_id", nullable = false)
-    private Game game;
+    private FreeGame freeGame;
 
     @Column(name = "round_number", nullable = false)
     private Integer roundNumber;        // 라운드의 순서

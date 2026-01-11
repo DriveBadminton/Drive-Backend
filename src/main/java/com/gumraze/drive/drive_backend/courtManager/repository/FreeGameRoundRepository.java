@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface FreeGameRoundRepository extends JpaRepository<FreeGameRound, Long> {
-    List<FreeGameRound> findByGameIdOrderByRoundNumber(Long gameId);
+    List<FreeGameRound> findByFreeGameIdOrderByRoundNumber(Long freeGameId);
 }

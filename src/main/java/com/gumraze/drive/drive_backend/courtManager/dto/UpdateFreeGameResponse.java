@@ -1,6 +1,6 @@
 package com.gumraze.drive.drive_backend.courtManager.dto;
 
-import com.gumraze.drive.drive_backend.courtManager.entity.Game;
+import com.gumraze.drive.drive_backend.courtManager.entity.FreeGame;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -9,9 +9,9 @@ import lombok.Getter;
 public class UpdateFreeGameResponse {
     private Long gameId;
 
-    public static UpdateFreeGameResponse from(Game game) {
+    public static UpdateFreeGameResponse from(FreeGame freeGame) {
         return UpdateFreeGameResponse.builder()
-                .gameId(game.getId())
+                .gameId(freeGame.getId())
                 .build();
     }
 }

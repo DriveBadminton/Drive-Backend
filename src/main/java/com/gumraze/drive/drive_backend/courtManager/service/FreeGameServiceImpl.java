@@ -77,7 +77,7 @@ public class FreeGameServiceImpl implements FreeGameService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 userId입니다. :" + userId));
 
         // 게임 정보 엔티티 생성
-        Game game = Game.builder()
+        FreeGame freeGame = FreeGame.builder()
                 .title(request.getTitle())
                 .organizer(organizerId)
                 .gradeType(request.getGradeType())
@@ -92,11 +92,11 @@ public class FreeGameServiceImpl implements FreeGameService {
                 .build();
 
         // 게임 기본 정보 우선 저장
-        Game savedGame = gameRepository.save(game);
+        FreeGame savedFreeGame = gameRepository.save(freeGame);
 
         // 자유게임 설정 저장
         FreeGameSetting freeGameSetting = FreeGameSetting.builder()
-                .game(savedGame)
+                .freeGame(savedFreeGame)
                 .courtCount(request.getCourtCount())
                 .roundCount(request.getRoundCount())
                 .build();
@@ -132,7 +132,7 @@ public class FreeGameServiceImpl implements FreeGameService {
                 }
 
                 GameParticipant toSave = GameParticipant.builder()
-                        .game(savedGame)
+                        .freeGame(savedFreeGame)
                         .user(participantUser)
                         .originalName(participant.getOriginalName())
                         .displayName(displayName)
@@ -146,33 +146,33 @@ public class FreeGameServiceImpl implements FreeGameService {
                 gameParticipantRepository.save(toSave);
             }
         }
-        return CreateFreeGameResponse.from(savedGame);
+        return CreateFreeGameResponse.from(savedFreeGame);
     }
 
     @Override
     @Transactional(readOnly = true)
     public FreeGameDetailResponse getFreeGameDetail(Long userId, Long gameId) {
-        Game game = gameRepository.findById(gameId)
+        FreeGame freeGame = gameRepository.findById(gameId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 게임입니다. gameId: " + gameId));
 
         // 생성자만 조회 가능
-        if (!game.getOrganizer().getId().equals(userId)) {
+        if (!freeGame.getOrganizer().getId().equals(userId)) {
             throw new ForbiddenException("게임 생성자만 조회할 수 있습니다.");
         }
 
-        FreeGameSetting setting = freeGameSettingRepository.findByGameId(gameId)
+        FreeGameSetting setting = freeGameSettingRepository.findByFreeGameId(gameId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 게임 세팅입니다. gameId: " + gameId));
 
-        return FreeGameDetailResponse.from(game, setting);
+        return FreeGameDetailResponse.from(freeGame, setting);
     }
 
     @Override
     @Transactional
     public UpdateFreeGameResponse updateFreeGameInfo(Long userId, Long gameId, UpdateFreeGameRequest request) {
-        Game game = gameRepository.findById(gameId)
+        FreeGame freeGame = gameRepository.findById(gameId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 게임입니다. gameId: " + gameId));
 
-        if (!game.getOrganizer().getId().equals(userId)) {
+        if (!freeGame.getOrganizer().getId().equals(userId)) {
             throw new ForbiddenException("게임 생성자만 수정할 수 있습니다.");
         }
 
@@ -181,27 +181,27 @@ public class FreeGameServiceImpl implements FreeGameService {
             throw new UnsupportedOperationException("매니저 수정 기능은 현재 미개발 상태입니다.");
         }
         // update 수행
-        game.updateBasicInfo(
+        freeGame.updateBasicInfo(
                 request.getTitle(),
                 request.getMatchRecordMode(),
                 request.getGradeType()
         );
-        gameRepository.save(game);
-        return UpdateFreeGameResponse.from(game);
+        gameRepository.save(freeGame);
+        return UpdateFreeGameResponse.from(freeGame);
     }
 
     @Override
     public FreeGameRoundMatchResponse getFreeGameRoundMatchResponse(Long userId, Long gameId) {
         // gameId로 Game 조회
-        Game game = gameRepository.findById(gameId)
+        FreeGame freeGame = gameRepository.findById(gameId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 게임입니다. gameId: " + gameId));
 
-        if (!game.getOrganizer().getId().equals(userId)) {
+        if (!freeGame.getOrganizer().getId().equals(userId)) {
             throw new ForbiddenException("게임의 주최자만 접근할 수 있습니다.");
         }
 
         // round 조회
-        List<FreeGameRound> rounds = freeGameRoundRepository.findByGameIdOrderByRoundNumber(gameId);
+        List<FreeGameRound> rounds = freeGameRoundRepository.findByFreeGameIdOrderByRoundNumber(gameId);
 
         // round가 존재하지 않으면 빈 배열로 반환
         if (rounds.isEmpty()) {
