@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Getter
 @Table(
         name = "free_game_round",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"game_id", "round_number"})
+        uniqueConstraints = @UniqueConstraint(columnNames = {"freegame_id", "round_number"})
 )
 public class FreeGameRound {
     @Id
@@ -18,7 +18,7 @@ public class FreeGameRound {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "game_id", nullable = false)
+    @JoinColumn(name = "freegame_id", nullable = false)
     private FreeGame freeGame;
 
     @Column(name = "round_number", nullable = false)
