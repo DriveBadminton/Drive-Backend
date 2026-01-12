@@ -436,7 +436,7 @@ class FreeGameServiceImplTest {
         when(organizer.getId()).thenReturn(99L);
 
         // entity
-        FreeGame freeGame = buildGame(gameId, organizer);
+        FreeGame freeGame = buildFreeGame(gameId, organizer);
         FreeGameSetting setting = buildSetting(freeGame, 2, 3);
 
         // stub
@@ -489,7 +489,7 @@ class FreeGameServiceImplTest {
 
         // entity
         User organizer = mock(User.class);
-        FreeGame freeGame = buildGame(gameId, organizer);
+        FreeGame freeGame = buildFreeGame(gameId, organizer);
 
         // stub
         when(organizer.getId()).thenReturn(99L);    // 요청자와 다름
@@ -509,7 +509,7 @@ class FreeGameServiceImplTest {
         User organizer = mock(User.class);
         when(organizer.getId()).thenReturn(userId);
 
-        FreeGame freeGame = buildGame(gameId, organizer);
+        FreeGame freeGame = buildFreeGame(gameId, organizer);
 
         // stub
         when(gameRepository.findById(gameId)).thenReturn(Optional.of(freeGame));
@@ -539,7 +539,7 @@ class FreeGameServiceImplTest {
         User organizer = mock(User.class);
 
         // stub
-        FreeGame freeGame = buildGame(gameId, organizer);
+        FreeGame freeGame = buildFreeGame(gameId, organizer);
         when(gameRepository.findById(gameId)).thenReturn(Optional.of(freeGame));
         when(freeGame.getOrganizer().getId()).thenReturn(3L);
 
@@ -560,7 +560,7 @@ class FreeGameServiceImplTest {
         when(organizer.getId()).thenReturn(userId);
 
         // game stub
-        FreeGame freeGame = buildGame(gameId, organizer);
+        FreeGame freeGame = buildFreeGame(gameId, organizer);
         when(gameRepository.findById(gameId)).thenReturn(Optional.of(freeGame));
 
         // round 엔티티 stub
@@ -614,6 +614,26 @@ class FreeGameServiceImplTest {
         verify(freeGameMatchRepository).findByRoundIdInOrderByCourtNumber(List.of(1L));
     }
 
+    @Test
+    @DisplayName("자유게임 라운드/매치 조회 시 organizer가 아니면 403 테스트")
+    void getFreeGameRoundMatchResponse_withNotOrganizer_throwsForbidden() {
+        // given
+        Long gameId = 10L;
+        Long userId = 1L;
+
+        User organizer = mock(User.class);
+        when(organizer.getId()).thenReturn(2L);
+
+        FreeGame freeGame = buildFreeGame(gameId, organizer);
+        when(gameRepository.findById(gameId)).thenReturn(Optional.of(freeGame));
+
+        // when & then
+        assertThrows(ForbiddenException.class, () -> freeGameService.getFreeGameRoundMatchResponse(userId, gameId));
+        verify(gameRepository).findById(gameId);
+        verify(freeGameRoundRepository, never()).findByFreeGameIdOrderByRoundNumber(anyLong());
+        verify(freeGameMatchRepository, never()).findByRoundIdInOrderByCourtNumber(anyList());
+    }
+
     /*
     Builder 메서드
      */
@@ -627,7 +647,7 @@ class FreeGameServiceImplTest {
                 .build();
     }
 
-    private FreeGame buildGame(Long gameId, User organizer) {
+    private FreeGame buildFreeGame(Long gameId, User organizer) {
         return FreeGame.builder()
                 .id(gameId)
                 .title("자유게임")
