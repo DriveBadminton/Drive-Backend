@@ -4,16 +4,22 @@ import com.gumraze.drive.drive_backend.courtManager.constants.MatchResult;
 import com.gumraze.drive.drive_backend.courtManager.constants.MatchStatus;
 import com.gumraze.drive.drive_backend.courtManager.constants.MatchType;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Builder
+@AllArgsConstructor
 @Table(
         name = "free_game_match",
         uniqueConstraints = @UniqueConstraint(columnNames = {"round_id", "court_number"})
 )
+@NoArgsConstructor
 public class FreeGameMatch {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

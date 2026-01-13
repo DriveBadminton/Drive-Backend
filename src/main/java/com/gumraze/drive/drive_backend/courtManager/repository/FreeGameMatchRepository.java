@@ -7,5 +7,7 @@ import java.util.List;
 
 public interface FreeGameMatchRepository extends JpaRepository<FreeGameMatch, Long> {
     List<FreeGameMatch> findByRoundIdInOrderByCourtNumber(List<Long> roundIds);
+
+    void deleteByRoundId(Long id);
 }
 

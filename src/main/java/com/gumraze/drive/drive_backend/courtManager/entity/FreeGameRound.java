@@ -2,12 +2,16 @@ package com.gumraze.drive.drive_backend.courtManager.entity;
 
 import com.gumraze.drive.drive_backend.courtManager.constants.RoundStatus;
 import jakarta.persistence.*;
-import lombok.Getter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(
         name = "free_game_round",
         uniqueConstraints = @UniqueConstraint(columnNames = {"freegame_id", "round_number"})
@@ -35,6 +39,4 @@ public class FreeGameRound {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-
-    protected FreeGameRound() {}
 }
