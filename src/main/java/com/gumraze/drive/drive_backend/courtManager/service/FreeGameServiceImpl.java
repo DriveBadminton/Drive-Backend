@@ -2,16 +2,10 @@ package com.gumraze.drive.drive_backend.courtManager.service;
 
 import com.gumraze.drive.drive_backend.common.exception.ForbiddenException;
 import com.gumraze.drive.drive_backend.common.exception.NotFoundException;
-import com.gumraze.drive.drive_backend.courtManager.constants.GameStatus;
-import com.gumraze.drive.drive_backend.courtManager.constants.GameType;
-import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
+import com.gumraze.drive.drive_backend.courtManager.constants.*;
 import com.gumraze.drive.drive_backend.courtManager.dto.*;
-import com.gumraze.drive.drive_backend.courtManager.entity.FreeGameSetting;
-import com.gumraze.drive.drive_backend.courtManager.entity.Game;
-import com.gumraze.drive.drive_backend.courtManager.entity.GameParticipant;
-import com.gumraze.drive.drive_backend.courtManager.repository.FreeGameSettingRepository;
-import com.gumraze.drive.drive_backend.courtManager.repository.GameParticipantRepository;
-import com.gumraze.drive.drive_backend.courtManager.repository.GameRepository;
+import com.gumraze.drive.drive_backend.courtManager.entity.*;
+import com.gumraze.drive.drive_backend.courtManager.repository.*;
 import com.gumraze.drive.drive_backend.user.constants.Gender;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
 import com.gumraze.drive.drive_backend.user.entity.User;
@@ -21,9 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -33,6 +26,8 @@ public class FreeGameServiceImpl implements FreeGameService {
     private final GameParticipantRepository gameParticipantRepository;
     private final FreeGameSettingRepository freeGameSettingRepository;
     private final UserRepository userRepository;
+    private final FreeGameRoundRepository freeGameRoundRepository;
+    private final FreeGameMatchRepository freeGameMatchRepository;
 
     @Override
     public CreateFreeGameResponse createFreeGame(
@@ -77,7 +72,7 @@ public class FreeGameServiceImpl implements FreeGameService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 userId입니다. :" + userId));
 
         // 게임 정보 엔티티 생성
-        Game game = Game.builder()
+        FreeGame freeGame = FreeGame.builder()
                 .title(request.getTitle())
                 .organizer(organizerId)
                 .gradeType(request.getGradeType())
@@ -92,11 +87,11 @@ public class FreeGameServiceImpl implements FreeGameService {
                 .build();
 
         // 게임 기본 정보 우선 저장
-        Game savedGame = gameRepository.save(game);
+        FreeGame savedFreeGame = gameRepository.save(freeGame);
 
         // 자유게임 설정 저장
         FreeGameSetting freeGameSetting = FreeGameSetting.builder()
-                .game(savedGame)
+                .freeGame(savedFreeGame)
                 .courtCount(request.getCourtCount())
                 .roundCount(request.getRoundCount())
                 .build();
@@ -132,7 +127,7 @@ public class FreeGameServiceImpl implements FreeGameService {
                 }
 
                 GameParticipant toSave = GameParticipant.builder()
-                        .game(savedGame)
+                        .freeGame(savedFreeGame)
                         .user(participantUser)
                         .originalName(participant.getOriginalName())
                         .displayName(displayName)
@@ -146,33 +141,33 @@ public class FreeGameServiceImpl implements FreeGameService {
                 gameParticipantRepository.save(toSave);
             }
         }
-        return CreateFreeGameResponse.from(savedGame);
+        return CreateFreeGameResponse.from(savedFreeGame);
     }
 
     @Override
     @Transactional(readOnly = true)
     public FreeGameDetailResponse getFreeGameDetail(Long userId, Long gameId) {
-        Game game = gameRepository.findById(gameId)
+        FreeGame freeGame = gameRepository.findById(gameId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 게임입니다. gameId: " + gameId));
 
         // 생성자만 조회 가능
-        if (!game.getOrganizer().getId().equals(userId)) {
+        if (!freeGame.getOrganizer().getId().equals(userId)) {
             throw new ForbiddenException("게임 생성자만 조회할 수 있습니다.");
         }
 
-        FreeGameSetting setting = freeGameSettingRepository.findByGameId(gameId)
+        FreeGameSetting setting = freeGameSettingRepository.findByFreeGameId(gameId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 게임 세팅입니다. gameId: " + gameId));
 
-        return FreeGameDetailResponse.from(game, setting);
+        return FreeGameDetailResponse.from(freeGame, setting);
     }
 
     @Override
     @Transactional
     public UpdateFreeGameResponse updateFreeGameInfo(Long userId, Long gameId, UpdateFreeGameRequest request) {
-        Game game = gameRepository.findById(gameId)
+        FreeGame freeGame = gameRepository.findById(gameId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 게임입니다. gameId: " + gameId));
 
-        if (!game.getOrganizer().getId().equals(userId)) {
+        if (!freeGame.getOrganizer().getId().equals(userId)) {
             throw new ForbiddenException("게임 생성자만 수정할 수 있습니다.");
         }
 
@@ -181,13 +176,249 @@ public class FreeGameServiceImpl implements FreeGameService {
             throw new UnsupportedOperationException("매니저 수정 기능은 현재 미개발 상태입니다.");
         }
         // update 수행
-        game.updateBasicInfo(
+        freeGame.updateBasicInfo(
                 request.getTitle(),
                 request.getMatchRecordMode(),
                 request.getGradeType()
         );
-        gameRepository.save(game);
-        return UpdateFreeGameResponse.from(game);
+        gameRepository.save(freeGame);
+        return UpdateFreeGameResponse.from(freeGame);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public FreeGameRoundMatchResponse getFreeGameRoundMatchResponse(Long userId, Long gameId) {
+        // gameId로 Game 조회
+        FreeGame freeGame = gameRepository.findById(gameId)
+                .orElseThrow(() -> new NotFoundException("존재하지 않는 게임입니다. gameId: " + gameId));
+
+        if (!freeGame.getOrganizer().getId().equals(userId)) {
+            throw new ForbiddenException("게임의 주최자만 접근할 수 있습니다.");
+        }
+
+        // round 조회
+        List<FreeGameRound> rounds = freeGameRoundRepository.findByFreeGameIdOrderByRoundNumber(gameId);
+
+        // round가 존재하지 않으면 빈 배열로 반환
+        if (rounds.isEmpty()) {
+            return FreeGameRoundMatchResponse.builder()
+                    .gameId(gameId)
+                    .rounds(List.of())
+                    .build();
+        }
+
+        // match 조회
+        List<Long> roundIds = rounds.stream()
+                .map(FreeGameRound::getId)
+                .toList();
+        List<FreeGameMatch> matches = freeGameMatchRepository.findByRoundIdInOrderByCourtNumber(roundIds);
+
+        // match를 roundID 기준으로 그룹화
+        Map<Long, List<FreeGameMatch>> matchesByRoundId = matches.stream()
+                .collect(Collectors.groupingBy(m -> m.getRound().getId()));
+
+        // DTO
+        List<FreeGameRoundResponse> roundResponses = rounds.stream()
+                .map(round -> {
+                    List<FreeGameMatch> roundMatches = matchesByRoundId.getOrDefault(round.getId(), List.of());
+                    List<FreeGameMatchResponse> matchResponses = roundMatches.stream()
+                            .map(match -> FreeGameMatchResponse.builder()
+                                    .courtNumber(match.getCourtNumber().longValue())
+                                    .teamAIds(List.of(
+                                            match.getTeamAPlayer1() != null ? match.getTeamAPlayer1().getId() : null,
+                                            match.getTeamAPlayer2() != null ? match.getTeamAPlayer2().getId() : null
+                                            ))
+                                    .teamBIds(List.of(
+                                            match.getTeamBPlayer1() != null ? match.getTeamBPlayer1().getId() : null,
+                                            match.getTeamBPlayer2() != null ? match.getTeamBPlayer2().getId() : null
+                                            ))
+                                    .matchStatus(match.getMatchStatus())
+                                    .matchResult(match.getMatchResult() != null ? match.getMatchResult() : MatchResult.NULL)
+                                    .isActive(match.getIsActive())
+                                    .build())
+                            .toList();
+                    return FreeGameRoundResponse.builder()
+                            .roundNumber(round.getRoundNumber())
+                            .roundStatus(round.getRoundStatus())
+                            .matches(matchResponses)
+                            .build();
+                })
+                .toList();
+        return FreeGameRoundMatchResponse.builder()
+                .gameId(gameId)
+                .rounds(roundResponses)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public UpdateFreeGameRoundMatchResponse updateFreeGameRoundMatch(
+            Long userId,
+            Long gameId,
+            UpdateFreeGameRoundMatchRequest request
+    ) {
+
+        // 게임 id와 organizer id 검증 수행
+        FreeGame freeGame = validateGameAndOrganizer(gameId, userId);
+
+        // 게임 상태 검증
+        if (freeGame.getGameStatus() == GameStatus.COMPLETED) {
+            throw new IllegalArgumentException("게임 상태가 COMPLETED이므로 수정이 불가합니다.");
+        }
+
+        // 기존 라운드 조회
+        List<FreeGameRound> existingRounds = freeGameRoundRepository.findByFreeGameIdOrderByRoundNumber(gameId);
+
+        // roundNumber를 FreeGameRound로 매핑
+        Map<Integer, FreeGameRound> roundMap =
+                existingRounds.stream()
+                        .collect(Collectors.toMap(
+                                FreeGameRound::getRoundNumber,
+                                r -> r
+                        ));
+
+        if (request == null || request.getRounds() == null) {
+            return UpdateFreeGameRoundMatchResponse.from(gameId);
+        }
+
+        // 게임 참가자 조회
+        Set<Long> participantIdsInGame = gameParticipantRepository.findByFreeGameId(gameId).stream()
+                .map(GameParticipant::getId)
+                .collect(Collectors.toSet());
+
+        // 요청 라운드 처리
+        for (RoundRequest roundRequest : request.getRounds()) {
+
+            // 요청한 roundNumber
+            Integer requestedRoundNumber = roundRequest.getRoundNumber();
+
+            // roundNumber 필수
+            if (requestedRoundNumber == null) {
+                throw new IllegalArgumentException("roundNumber는 필수입니다.");
+            }
+
+            // round에는 반드시 match가 있어야함
+            if (roundRequest.getMatches() == null || roundRequest.getMatches().isEmpty()) {
+                throw new IllegalArgumentException("라운드는 최소 1개의 매치를 포함해야합니다.");
+            }
+
+            // round 내 중복 참가자 검증용
+            Set<Long> usedParticipantIds = new HashSet<>();
+
+            // teamAIds, teamBIds 검증
+            for (MatchRequest matchRequest : roundRequest.getMatches()) {
+                List<Long> teamAIds = matchRequest.getTeamAIds();
+                List<Long> teamBIds = matchRequest.getTeamBIds();
+
+                if (teamAIds == null || teamBIds == null) {
+                    throw new IllegalArgumentException("teamAIds와 teamBIds는 모두 필수입니다.");
+                }
+                if (teamAIds.size() != 2 || teamBIds.size() != 2) {
+                    throw new IllegalArgumentException("teamAIds와 teamBIds의 길이는 2여야 합니다.");
+                }
+
+                // 매치 내 중복 participantId 검증
+                Set<Long> matchParticipantIds = new HashSet<>();
+
+                for (Long id : teamAIds) {
+                    if (id == null) {
+                        continue;
+                    }
+                    if (!participantIdsInGame.contains(id)) {
+                        throw new IllegalArgumentException("존재하지 않거나 해당 게임에 속하지 않는 participantId입니다. participantId: " + id);
+                    }
+                    if (!matchParticipantIds.add(id)) {
+                        throw new IllegalArgumentException("match 내 participantId 중복입니다. participantId: " + id);
+                    }
+                    if (!usedParticipantIds.add(id)) {
+                        throw new IllegalArgumentException("round 내 participantId 중복입니다. participantId: " + id);
+                    }
+                }
+
+                for (Long id : teamBIds) {
+                    if (id == null) {
+                        continue;
+                    }
+                    if (!participantIdsInGame.contains(id)) {
+                        throw new IllegalArgumentException("존재하지 않거나 해당 게임에 속하지 않는 participantId입니다. participantId: " + id);
+                    }
+                    if (!matchParticipantIds.add(id)) {
+                        throw new IllegalArgumentException("match 내 participantId 중복입니다. participantId: " + id);
+                    }
+                    if (!usedParticipantIds.add(id)) {
+                        throw new IllegalArgumentException("round 내 participantId 중복입니다. participantId: " + id);
+                    }
+                }
+            }
+
+            // courtNumber가 1..n 연속인지 검증
+            List<Integer> courtNumbers = roundRequest.getMatches().stream()
+                    .map(MatchRequest::getCourtNumber)
+                    .toList();
+
+            // courtNumber 최소값 검증
+            if (courtNumbers.stream().anyMatch(n -> n == null || n < 1)) {
+                throw new IllegalArgumentException("courtNumber는 1이상이어야 합니다.");
+            }
+
+            List<Integer> sorted = courtNumbers.stream().sorted().toList();
+            for (int i = 0; i < sorted.size(); i++) {
+                if (sorted.get(i) != i + 1) {
+                    throw new IllegalArgumentException("courtNumber는 1..n 연속이어야 합니다.");
+                }
+            }
+
+            // round의 courtNumber는 서로 다른 값을 가지고 있어야함.
+            long distinctCount = courtNumbers.stream().distinct().count();
+            if (distinctCount != courtNumbers.size()) {
+                throw new IllegalArgumentException("매치는 서로 다른 courtNumber를 가져야합니다.");
+            }
+
+            // round 결정
+            FreeGameRound resolvedRound = roundMap.get(requestedRoundNumber);
+            if (resolvedRound == null) {
+                // 신규 라운드인 경우만 라운드 생성
+                resolvedRound = FreeGameRound.builder()
+                        .freeGame(freeGame)
+                        .roundNumber(roundRequest.getRoundNumber())
+                        .roundStatus(RoundStatus.NOT_STARTED)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .build();
+                resolvedRound = freeGameRoundRepository.save(resolvedRound);
+            }
+
+            // 기존 매치 삭제
+            if (resolvedRound.getId() != null) {
+                freeGameMatchRepository.deleteByRoundId(resolvedRound.getId());
+            }
+
+            // 새 매치 생성
+            final FreeGameRound targetRound = resolvedRound;
+            List<FreeGameMatch> newMatches = roundRequest.getMatches().stream()
+                    .map(matchRequest -> {
+                        List<Long> teamAIds = matchRequest.getTeamAIds();
+                        List<Long> teamBIds = matchRequest.getTeamBIds();
+
+                        GameParticipant teamAPlayer1 = teamAIds.getFirst() == null ? null : gameParticipantRepository.findById(teamAIds.getFirst()).orElse(null);
+                        GameParticipant teamAPlayer2 = teamAIds.get(1) == null ? null : gameParticipantRepository.findById(teamAIds.get(1)).orElse(null);
+                        GameParticipant teamBPlayer1 = teamBIds.getFirst() == null ? null : gameParticipantRepository.findById(teamBIds.getFirst()).orElse(null);
+                        GameParticipant teamBPlayer2 = teamBIds.get(1) == null ? null : gameParticipantRepository.findById(teamBIds.get(1)).orElse(null);
+
+                        return FreeGameMatch.builder()
+                                .round(targetRound)
+                                .courtNumber(matchRequest.getCourtNumber())
+                                .teamAPlayer1(teamAPlayer1)
+                                .teamAPlayer2(teamAPlayer2)
+                                .teamBPlayer1(teamBPlayer1)
+                                .teamBPlayer2(teamBPlayer2)
+                                .build();
+                    })
+                    .toList();
+            // 매치 전체 교체 저장
+            freeGameMatchRepository.saveAll(newMatches);
+        }
+        return UpdateFreeGameRoundMatchResponse.from(gameId);
     }
 
     private String suffix(int count) {
@@ -200,5 +431,16 @@ public class FreeGameServiceImpl implements FreeGameService {
             Grade grade,
             Integer ageGroup
     ) {
+    }
+
+    private FreeGame validateGameAndOrganizer(Long gameId, Long userId) {
+        FreeGame freeGame = gameRepository.findById(gameId)
+                .orElseThrow(() -> new NotFoundException("존재하지 않는 게임입니다. gameId: " + gameId));
+
+        if (!freeGame.getOrganizer().getId().equals(userId)) {
+            throw new ForbiddenException("게임의 organizer가 아닙니다. gameId: " + gameId);
+        }
+
+        return freeGame;
     }
 }
