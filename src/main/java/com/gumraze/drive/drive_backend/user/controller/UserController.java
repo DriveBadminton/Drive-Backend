@@ -7,6 +7,7 @@ import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateResponseDto;
 import com.gumraze.drive.drive_backend.user.dto.UserProfilePrefillResponseDto;
 import com.gumraze.drive.drive_backend.user.service.UserProfileService;
+import com.gumraze.drive.drive_backend.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserProfileService userProfileService;
+    private final UserService userService;
 
     @GetMapping("/me")
     @Operation(
@@ -46,7 +48,7 @@ public class UserController {
             @AuthenticationPrincipal Long userId
     ) {
         // userId로 프로필 조회
-        UserMeResponse profile = userProfileService.getUserMe(userId);
+        UserMeResponse profile = userService.getUserMe(userId);
 
         ResultCode code = ResultCode.OK;
 

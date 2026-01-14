@@ -5,6 +5,7 @@ import com.gumraze.drive.drive_backend.config.SecurityConfig;
 import com.gumraze.drive.drive_backend.user.constants.UserStatus;
 import com.gumraze.drive.drive_backend.user.dto.UserMeResponse;
 import com.gumraze.drive.drive_backend.user.service.UserProfileService;
+import com.gumraze.drive.drive_backend.user.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,8 @@ public class UserControllerTest {
 
     @MockitoBean
     private UserProfileService userProfileService;
+    @Autowired
+    private UserService userService;
 
     @Test
     @DisplayName("PENDING 사용자가 /users/me 조회 시 status만 반환한다.")
@@ -42,7 +45,7 @@ public class UserControllerTest {
                 .build();
 
         // stub
-        when(userProfileService.getUserMe(1L))
+        when(userService.getUserMe(1L))
                 .thenReturn(responseDto);
         when(jwtAccessTokenValidator.validateAndGetUserId("token"))
                 .thenReturn(Optional.of(1L));
