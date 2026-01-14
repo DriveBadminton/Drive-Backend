@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Table(
         name = "game_participants",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"game_id", "user_id"})
+        uniqueConstraints = @UniqueConstraint(columnNames = {"freegame_id", "user_id"})
 )
 public class GameParticipant {
     @Id
@@ -25,8 +25,8 @@ public class GameParticipant {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "game_id", nullable = false)
-    private Game game;
+    @JoinColumn(name = "freegame_id", nullable = false)
+    private FreeGame freeGame;
 
     // 비회원 참가 허용
     @ManyToOne(fetch = FetchType.LAZY)

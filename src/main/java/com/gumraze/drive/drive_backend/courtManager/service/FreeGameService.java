@@ -8,4 +8,8 @@ public interface FreeGameService {
     FreeGameDetailResponse getFreeGameDetail(Long userId, Long gameId);
 
     UpdateFreeGameResponse updateFreeGameInfo(Long userId, Long gameId, UpdateFreeGameRequest request);
+
+    FreeGameRoundMatchResponse getFreeGameRoundMatchResponse(Long userId, Long gameId);
+
+    UpdateFreeGameRoundMatchResponse updateFreeGameRoundMatch(Long userId, Long gameId, UpdateFreeGameRoundMatchRequest request);
 }

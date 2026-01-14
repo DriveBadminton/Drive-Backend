@@ -2,16 +2,10 @@ package com.gumraze.drive.drive_backend.courtManager.service;
 
 import com.gumraze.drive.drive_backend.common.exception.ForbiddenException;
 import com.gumraze.drive.drive_backend.common.exception.NotFoundException;
-import com.gumraze.drive.drive_backend.courtManager.constants.GameStatus;
-import com.gumraze.drive.drive_backend.courtManager.constants.GameType;
-import com.gumraze.drive.drive_backend.courtManager.constants.MatchRecordMode;
+import com.gumraze.drive.drive_backend.courtManager.constants.*;
 import com.gumraze.drive.drive_backend.courtManager.dto.*;
-import com.gumraze.drive.drive_backend.courtManager.entity.FreeGameSetting;
-import com.gumraze.drive.drive_backend.courtManager.entity.Game;
-import com.gumraze.drive.drive_backend.courtManager.entity.GameParticipant;
-import com.gumraze.drive.drive_backend.courtManager.repository.FreeGameSettingRepository;
-import com.gumraze.drive.drive_backend.courtManager.repository.GameParticipantRepository;
-import com.gumraze.drive.drive_backend.courtManager.repository.GameRepository;
+import com.gumraze.drive.drive_backend.courtManager.entity.*;
+import com.gumraze.drive.drive_backend.courtManager.repository.*;
 import com.gumraze.drive.drive_backend.user.constants.Gender;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
 import com.gumraze.drive.drive_backend.user.constants.GradeType;
@@ -48,6 +42,12 @@ class FreeGameServiceImplTest {
     @Mock
     FreeGameSettingRepository freeGameSettingRepository;
 
+    @Mock
+    FreeGameRoundRepository freeGameRoundRepository;
+
+    @Mock
+    FreeGameMatchRepository freeGameMatchRepository;
+
     @InjectMocks
     FreeGameServiceImpl freeGameService;
 
@@ -67,7 +67,7 @@ class FreeGameServiceImplTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(organizer));
 
         // 게임 저장 결과 stub
-        Game savedGame = new Game(
+        FreeGame savedFreeGame = new FreeGame(
                 1L,                     // gameId 1로 stub
                 request.getTitle(),        // title 설정
                 organizer,                      // 게임 생성 유저의 id
@@ -81,8 +81,8 @@ class FreeGameServiceImplTest {
         );
 
         // 생성한 게임 저장
-        when(gameRepository.save(any(Game.class)))
-                .thenReturn(savedGame);
+        when(gameRepository.save(any(FreeGame.class)))
+                .thenReturn(savedFreeGame);
 
 
         // when: createFreeGame() 호출함.
@@ -90,9 +90,9 @@ class FreeGameServiceImplTest {
 
         // then: 반환값을 검증함.
         assertNotNull(createdGame);
-        assertEquals(createdGame.getGameId(), savedGame.getId());
+        assertEquals(createdGame.getGameId(), savedFreeGame.getId());
         // save가 호출되었는지 검증
-        verify(gameRepository).save(any(Game.class));
+        verify(gameRepository).save(any(FreeGame.class));
     }
 
     @Test
@@ -105,7 +105,7 @@ class FreeGameServiceImplTest {
                 .build();
 
         // 저장값 stub
-        when(gameRepository.save(any(Game.class)))
+        when(gameRepository.save(any(FreeGame.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // 사용자 검증
@@ -117,15 +117,15 @@ class FreeGameServiceImplTest {
         freeGameService.createFreeGame(1L, request);
 
         // 내부 전달값 capture
-        ArgumentCaptor<Game> captor = ArgumentCaptor.forClass(Game.class);
+        ArgumentCaptor<FreeGame> captor = ArgumentCaptor.forClass(FreeGame.class);
         // 내부 전달값 저장
         verify(gameRepository).save(captor.capture());
 
-        Game savedGame = captor.getValue();
+        FreeGame savedFreeGame = captor.getValue();
 
         // then
         // MatchRecordMode 검증
-        assertEquals(savedGame.getMatchRecordMode(), MatchRecordMode.STATUS_ONLY);
+        assertEquals(savedFreeGame.getMatchRecordMode(), MatchRecordMode.STATUS_ONLY);
     }
 
     @Test
@@ -140,7 +140,7 @@ class FreeGameServiceImplTest {
                 .build();
 
         // 저장값 stub
-        when(gameRepository.save(any(Game.class)))
+        when(gameRepository.save(any(FreeGame.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // 사용자 검증
@@ -151,15 +151,15 @@ class FreeGameServiceImplTest {
         freeGameService.createFreeGame(1L, request);
 
         // 내부 전달값 capture
-        ArgumentCaptor<Game> captor = ArgumentCaptor.forClass(Game.class);
+        ArgumentCaptor<FreeGame> captor = ArgumentCaptor.forClass(FreeGame.class);
         // 내부 전달값 저장
         verify(gameRepository).save(captor.capture());
 
-        Game savedGame = captor.getValue();
+        FreeGame savedFreeGame = captor.getValue();
 
         // then
         // MatchRecordMode 검증
-        assertEquals(savedGame.getMatchRecordMode(), MatchRecordMode.RESULT);
+        assertEquals(savedFreeGame.getMatchRecordMode(), MatchRecordMode.RESULT);
     }
 
     @Test
@@ -174,7 +174,7 @@ class FreeGameServiceImplTest {
                 .build();
 
         // 저장값 stub
-        when(gameRepository.save(any(Game.class)))
+        when(gameRepository.save(any(FreeGame.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // 사용자 검증
@@ -185,14 +185,14 @@ class FreeGameServiceImplTest {
         freeGameService.createFreeGame(1L, request);
 
         // save가 호출되었는지 검증
-        ArgumentCaptor<Game> captor = ArgumentCaptor.forClass(Game.class);
+        ArgumentCaptor<FreeGame> captor = ArgumentCaptor.forClass(FreeGame.class);
         // 내부 전달값 저장
         verify(gameRepository).save(captor.capture());
-        Game savedGame = captor.getValue();
+        FreeGame savedFreeGame = captor.getValue();
 
         // then: GameType과, GameStatus가 기본값 FREE, NOT_STARTED로 저장됨.
-        assertEquals(savedGame.getGameType(), GameType.FREE);
-        assertEquals(savedGame.getGameStatus(), GameStatus.NOT_STARTED);
+        assertEquals(savedFreeGame.getGameType(), GameType.FREE);
+        assertEquals(savedFreeGame.getGameStatus(), GameStatus.NOT_STARTED);
     }
 
     @Test
@@ -266,9 +266,9 @@ class FreeGameServiceImplTest {
         when(userRepository.existsById(1L)).thenReturn(true);
         when(userRepository.findById(1L)).thenReturn(Optional.of(organizer));
 
-        when(gameRepository.save(any(Game.class)))
+        when(gameRepository.save(any(FreeGame.class)))
                 .thenReturn(
-                        new Game(
+                        new FreeGame(
                                 1L,
                                 "자유게임",
                                 organizer,
@@ -329,9 +329,9 @@ class FreeGameServiceImplTest {
         User organizer = mock(User.class);
         when(userRepository.existsById(1L)).thenReturn(true);
         when(userRepository.findById(1L)).thenReturn(Optional.of(organizer));
-        when(gameRepository.save(any(Game.class)))
+        when(gameRepository.save(any(FreeGame.class)))
                 .thenReturn(
-                        new Game(
+                        new FreeGame(
                                 1L,
                                 "자유게임",
                                 organizer,
@@ -369,17 +369,17 @@ class FreeGameServiceImplTest {
         when(organizer.getId()).thenReturn(userId);
         when(userRepository.existsById(1L)).thenReturn(true);
         when(userRepository.findById(1L)).thenReturn(Optional.of(organizer));
-        when(gameRepository.save(any(Game.class)))
+        when(gameRepository.save(any(FreeGame.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when: 자유게임을 생성했을 때
         freeGameService.createFreeGame(userId, request);
 
         // then: organizerId가 userId와 동일함.
-        ArgumentCaptor<Game> captor = ArgumentCaptor.forClass(Game.class);
+        ArgumentCaptor<FreeGame> captor = ArgumentCaptor.forClass(FreeGame.class);
         verify(gameRepository).save(captor.capture());
 
-        Game saved = captor.getValue();
+        FreeGame saved = captor.getValue();
         assertSame(organizer, saved.getOrganizer());
         assertEquals(userId, saved.getOrganizer().getId());
     }
@@ -400,7 +400,7 @@ class FreeGameServiceImplTest {
         when(userRepository.existsById(1L)).thenReturn(true);
         when(userRepository.findById(userId)).thenReturn(Optional.of(organizer));
 
-        Game savedGame = Game.builder()
+        FreeGame savedFreeGame = FreeGame.builder()
                 .title("자유게임")
                 .organizer(organizer)
                 .gradeType(GradeType.NATIONAL)
@@ -411,7 +411,7 @@ class FreeGameServiceImplTest {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        when(gameRepository.save(any(Game.class))).thenReturn(savedGame);
+        when(gameRepository.save(any(FreeGame.class))).thenReturn(savedFreeGame);
 
         // when
         freeGameService.createFreeGame(userId, request);
@@ -423,7 +423,7 @@ class FreeGameServiceImplTest {
         FreeGameSetting savedSetting = captor.getValue();
         assertEquals(request.getCourtCount(), savedSetting.getCourtCount());
         assertEquals(request.getRoundCount(), savedSetting.getRoundCount());
-        assertEquals(savedGame, savedSetting.getGame());
+        assertEquals(savedFreeGame, savedSetting.getFreeGame());
     }
 
     @Test
@@ -436,27 +436,27 @@ class FreeGameServiceImplTest {
         when(organizer.getId()).thenReturn(99L);
 
         // entity
-        Game game = buildGame(gameId, organizer);
-        FreeGameSetting setting = buildSetting(game, 2, 3);
+        FreeGame freeGame = buildFreeGame(gameId, organizer);
+        FreeGameSetting setting = buildSetting(freeGame, 2, 3);
 
         // stub
         when(organizer.getId()).thenReturn(userId);
-        when(gameRepository.findById(gameId)).thenReturn(Optional.of(game));
-        when(freeGameSettingRepository.findByGameId(gameId)).thenReturn(Optional.of(setting));
+        when(gameRepository.findById(gameId)).thenReturn(Optional.of(freeGame));
+        when(freeGameSettingRepository.findByFreeGameId(gameId)).thenReturn(Optional.of(setting));
 
         // when: getFreeGameDetail 호출 시 response가 채워짐
         FreeGameDetailResponse response = freeGameService.getFreeGameDetail(userId, gameId);
 
         // then
         assertEquals(gameId, response.getGameId());
-        assertEquals(game.getTitle(), response.getTitle());
-        assertEquals(game.getGameType(), response.getGameType());
-        assertEquals(game.getGameStatus(), response.getGameStatus());
-        assertEquals(game.getMatchRecordMode(), response.getMatchRecordMode());
-        assertEquals(game.getGradeType(), response.getGradeType());
+        assertEquals(freeGame.getTitle(), response.getTitle());
+        assertEquals(freeGame.getGameType(), response.getGameType());
+        assertEquals(freeGame.getGameStatus(), response.getGameStatus());
+        assertEquals(freeGame.getMatchRecordMode(), response.getMatchRecordMode());
+        assertEquals(freeGame.getGradeType(), response.getGradeType());
         assertEquals(setting.getCourtCount(), response.getCourtCount());
         assertEquals(setting.getRoundCount(), response.getRoundCount());
-        assertEquals(game.getOrganizer().getId(), response.getOrganizerId());
+        assertEquals(freeGame.getOrganizer().getId(), response.getOrganizerId());
         // shareCode는 제외
     }
 
@@ -477,7 +477,7 @@ class FreeGameServiceImplTest {
         verify(gameRepository).findById(gameId);
 
         // game이 없는 경우에 freeGameSettingRepository는 호출하지 않음
-        verify(freeGameSettingRepository, never()).findByGameId(anyLong());
+        verify(freeGameSettingRepository, never()).findByFreeGameId(anyLong());
     }
 
     @Test
@@ -489,11 +489,11 @@ class FreeGameServiceImplTest {
 
         // entity
         User organizer = mock(User.class);
-        Game game = buildGame(gameId, organizer);
+        FreeGame freeGame = buildFreeGame(gameId, organizer);
 
         // stub
         when(organizer.getId()).thenReturn(99L);    // 요청자와 다름
-        when(gameRepository.findById(gameId)).thenReturn(Optional.of(game));
+        when(gameRepository.findById(gameId)).thenReturn(Optional.of(freeGame));
 
         // when & then
         assertThrows(ForbiddenException.class, () -> freeGameService.getFreeGameDetail(userId, gameId));
@@ -509,24 +509,24 @@ class FreeGameServiceImplTest {
         User organizer = mock(User.class);
         when(organizer.getId()).thenReturn(userId);
 
-        Game game = buildGame(gameId, organizer);
+        FreeGame freeGame = buildFreeGame(gameId, organizer);
 
         // stub
-        when(gameRepository.findById(gameId)).thenReturn(Optional.of(game));
-        when(gameRepository.save(any(Game.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(gameRepository.findById(gameId)).thenReturn(Optional.of(freeGame));
+        when(gameRepository.save(any(FreeGame.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
         UpdateFreeGameResponse response = freeGameService.updateFreeGameInfo(userId, gameId, request);
 
         // then
-        ArgumentCaptor<Game> captor = ArgumentCaptor.forClass(Game.class);
+        ArgumentCaptor<FreeGame> captor = ArgumentCaptor.forClass(FreeGame.class);
         verify(gameRepository).save(captor.capture());
 
-        Game savedGame = captor.getValue();
-        assertEquals(gameId, savedGame.getId());
-        assertEquals(request.getTitle(), savedGame.getTitle());
-        assertEquals(request.getGradeType(), savedGame.getGradeType());
-        assertEquals(request.getMatchRecordMode(), savedGame.getMatchRecordMode());
+        FreeGame savedFreeGame = captor.getValue();
+        assertEquals(gameId, savedFreeGame.getId());
+        assertEquals(request.getTitle(), savedFreeGame.getTitle());
+        assertEquals(request.getGradeType(), savedFreeGame.getGradeType());
+        assertEquals(request.getMatchRecordMode(), savedFreeGame.getMatchRecordMode());
     }
 
     @Test
@@ -539,13 +539,99 @@ class FreeGameServiceImplTest {
         User organizer = mock(User.class);
 
         // stub
-        Game game = buildGame(gameId, organizer);
-        when(gameRepository.findById(gameId)).thenReturn(Optional.of(game));
-        when(game.getOrganizer().getId()).thenReturn(3L);
+        FreeGame freeGame = buildFreeGame(gameId, organizer);
+        when(gameRepository.findById(gameId)).thenReturn(Optional.of(freeGame));
+        when(freeGame.getOrganizer().getId()).thenReturn(3L);
 
 
         // when & then: FORBIDDEN(수정 권한 없음) 발생
         assertThrows(ForbiddenException.class, () -> freeGameService.updateFreeGameInfo(userId, gameId, request));
+    }
+
+    @Test
+    @DisplayName("자유게임 라운드/매치 조회 성공 테스트")
+    void getFreeGameRoundMatchResponse_success() {
+        // given
+        Long gameId = 10L;
+        Long userId = 1L;
+
+        // user stub
+        User organizer = mock(User.class);
+        when(organizer.getId()).thenReturn(userId);
+
+        // game stub
+        FreeGame freeGame = buildFreeGame(gameId, organizer);
+        when(gameRepository.findById(gameId)).thenReturn(Optional.of(freeGame));
+
+        // round 엔티티 stub
+        FreeGameRound round1 = mock(FreeGameRound.class);
+        when(round1.getId()).thenReturn(1L);
+        when(round1.getRoundNumber()).thenReturn(1);
+        when(round1.getRoundStatus()).thenReturn(RoundStatus.NOT_STARTED);
+
+        when(freeGameRoundRepository.findByFreeGameIdOrderByRoundNumber(gameId))
+                .thenReturn(List.of(round1));
+
+        // participant stub
+        GameParticipant a1 = mock(GameParticipant.class);
+        GameParticipant a2 = mock(GameParticipant.class);
+        GameParticipant b1 = mock(GameParticipant.class);
+        GameParticipant b2 = mock(GameParticipant.class);
+        when(a1.getId()).thenReturn(1L);
+        when(a2.getId()).thenReturn(2L);
+        when(b1.getId()).thenReturn(3L);
+        when(b2.getId()).thenReturn(4L);
+
+        // match stub
+        FreeGameMatch m1 = mock(FreeGameMatch.class);
+        when(m1.getRound()).thenReturn(round1);
+        when(m1.getCourtNumber()).thenReturn(1);
+        when(m1.getTeamAPlayer1()).thenReturn(a1);
+        when(m1.getTeamAPlayer2()).thenReturn(a2);
+        when(m1.getTeamBPlayer1()).thenReturn(b1);
+        when(m1.getTeamBPlayer2()).thenReturn(b2);
+        when(m1.getMatchStatus()).thenReturn(MatchStatus.NOT_STARTED);
+        when(m1.getMatchResult()).thenReturn(null);
+        when(m1.getIsActive()).thenReturn(true);
+        when(freeGameMatchRepository.findByRoundIdInOrderByCourtNumber(List.of(1L)))
+                .thenReturn(List.of(m1));
+        when(m1.getMatchStatus()).thenReturn(MatchStatus.NOT_STARTED);
+
+
+        // when
+        FreeGameRoundMatchResponse response =
+                freeGameService.getFreeGameRoundMatchResponse(userId, gameId);
+
+        // then
+        assertEquals(gameId, response.getGameId());
+        assertEquals(1, response.getRounds().size());
+        assertEquals(1, response.getRounds().get(0).getMatches().size());
+        assertEquals(MatchResult.NULL,
+                response.getRounds().get(0).getMatches().get(0).getMatchResult());
+
+        verify(gameRepository).findById(gameId);
+        verify(freeGameRoundRepository).findByFreeGameIdOrderByRoundNumber(gameId);
+        verify(freeGameMatchRepository).findByRoundIdInOrderByCourtNumber(List.of(1L));
+    }
+
+    @Test
+    @DisplayName("자유게임 라운드/매치 조회 시 organizer가 아니면 403 테스트")
+    void getFreeGameRoundMatchResponse_withNotOrganizer_throwsForbidden() {
+        // given
+        Long gameId = 10L;
+        Long userId = 1L;
+
+        User organizer = mock(User.class);
+        when(organizer.getId()).thenReturn(2L);
+
+        FreeGame freeGame = buildFreeGame(gameId, organizer);
+        when(gameRepository.findById(gameId)).thenReturn(Optional.of(freeGame));
+
+        // when & then
+        assertThrows(ForbiddenException.class, () -> freeGameService.getFreeGameRoundMatchResponse(userId, gameId));
+        verify(gameRepository).findById(gameId);
+        verify(freeGameRoundRepository, never()).findByFreeGameIdOrderByRoundNumber(anyLong());
+        verify(freeGameMatchRepository, never()).findByRoundIdInOrderByCourtNumber(anyList());
     }
 
     /*
@@ -561,8 +647,8 @@ class FreeGameServiceImplTest {
                 .build();
     }
 
-    private Game buildGame(Long gameId, User organizer) {
-        return Game.builder()
+    private FreeGame buildFreeGame(Long gameId, User organizer) {
+        return FreeGame.builder()
                 .id(gameId)
                 .title("자유게임")
                 .organizer(organizer)
@@ -576,9 +662,9 @@ class FreeGameServiceImplTest {
                 .build();
     }
 
-    private FreeGameSetting buildSetting(Game game, int courtCount, int roundCount) {
+    private FreeGameSetting buildSetting(FreeGame freeGame, int courtCount, int roundCount) {
         return FreeGameSetting.builder()
-                .game(game)
+                .freeGame(freeGame)
                 .courtCount(courtCount)
                 .roundCount(roundCount)
                 .createdAt(LocalDateTime.now())
