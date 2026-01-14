@@ -250,6 +250,7 @@ public class FreeGameServiceImpl implements FreeGameService {
     }
 
     @Override
+    @Transactional
     public UpdateFreeGameRoundMatchResponse updateFreeGameRoundMatch(
             Long userId,
             Long gameId,
@@ -276,7 +277,7 @@ public class FreeGameServiceImpl implements FreeGameService {
                         ));
 
         if (request == null || request.getRounds() == null) {
-            return null;
+            return UpdateFreeGameRoundMatchResponse.from(gameId);
         }
 
         // 게임 참가자 조회
