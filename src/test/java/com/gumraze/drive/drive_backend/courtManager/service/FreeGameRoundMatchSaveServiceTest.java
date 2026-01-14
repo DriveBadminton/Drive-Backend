@@ -863,10 +863,6 @@ public class FreeGameRoundMatchSaveServiceTest {
         when(freeGameRoundRepository.findByFreeGameIdOrderByRoundNumber(gameId))
                 .thenReturn(List.of(existingRound));
 
-        // 존재하지 않는 participantId만 비정상으로 처리하도록 stub
-        when(gameParticipantRepository.findById(invalidParticipantId))
-                .thenReturn(Optional.empty());
-
         UpdateFreeGameRoundMatchRequest request =
                 UpdateFreeGameRoundMatchRequest.builder()
                         .rounds(List.of(
@@ -949,10 +945,6 @@ public class FreeGameRoundMatchSaveServiceTest {
         when(freeGameRoundRepository.findByFreeGameIdOrderByRoundNumber(gameId))
                 .thenReturn(List.of(existingRound));
 
-        // participant 존재하도록 stub
-        when(gameParticipantRepository.findById(duplicatedId))
-                .thenReturn(Optional.of(mock(GameParticipant.class)));
-
         UpdateFreeGameRoundMatchRequest request =
                 UpdateFreeGameRoundMatchRequest.builder()
                         .rounds(List.of(
@@ -992,7 +984,6 @@ public class FreeGameRoundMatchSaveServiceTest {
         FreeGameRound existingRound = buildFreeGameRound(freeGame, 1);
         existingRound.setId(10L);
         when(freeGameRoundRepository.findByFreeGameIdOrderByRoundNumber(gameId)).thenReturn(List.of(existingRound));
-        when(gameParticipantRepository.findById(duplicatedId)).thenReturn(Optional.of(mock(GameParticipant.class)));
 
         UpdateFreeGameRoundMatchRequest request =
                 UpdateFreeGameRoundMatchRequest.builder()
@@ -1029,13 +1020,8 @@ public class FreeGameRoundMatchSaveServiceTest {
                 .thenReturn(List.of(existingRound));
 
         // 존재는 하지만 게임 소속이 아닌 participant
-        stubParticipantsExist(notInGameId);
-
-        GameParticipant p1 = mockGameParticipantWithId(1L);
-        GameParticipant p2 = mockGameParticipantWithId(2L);
-
-        // gameId에 속한 참가자 목록 stub
-        when(gameParticipantRepository.findByFreeGameId(gameId)).thenReturn(List.of(p1, p2));
+        when(gameParticipantRepository.findByFreeGameId(gameId))
+                .thenReturn(List.of());
 
         UpdateFreeGameRoundMatchRequest request =
                 UpdateFreeGameRoundMatchRequest.builder()
@@ -1127,7 +1113,10 @@ public class FreeGameRoundMatchSaveServiceTest {
         Long gameId = 1L;
         Long userId = 1L;
 
-        FreeGame freeGame = stubGameWithOrganizer(gameId, userId);
+        User organizer = mockUserWithId(userId);
+        FreeGame freeGame = buildNewFreeGameWithStatus(gameId, organizer, status);
+        when(gameRepository.findById(gameId)).thenReturn(Optional.of(freeGame));
+
         FreeGameRound existingRound = buildFreeGameRound(freeGame, 1);
         existingRound.setId(10L);
         when(freeGameRoundRepository.findByFreeGameIdOrderByRoundNumber(gameId)).thenReturn(List.of(existingRound));
