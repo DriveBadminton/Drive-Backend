@@ -38,14 +38,4 @@ public class User {
 
     // JPA 프록시 생성을 위한 기본 생성자
     protected User() {}
-
-    public User(
-            UserStatus status,
-            UserRole role
-    ) {
-        this.status = status;
-        this.role = role;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
 }

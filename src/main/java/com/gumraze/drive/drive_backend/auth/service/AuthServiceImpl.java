@@ -6,8 +6,6 @@ import com.gumraze.drive.drive_backend.auth.oauth.OAuthClientResolver;
 import com.gumraze.drive.drive_backend.auth.oauth.OAuthUserInfo;
 import com.gumraze.drive.drive_backend.auth.repository.UserAuthRepository;
 import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenGenerator;
-import com.gumraze.drive.drive_backend.user.constants.UserRole;
-import com.gumraze.drive.drive_backend.user.constants.UserStatus;
 import com.gumraze.drive.drive_backend.user.entity.User;
 import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -65,7 +63,12 @@ public class AuthServiceImpl implements AuthService {
                 )
                 .orElseGet(() -> {
                     // 신규 사용자 생성
-                    Long newUserId = userRepository.save(new User(UserStatus.PENDING, UserRole.USER)).getId();
+                    Long newUserId =
+                            userRepository.save(
+                                    User.builder()
+                                            .id(1L)
+                                            .build()
+                            ).getId();
 
                     // 신규 사용자 저장
                     userAuthRepository.save(
