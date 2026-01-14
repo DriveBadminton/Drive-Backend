@@ -5,7 +5,7 @@ import com.gumraze.drive.drive_backend.auth.repository.JpaRefreshTokenRepository
 import com.gumraze.drive.drive_backend.auth.token.JwtProperties;
 import com.gumraze.drive.drive_backend.auth.token.RefreshTokenGenerator;
 import com.gumraze.drive.drive_backend.user.entity.User;
-import com.gumraze.drive.drive_backend.user.repository.JpaUserRepository;
+import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +19,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     private final JpaRefreshTokenRepository jpaRefreshTokenRepository;
     private final RefreshTokenGenerator refreshTokenGenerator;
-    private final JpaUserRepository jpaUserRepository;
+    private final UserRepository userRepository;
     private final JwtProperties properties;
 
     /**
@@ -32,7 +32,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Override
     public String rotate(Long userId) {
         // 사용자 id 조회
-        User user = jpaUserRepository.findById(userId).orElseThrow();
+        User user = userRepository.findById(userId).orElseThrow();
 
         // 기존 Refresh Token 삭제
         jpaRefreshTokenRepository.deleteByUser(user);
