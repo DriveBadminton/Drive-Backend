@@ -9,7 +9,7 @@ import java.util.List;
 @Builder
 @Getter
 public class FreeGameRoundResponse {
-    Long roundNumber;
+    Integer roundNumber;
     RoundStatus roundStatus;
     List<FreeGameMatchResponse> matches;
 }

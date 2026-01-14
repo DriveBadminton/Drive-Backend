@@ -237,7 +237,7 @@ public class FreeGameServiceImpl implements FreeGameService {
                                     .build())
                             .toList();
                     return FreeGameRoundResponse.builder()
-                            .roundNumber(round.getRoundNumber().longValue())
+                            .roundNumber(round.getRoundNumber())
                             .roundStatus(round.getRoundStatus())
                             .matches(matchResponses)
                             .build();

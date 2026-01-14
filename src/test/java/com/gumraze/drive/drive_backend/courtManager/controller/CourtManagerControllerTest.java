@@ -503,7 +503,7 @@ class CourtManagerControllerTest {
 
         FreeGameRoundResponse round =
                 FreeGameRoundResponse.builder()
-                        .roundNumber(1L)
+                        .roundNumber(1)
                         .roundStatus(RoundStatus.NOT_STARTED)
                         .matches(List.of(match))
                         .build();
