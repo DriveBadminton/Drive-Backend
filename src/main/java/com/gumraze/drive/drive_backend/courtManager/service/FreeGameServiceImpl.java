@@ -422,7 +422,7 @@ public class FreeGameServiceImpl implements FreeGameService {
             // 매치 전체 교체 저장
             freeGameMatchRepository.saveAll(newMatches);
         }
-        return null;
+        return UpdateFreeGameRoundMatchResponse.from(gameId);
     }
 
     private String suffix(int count) {
