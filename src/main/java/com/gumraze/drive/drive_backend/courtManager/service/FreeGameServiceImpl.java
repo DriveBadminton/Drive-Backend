@@ -323,11 +323,8 @@ public class FreeGameServiceImpl implements FreeGameService {
                     if (id == null) {
                         continue;
                     }
-                    if (gameParticipantRepository.findById(id).isEmpty()) {
-                        throw new IllegalArgumentException("존재하지 않는 participantId가 포함되었습니다. participantId: " + id);
-                    }
                     if (!participantIdsInGame.contains(id)) {
-                        throw new IllegalArgumentException("participantId는 게임 참가자에 속해야 합니다. participantId: " + id);
+                        throw new IllegalArgumentException("존재하지 않거나 해당 게임에 속하지 않는 participantId입니다. participantId: " + id);
                     }
                     if (!matchParticipantIds.add(id)) {
                         throw new IllegalArgumentException("match 내 participantId 중복입니다. participantId: " + id);
@@ -341,11 +338,8 @@ public class FreeGameServiceImpl implements FreeGameService {
                     if (id == null) {
                         continue;
                     }
-                    if (gameParticipantRepository.findById(id).isEmpty()) {
-                        throw new IllegalArgumentException("존재하지 않는 participantId가 포함되었습니다. participantId: " + id);
-                    }
                     if (!participantIdsInGame.contains(id)) {
-                        throw new IllegalArgumentException("participantId는 게임 참가자에 속해야 합니다. participantId: " + id);
+                        throw new IllegalArgumentException("존재하지 않거나 해당 게임에 속하지 않는 participantId입니다. participantId: " + id);
                     }
                     if (!matchParticipantIds.add(id)) {
                         throw new IllegalArgumentException("match 내 participantId 중복입니다. participantId: " + id);
