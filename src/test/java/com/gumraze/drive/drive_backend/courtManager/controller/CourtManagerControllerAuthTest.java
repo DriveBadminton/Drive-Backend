@@ -65,7 +65,7 @@ public class CourtManagerControllerAuthTest {
                         .build();
 
         // when & then
-        mockMvc.perform(patch("/free-games/{gameId}/round-matches", 1L)
+        mockMvc.perform(patch("/free-games/{gameId}/rounds-and-matches", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
