@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
@@ -42,13 +43,10 @@ public class UserController {
     })
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<UserMeResponse>> me(
-            Authentication authentication
+            @AuthenticationPrincipal Long userId
     ) {
-        // 인증 정보에서 userId 조회
-        Long userId = (Long) authentication.getPrincipal();
-
         // userId로 프로필 조회
-        UserMeResponse profile = userProfileService.getMyProfile(userId);
+        UserMeResponse profile = userProfileService.getUserMe(userId);
 
         ResultCode code = ResultCode.OK;
 

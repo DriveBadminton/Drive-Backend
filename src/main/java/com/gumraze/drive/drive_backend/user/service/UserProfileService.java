@@ -16,5 +16,5 @@ public interface UserProfileService {
     UserProfilePrefillResponseDto getProfilePrefill(Long userId);
 
     // 내 프로필 조회
-    UserMeResponse getMyProfile(Long userId);
+    UserMeResponse getUserMe(Long userId);
 }

@@ -42,7 +42,7 @@ public class UserControllerTest {
                 .build();
 
         // stub
-        when(userProfileService.getMyProfile(1L))
+        when(userProfileService.getUserMe(1L))
                 .thenReturn(responseDto);
         when(jwtAccessTokenValidator.validateAndGetUserId("token"))
                 .thenReturn(Optional.of(1L));
