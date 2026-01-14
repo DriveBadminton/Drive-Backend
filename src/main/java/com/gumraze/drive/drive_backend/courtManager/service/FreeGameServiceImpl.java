@@ -224,11 +224,11 @@ public class FreeGameServiceImpl implements FreeGameService {
                     List<FreeGameMatchResponse> matchResponses = roundMatches.stream()
                             .map(match -> FreeGameMatchResponse.builder()
                                     .courtNumber(match.getCourtNumber().longValue())
-                                    .teamAIds(List.of(
+                                    .teamAIds(Arrays.asList(
                                             match.getTeamAPlayer1() != null ? match.getTeamAPlayer1().getId() : null,
                                             match.getTeamAPlayer2() != null ? match.getTeamAPlayer2().getId() : null
                                             ))
-                                    .teamBIds(List.of(
+                                    .teamBIds(Arrays.asList(
                                             match.getTeamBPlayer1() != null ? match.getTeamBPlayer1().getId() : null,
                                             match.getTeamBPlayer2() != null ? match.getTeamBPlayer2().getId() : null
                                             ))
