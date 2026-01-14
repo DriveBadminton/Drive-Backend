@@ -186,6 +186,7 @@ public class FreeGameServiceImpl implements FreeGameService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public FreeGameRoundMatchResponse getFreeGameRoundMatchResponse(Long userId, Long gameId) {
         // gameId로 Game 조회
         FreeGame freeGame = gameRepository.findById(gameId)
@@ -399,10 +400,10 @@ public class FreeGameServiceImpl implements FreeGameService {
                         List<Long> teamAIds = matchRequest.getTeamAIds();
                         List<Long> teamBIds = matchRequest.getTeamBIds();
 
-                        GameParticipant teamAPlayer1 = gameParticipantRepository.findById(teamAIds.get(0)).orElse(null);
-                        GameParticipant teamAPlayer2 = gameParticipantRepository.findById(teamAIds.get(1)).orElse(null);
-                        GameParticipant teamBPlayer1 = gameParticipantRepository.findById(teamBIds.get(0)).orElse(null);
-                        GameParticipant teamBPlayer2 = gameParticipantRepository.findById(teamBIds.get(1)).orElse(null);
+                        GameParticipant teamAPlayer1 = teamAIds.getFirst() == null ? null : gameParticipantRepository.findById(teamAIds.getFirst()).orElse(null);
+                        GameParticipant teamAPlayer2 = teamAIds.get(1) == null ? null : gameParticipantRepository.findById(teamAIds.get(1)).orElse(null);
+                        GameParticipant teamBPlayer1 = teamBIds.getFirst() == null ? null : gameParticipantRepository.findById(teamBIds.getFirst()).orElse(null);
+                        GameParticipant teamBPlayer2 = teamBIds.get(1) == null ? null : gameParticipantRepository.findById(teamBIds.get(1)).orElse(null);
 
                         return FreeGameMatch.builder()
                                 .round(targetRound)
