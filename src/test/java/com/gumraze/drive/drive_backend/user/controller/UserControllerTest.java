@@ -33,7 +33,8 @@ public class UserControllerTest {
 
     @MockitoBean
     private UserProfileService userProfileService;
-    @Autowired
+
+    @MockitoBean
     private UserService userService;
 
     @Test
@@ -59,5 +60,37 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.data.status").value(UserStatus.PENDING.name()))
                 .andExpect(jsonPath("$.data.profileImageUrl").value(nullValue()))
                 .andExpect(jsonPath("$.data.nickname").value(nullValue()));
+    }
+
+    @Test
+    @DisplayName("ACTIVE 사용자가 /users/me 조회 시 프로필 정보를 반환한다.")
+    void get_user_me_return_profile_when_active() throws Exception {
+        // given
+        UserMeResponse response = UserMeResponse.builder()
+                .status(UserStatus.ACTIVE)
+                .nickname("테스트 닉네임")
+                .profileImageUrl("http://profile-image.com")
+                .build();
+
+        when(userService.getUserMe(1L)).thenReturn(response);
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.of(1L));
+
+        mockMvc.perform(get("/users/me")
+                .header("Authorization", "Bearer token")
+                .accept("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.status").value(UserStatus.ACTIVE.name()))
+                .andExpect(jsonPath("$.data.nickname").value("테스트 닉네임"))
+                .andExpect(jsonPath("$.data.profileImageUrl").value("http://profile-image.com"));
+    }
+
+    @Test
+    @DisplayName("토큰이 없으면 401을 반환한다.")
+    void get_user_me_returns_unauthorized_when_token_is_missing() throws Exception {
+        mockMvc.perform(get("/users/me")
+                        .accept("application/json"))
+                .andExpect(status().isUnauthorized());
     }
 }

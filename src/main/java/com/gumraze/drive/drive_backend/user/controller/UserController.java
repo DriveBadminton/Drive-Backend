@@ -31,31 +31,17 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/me")
-    @Operation(
-            summary = "내 프로필 상태 조회",
-            description = "Access Token 기반으로 사용자 정보를 반환합니다."
-    )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "200",
-                    description = "조회 성공",
-                    content = @Content(schema = @Schema(implementation = UserMeResponse.class))
-            ),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
-    })
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<UserMeResponse>> me(
             @AuthenticationPrincipal Long userId
     ) {
-        // userId로 프로필 조회
-        UserMeResponse profile = userService.getUserMe(userId);
+        UserMeResponse body = userService.getUserMe(userId);
 
         ResultCode code = ResultCode.OK;
-
         // 프로필이 존재하면, 프로필 조회 성공
         return ResponseEntity
                 .status(code.httpStatus())
-                .body(ApiResponse.success(code, "내 프로필 조회 성공", profile));
+                .body(ApiResponse.success(code, "내 프로필 조회 성공", body));
     }
 
     @PostMapping("/me/profile")
