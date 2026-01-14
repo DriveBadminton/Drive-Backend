@@ -537,7 +537,42 @@ class CourtManagerControllerTest {
                 .andExpect(jsonPath("$.data.rounds[0].matches[0].matchResult").value("NULL"))
                 .andExpect(jsonPath("$.data.rounds[0].matches[0].isActive").value(true))
         ;
+    }
 
+    @Test
+    @DisplayName("라운드/매치 부분 수정 PATCH 성공")
+    void updateRoundsAndMatches_patch_success() throws Exception {
+        // given
+        Long userId = 1L;
+        Long gameId = 1L;
+
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.of(userId));
+
+        when(freeGameService.updateFreeGameRoundMatch(anyLong(), anyLong(), any()))
+                .thenReturn(new UpdateFreeGameRoundMatchResponse(gameId));
+
+        UpdateFreeGameRoundMatchRequest request =
+                UpdateFreeGameRoundMatchRequest.builder()
+                        .rounds(List.of(
+                                RoundRequest.builder()
+                                        .roundNumber(1)
+                                        .matches(List.of(
+                                                MatchRequest.builder()
+                                                        .courtNumber(1)
+                                                        .teamAIds(List.of(101L, 102L))
+                                                        .teamBIds(List.of(103L, 104L))
+                                                        .build()
+                                        ))
+                                        .build()
+                        ))
+                        .build();
+
+        mockMvc.perform(patch("/free-games/{gameId}/rounds-and-matches", gameId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer token")
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
 
     }
 
