@@ -3,6 +3,8 @@ package com.gumraze.drive.drive_backend.user.entity;
 import com.gumraze.drive.drive_backend.user.constants.UserRole;
 import com.gumraze.drive.drive_backend.user.constants.UserStatus;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,6 +13,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
+@Builder
+@AllArgsConstructor
 @Table(name = "users")
 public class User {
 
