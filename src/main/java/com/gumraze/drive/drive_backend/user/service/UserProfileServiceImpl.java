@@ -5,9 +5,9 @@ import com.gumraze.drive.drive_backend.region.service.RegionService;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
 import com.gumraze.drive.drive_backend.user.constants.GradeType;
 import com.gumraze.drive.drive_backend.user.constants.UserStatus;
+import com.gumraze.drive.drive_backend.user.dto.UserMeResponse;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
 import com.gumraze.drive.drive_backend.user.dto.UserProfilePrefillResponseDto;
-import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
 import com.gumraze.drive.drive_backend.user.entity.User;
 import com.gumraze.drive.drive_backend.user.entity.UserGradeHistory;
 import com.gumraze.drive.drive_backend.user.entity.UserProfile;
@@ -118,7 +118,7 @@ public class UserProfileServiceImpl implements UserProfileService{
     }
 
     @Override
-    public UserProfileResponseDto getMyProfile(Long userId) {
+    public UserMeResponse getMyProfile(Long userId) {
 
         // 사용자 조회, 없으면 실패 처리
         User user = userRepository.findById(userId)
@@ -131,6 +131,6 @@ public class UserProfileServiceImpl implements UserProfileService{
         }
 
         // 사용자 상태 + 프로필 정보가 있으면 DTO로 반환
-        return UserProfileResponseDto.from(user, profile);
+        return UserMeResponse.from(user, profile);
     }
 }

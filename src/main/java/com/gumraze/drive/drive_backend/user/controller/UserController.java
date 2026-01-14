@@ -2,10 +2,10 @@ package com.gumraze.drive.drive_backend.user.controller;
 
 import com.gumraze.drive.drive_backend.common.api.ApiResponse;
 import com.gumraze.drive.drive_backend.common.api.ResultCode;
+import com.gumraze.drive.drive_backend.user.dto.UserMeResponse;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateResponseDto;
 import com.gumraze.drive.drive_backend.user.dto.UserProfilePrefillResponseDto;
-import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
 import com.gumraze.drive.drive_backend.user.service.UserProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -36,19 +36,19 @@ public class UserController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
                     description = "조회 성공",
-                    content = @Content(schema = @Schema(implementation = UserProfileResponseDto.class))
+                    content = @Content(schema = @Schema(implementation = UserMeResponse.class))
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
     })
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<ApiResponse<UserProfileResponseDto>> me(
+    public ResponseEntity<ApiResponse<UserMeResponse>> me(
             Authentication authentication
     ) {
         // 인증 정보에서 userId 조회
         Long userId = (Long) authentication.getPrincipal();
 
         // userId로 프로필 조회
-        UserProfileResponseDto profile = userProfileService.getMyProfile(userId);
+        UserMeResponse profile = userProfileService.getMyProfile(userId);
 
         ResultCode code = ResultCode.OK;
 
