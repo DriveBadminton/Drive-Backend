@@ -5,10 +5,12 @@ import com.gumraze.drive.drive_backend.user.constants.Grade;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 public class UserProfileCreateRequest {
         private String nickname;
         private Long districtId;
