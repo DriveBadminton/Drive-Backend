@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -79,5 +80,39 @@ public class CreateUserProfileUseCaseTest {
                                 && profile.getTag().matches("^[A-Z0-9]{4}$")
                                 && profile.getTagChangedAt() != null
                 ));
+    }
+
+    @Test
+    @DisplayName("프로필 생성 시, 닉네임이 null/blank이면 프로필 생성은 실패한다.")
+    void create_profile_throws_when_nickname_is_null() {
+        // given
+        Long userId = 1L;
+        UserProfileCreateRequest request =
+                UserProfileCreateRequest.builder()
+                        .nickname(null)
+                        .districtId(1L)
+                        .regionalGrade(Grade.D)
+                        .nationalGrade(Grade.D)
+                        .birth("19900101")
+                        .gender(Gender.MALE)
+                        .build();
+
+        User user = User.builder()
+                .id(userId)
+                .build();
+
+        RegionDistrict district = mock(RegionDistrict.class);
+
+
+        when(userProfileRepository.existsById(userId)).thenReturn(false);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(regionService.findDistrictsById(1L)).thenReturn(Optional.of(district));
+
+        // when & then
+        assertThatThrownBy(() -> userProfileService.createProfile(userId, request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("닉네임은 필수 입력 항목입니다.");
+
+        verify(userProfileRepository, never()).save(any());
     }
 }

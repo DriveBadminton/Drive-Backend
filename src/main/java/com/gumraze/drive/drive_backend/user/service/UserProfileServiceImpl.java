@@ -57,7 +57,7 @@ public class UserProfileServiceImpl implements UserProfileService{
         // 닉네임 설정
         String resolvedNickname = request.getNickname();
         if (resolvedNickname == null || resolvedNickname.isBlank()) {
-            throw new IllegalArgumentException("nickname이 필요합니다.");
+            throw new IllegalArgumentException("닉네임은 필수 입력 항목입니다.");
         }
 
         Grade regional = request.getRegionalGrade();
