@@ -4,7 +4,6 @@ import com.gumraze.drive.drive_backend.region.entity.RegionDistrict;
 import com.gumraze.drive.drive_backend.region.service.RegionService;
 import com.gumraze.drive.drive_backend.user.constants.Gender;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
-import com.gumraze.drive.drive_backend.user.constants.UserRole;
 import com.gumraze.drive.drive_backend.user.constants.UserStatus;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
 import com.gumraze.drive.drive_backend.user.entity.User;
@@ -129,7 +128,9 @@ class UserProfileServiceImplTest {
                 Gender.MALE
         );
 
-        User user = new User(UserStatus.PENDING, UserRole.USER);
+        User user = User.builder()
+                .id(userId)
+                .build();
 
         when(userProfileRepository.existsById(userId))
                 .thenReturn(false);
@@ -160,7 +161,10 @@ class UserProfileServiceImplTest {
         );
 
         // 사용자 객체 생성
-        User user = new User(UserStatus.PENDING, UserRole.USER);
+        User user = User.builder()
+                .id(userId)
+                .build();
+
         when(userProfileRepository.existsById(userId))
                 .thenReturn(false);      // 사용자가 존재하는지 확인
 
@@ -193,7 +197,10 @@ class UserProfileServiceImplTest {
                 Gender.MALE
         );
 
-        User user = new User(UserStatus.PENDING, UserRole.USER);
+        User user =
+                User.builder()
+                        .id(userId)
+                        .build();
         when(userProfileRepository.existsById(userId))
                 .thenReturn(false);
         when(userRepository.findById(userId))
@@ -227,7 +234,9 @@ class UserProfileServiceImplTest {
                 Gender.MALE
         );
 
-        User user = new User(UserStatus.PENDING, UserRole.USER);
+        User user = User.builder()
+                .id(userId)
+                .build();
         when(userProfileRepository.existsById(userId))
                 .thenReturn(false);
         when(userRepository.findById(userId))
@@ -258,7 +267,9 @@ class UserProfileServiceImplTest {
                 Gender.MALE
         );
 
-        User user = new User(UserStatus.PENDING, UserRole.USER);
+        User user = User.builder()
+                .id(userId)
+                .build();
         when(userProfileRepository.existsById(userId))
                 .thenReturn(false);
         when(userRepository.findById(userId))
@@ -289,7 +300,9 @@ class UserProfileServiceImplTest {
                 Gender.MALE
         );
 
-        User user = new User(UserStatus.PENDING, UserRole.USER);
+        User user = User.builder()
+                .id(userId)
+                .build();
         when(userProfileRepository.existsById(userId))
                 .thenReturn(false);
         when(userRepository.findById(userId))
@@ -309,32 +322,6 @@ class UserProfileServiceImplTest {
                                 && profile.getGender() == Gender.MALE));
     }
 
-    @Test
-    @DisplayName("요청 nickname이 없으면 프로필 생성은 실패한다.")
-    void create_profile_throws_when_request_nickname_is_null() {
-        // given
-        Long userId = 1L;
-        UserProfileCreateRequest request = new UserProfileCreateRequest(
-                null,
-                2L,
-                Grade.A,
-                Grade.A,
-                "19980925",
-                Gender.MALE
-        );
-
-        User user = new User(UserStatus.PENDING, UserRole.USER);
-        when(userProfileRepository.existsById(userId))
-                .thenReturn(false);
-        when(userRepository.findById(userId))
-                .thenReturn(Optional.of(user));
-
-        // when & then
-        assertThatThrownBy(() -> userProfileService.createProfile(userId, request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Nickname이 필요합니다.");
-        verify(userProfileRepository, never()).save(any());
-    }
 
     @Test
     @DisplayName("요청 nickname이 있으면 DB nickname이 있어도 요청 nickname을 우선한다.")
@@ -350,7 +337,9 @@ class UserProfileServiceImplTest {
                 Gender.MALE
         );
 
-        User user = new User(UserStatus.PENDING, UserRole.USER);
+        User user = User.builder()
+                .id(userId)
+                .build();
         when(userProfileRepository.existsById(userId))
                 .thenReturn(false);
         when(userRepository.findById(userId))

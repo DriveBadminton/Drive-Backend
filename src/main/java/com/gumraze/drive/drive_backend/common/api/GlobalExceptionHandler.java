@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -84,6 +85,16 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.failure(code, ex.getMessage()));
     }
 
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingParam(
+            MissingServletRequestParameterException ex
+    ) {
+        log.warn("[필수 파라미터 누락]: {}", ex.getParameterName());
+        ResultCode code = ResultCode.MISSING_PARAMETER;
+        return ResponseEntity
+                .status(code.httpStatus())
+                .body(ApiResponse.failure(code, ex.getMessage()));
+    }
 
     /* =========================
      *  Generic Exceptions

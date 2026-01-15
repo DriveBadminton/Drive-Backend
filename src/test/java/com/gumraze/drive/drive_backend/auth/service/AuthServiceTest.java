@@ -8,25 +8,33 @@ import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenGenerator;
 import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenValidator;
 import com.gumraze.drive.drive_backend.auth.token.JwtProperties;
 import com.gumraze.drive.drive_backend.user.constants.Gender;
+import com.gumraze.drive.drive_backend.user.entity.User;
+import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
     private AuthService authService;
     private JwtAccessTokenGenerator jwtAccessTokenGenerator;
     private JwtProperties properties;
     private FakeOAuthClient fakeOAuthClient;
     private FakeUserAuthRepository userAuthRepository;
-    private FakeUserRepository userRepository;
     private RefreshTokenService refreshTokenService;
     private FakeOAuthClientResolver oAuthClientResolver;
-    private OAuthAllowedProvidersProperties allowedProvidersProperties;
+
+    @Mock
+    UserRepository userRepository;
 
     // 테스트 실행되기 전에 항상 실행되는 메서드
     @BeforeEach
@@ -50,11 +58,19 @@ class AuthServiceTest {
         oAuthClientResolver = new FakeOAuthClientResolver();
         oAuthClientResolver.register(AuthProvider.DUMMY, fakeOAuthClient);
         userAuthRepository = new FakeUserAuthRepository();
-        userRepository = new FakeUserRepository();
+
         refreshTokenService = new FakeRefreshTokenService();
 
         OAuthAllowedProvidersProperties allowedProps = new OAuthAllowedProvidersProperties();
         allowedProps.setAllowedProviders(List.of(AuthProvider.DUMMY, AuthProvider.KAKAO));
+
+        // stub
+        lenient().when(userRepository.save(any(User.class)))
+                .thenAnswer(invocation -> {
+                    User user = invocation.getArgument(0);
+                    user.setId(1L);
+                    return user;
+                });
 
         authService = new AuthServiceImpl(
                 jwtAccessTokenGenerator,
@@ -199,9 +215,6 @@ class AuthServiceTest {
                         )
                 );
 
-        FakeUserRepository userRepository =
-                new FakeUserRepository();
-
         FakeOAuthClientResolver oAuthClientResolver =
                 new FakeOAuthClientResolver();
         oAuthClientResolver.register(AuthProvider.DUMMY, fakeOAuthClient);
@@ -271,7 +284,7 @@ class AuthServiceTest {
         OAuthLoginResult result = authService.login(request);
 
         // then
-        assertThat(userRepository.isCreateCalled()).isTrue();
+        verify(userRepository).save(any(User.class));
     }
 
     @Test

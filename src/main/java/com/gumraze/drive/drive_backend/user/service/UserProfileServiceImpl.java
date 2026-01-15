@@ -7,7 +7,6 @@ import com.gumraze.drive.drive_backend.user.constants.GradeType;
 import com.gumraze.drive.drive_backend.user.constants.UserStatus;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
 import com.gumraze.drive.drive_backend.user.dto.UserProfilePrefillResponseDto;
-import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
 import com.gumraze.drive.drive_backend.user.entity.User;
 import com.gumraze.drive.drive_backend.user.entity.UserGradeHistory;
 import com.gumraze.drive.drive_backend.user.entity.UserProfile;
@@ -17,7 +16,9 @@ import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Optional;
@@ -32,16 +33,9 @@ public class UserProfileServiceImpl implements UserProfileService{
     private final RegionService regionService;
     private final UserNicknameProvider userNicknameProvider;
     private final UserGradeHistoryRepository userGradeHistoryRepository;
+    private static final String TAG_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private final SecureRandom secureRandom = new SecureRandom();
 
-    /**
-     * Creates and persists a user profile for the given user, saves regional and national grade history entries when provided,
-     * sets the profile's birth and gender, and marks the associated user as ACTIVE.
-     *
-     * @param userId  the identifier of the user for whom the profile will be created
-     * @param request the profile creation request containing nickname, district id, birth, gender, and grade information
-     * @throws IllegalArgumentException if a profile already exists for the user, the user does not exist, the district cannot be resolved,
-     *                                  the nickname is null or blank, or any validator check fails
-     */
     @Override
     public void createProfile(Long userId, UserProfileCreateRequest request) {
         if (userProfileRepository.existsById(userId)) {
@@ -57,26 +51,29 @@ public class UserProfileServiceImpl implements UserProfileService{
         validator.validateForCreate(request);
 
         // 지역 조회
-        Optional<RegionDistrict> regionDist = Optional.ofNullable(regionService.findDistrictsById(request.districtId())
-                .orElseThrow(() -> new IllegalArgumentException("지역이 존재하지 않습니다.")));
-
+        RegionDistrict regionDistrict = regionService.findDistrictsById(request.getDistrictId())
+                .orElseThrow(() -> new IllegalArgumentException("지역이 존재하지 않습니다."));
 
         // 닉네임 설정
-        String resolvedNickname = request.nickname();
+        String resolvedNickname = request.getNickname();
         if (resolvedNickname == null || resolvedNickname.isBlank()) {
-            throw new IllegalArgumentException("nickname이 필요합니다.");
+            throw new IllegalArgumentException("닉네임은 필수 입력 항목입니다.");
         }
 
-        Grade regional = request.regionalGrade();
-        Grade national = request.nationalGrade();
+        Grade regional = request.getRegionalGrade();
+        Grade national = request.getNationalGrade();
 
-        UserProfile profile = new UserProfile(
-                userId,
-                resolvedNickname,
-                regional,
-                national,
-                regionDist.get()
-        );
+        UserProfile profile =
+                UserProfile.builder()
+                        .user(user)
+                        .nickname(resolvedNickname)
+                        .regionDistrict(regionDistrict)
+                        .regionalGrade(regional)
+                        .nationalGrade(national)
+                        .build();
+
+        profile.setTag(generateTag());
+        profile.setTagChangedAt(LocalDateTime.now());
 
         // grade 저장
         if (regional != null) {
@@ -92,12 +89,12 @@ public class UserProfileServiceImpl implements UserProfileService{
 
         // birth 파싱
         LocalDate birth = LocalDate.parse(
-                request.birth(),
+                request.getBirth(),
                 DateTimeFormatter.BASIC_ISO_DATE.withLocale(Locale.KOREA));
         profile.setBirth(birth.atStartOfDay());
 
         // gender 세팅
-        profile.setGender(request.gender());
+        profile.setGender(request.getGender());
 
         // user 상태 전환
         user.setStatus(UserStatus.ACTIVE);
@@ -117,20 +114,13 @@ public class UserProfileServiceImpl implements UserProfileService{
         return new UserProfilePrefillResponseDto(nickname.orElse(null), nickname.isPresent());
     }
 
-    @Override
-    public UserProfileResponseDto getMyProfile(Long userId) {
-
-        // 사용자 조회, 없으면 실패 처리
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-
-        // 프로필 조회, 없으면 null 반환
-        UserProfile profile = null;
-        if (user.getStatus() == UserStatus.ACTIVE) {
-            profile = userProfileRepository.findByUserId(userId).orElse(null);
+    // Helper
+    private String generateTag() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 4; i++) {
+            int idx = secureRandom.nextInt(TAG_CHARS.length());
+            sb.append(TAG_CHARS.charAt(idx));
         }
-
-        // 사용자 상태 + 프로필 정보가 있으면 DTO로 반환
-        return UserProfileResponseDto.from(user, profile);
+        return sb.toString();
     }
 }
