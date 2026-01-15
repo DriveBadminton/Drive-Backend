@@ -40,7 +40,7 @@ public class CreateUserProfileUseCaseTest {
     UserGradeHistoryRepository userGradeHistoryRepository;
 
     @Mock
-    UserProfileValidator validator = new UserProfileValidator();
+    UserProfileValidator validator;
 
     @InjectMocks
     UserProfileServiceImpl userProfileService;
