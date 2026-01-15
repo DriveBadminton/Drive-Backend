@@ -16,7 +16,9 @@ import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Optional;
@@ -31,6 +33,8 @@ public class UserProfileServiceImpl implements UserProfileService{
     private final RegionService regionService;
     private final UserNicknameProvider userNicknameProvider;
     private final UserGradeHistoryRepository userGradeHistoryRepository;
+    private static final String TAG_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private final SecureRandom secureRandom = new SecureRandom();
 
     @Override
     public void createProfile(Long userId, UserProfileCreateRequest request) {
@@ -47,9 +51,8 @@ public class UserProfileServiceImpl implements UserProfileService{
         validator.validateForCreate(request);
 
         // 지역 조회
-        Optional<RegionDistrict> regionDist = Optional.ofNullable(regionService.findDistrictsById(request.getDistrictId())
-                .orElseThrow(() -> new IllegalArgumentException("지역이 존재하지 않습니다.")));
-
+        RegionDistrict regionDistrict = regionService.findDistrictsById(request.getDistrictId())
+                .orElseThrow(() -> new IllegalArgumentException("지역이 존재하지 않습니다."));
 
         // 닉네임 설정
         String resolvedNickname = request.getNickname();
@@ -60,13 +63,17 @@ public class UserProfileServiceImpl implements UserProfileService{
         Grade regional = request.getRegionalGrade();
         Grade national = request.getNationalGrade();
 
-        UserProfile profile = new UserProfile(
-                userId,
-                resolvedNickname,
-                regional,
-                national,
-                regionDist.get()
-        );
+        UserProfile profile =
+                UserProfile.builder()
+                        .user(user)
+                        .nickname(resolvedNickname)
+                        .regionDistrict(regionDistrict)
+                        .regionalGrade(regional)
+                        .nationalGrade(national)
+                        .build();
+
+        profile.setTag(generateTag());
+        profile.setTagChangedAt(LocalDateTime.now());
 
         // grade 저장
         if (regional != null) {
@@ -107,5 +114,13 @@ public class UserProfileServiceImpl implements UserProfileService{
         return new UserProfilePrefillResponseDto(nickname.orElse(null), nickname.isPresent());
     }
 
-
+    // Helper
+    private String generateTag() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 4; i++) {
+            int idx = secureRandom.nextInt(TAG_CHARS.length());
+            sb.append(TAG_CHARS.charAt(idx));
+        }
+        return sb.toString();
+    }
 }
