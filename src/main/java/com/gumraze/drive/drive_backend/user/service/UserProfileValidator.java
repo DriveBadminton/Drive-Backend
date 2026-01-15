@@ -10,19 +10,19 @@ public class UserProfileValidator {
 
     // 프로필 생성 시 검증 메서드
     public void validateForCreate(UserProfileCreateRequest request) {
-        if (request.nickname() == null || request.nickname().isBlank()) {
+        if (request.getNickname() == null || request.getNickname().isBlank()) {
             throw new IllegalArgumentException("Nickname이 필요합니다.");
         }
 
-        if (request.birth() == null || request.birth().isBlank()) {
+        if (request.getBirth() == null || request.getBirth().isBlank()) {
             throw new IllegalArgumentException("Birth가 필요합니다.");
         }
 
-        if (request.gender() == null) {
+        if (request.getGender() == null) {
             throw new IllegalArgumentException("gender가 필요합니다.");
         }
 
-        if (request.districtId() == null) {
+        if (request.getDistrictId() == null) {
             throw new IllegalArgumentException("districtId가 필요합니다.");
         }
     }
