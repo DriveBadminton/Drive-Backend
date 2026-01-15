@@ -42,6 +42,12 @@ public class UserProfile {
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
+    @Column(length = 4, nullable = false)
+    private String tag;
+
+    @Column(name = "tag_changed_at", nullable = false)
+    private LocalDateTime tagChangedAt;
+
     private LocalDateTime createdAt;    // 계정 생성 시점이 아닌 프로필 생성 시점
     private LocalDateTime updatedAt;
 
