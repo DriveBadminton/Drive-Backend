@@ -47,18 +47,18 @@ public class UserProfileServiceImpl implements UserProfileService{
         validator.validateForCreate(request);
 
         // 지역 조회
-        Optional<RegionDistrict> regionDist = Optional.ofNullable(regionService.findDistrictsById(request.districtId())
+        Optional<RegionDistrict> regionDist = Optional.ofNullable(regionService.findDistrictsById(request.getDistrictId())
                 .orElseThrow(() -> new IllegalArgumentException("지역이 존재하지 않습니다.")));
 
 
         // 닉네임 설정
-        String resolvedNickname = request.nickname();
+        String resolvedNickname = request.getNickname();
         if (resolvedNickname == null || resolvedNickname.isBlank()) {
             throw new IllegalArgumentException("nickname이 필요합니다.");
         }
 
-        Grade regional = request.regionalGrade();
-        Grade national = request.nationalGrade();
+        Grade regional = request.getRegionalGrade();
+        Grade national = request.getNationalGrade();
 
         UserProfile profile = new UserProfile(
                 userId,
@@ -82,12 +82,12 @@ public class UserProfileServiceImpl implements UserProfileService{
 
         // birth 파싱
         LocalDate birth = LocalDate.parse(
-                request.birth(),
+                request.getBirth(),
                 DateTimeFormatter.BASIC_ISO_DATE.withLocale(Locale.KOREA));
         profile.setBirth(birth.atStartOfDay());
 
         // gender 세팅
-        profile.setGender(request.gender());
+        profile.setGender(request.getGender());
 
         // user 상태 전환
         user.setStatus(UserStatus.ACTIVE);
