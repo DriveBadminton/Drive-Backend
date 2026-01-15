@@ -4,10 +4,12 @@ import com.gumraze.drive.drive_backend.user.dto.UserSearchResponse;
 import com.gumraze.drive.drive_backend.user.entity.UserProfile;
 import com.gumraze.drive.drive_backend.user.repository.UserProfileRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Locale;
 
+@Service
 @AllArgsConstructor
 public class UserSearchServiceImpl implements UserSearchService {
 
