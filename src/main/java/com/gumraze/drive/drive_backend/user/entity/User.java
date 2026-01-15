@@ -24,17 +24,21 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private UserStatus status;
+    @Builder.Default
+    private UserStatus status = UserStatus.PENDING;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private UserRole role;
+    @Builder.Default
+    private UserRole role = UserRole.USER;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    @Builder.Default
+    private LocalDateTime updatedAt = LocalDateTime.now();
 
     // JPA 프록시 생성을 위한 기본 생성자
     protected User() {}
