@@ -10,6 +10,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +36,7 @@ public class SearchUserUseCaseTest {
     void search_by_nickname_containing() {
         // given
         String nickname = "김대환";
+        Pageable pageable = PageRequest.of(0, 20);
 
         User user = User.builder().id(1L).build();
         UserProfile profile = UserProfile.builder()
@@ -40,16 +45,20 @@ public class SearchUserUseCaseTest {
                 .tag("AB12")
                 .build();
 
-        when(userProfileRepository.findByNicknameContaining(nickname)).thenReturn(List.of(profile));
+        Page<UserProfile> users = new PageImpl<>(List.of(profile), pageable, 1);
+        when(userProfileRepository.findByNicknameContaining(nickname, pageable))
+                .thenReturn(users);
 
         // when
-        List<UserSearchResponse> result = userSearchService.searchByNickname(nickname);
+        Page<UserSearchResponse> result =
+                userSearchService.searchByNickname(nickname, pageable);
 
         // then
-        verify(userProfileRepository).findByNicknameContaining(nickname);
-        assertThat(result.getFirst().getNickname()).isEqualTo(nickname);
-        assertThat(result.getFirst().getUserId()).isEqualTo(user.getId());
-        assertThat(result.getFirst().getTag()).isEqualTo("AB12");
+        verify(userProfileRepository).findByNicknameContaining(nickname, pageable);
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().getNickname()).isEqualTo(nickname);
+        assertThat(result.getContent().getFirst().getUserId()).isEqualTo(1L);
+        assertThat(result.getContent().getFirst().getTag()).isEqualTo("AB12");
     }
 
     @Test
@@ -75,14 +84,15 @@ public class SearchUserUseCaseTest {
                 .thenReturn(Optional.of(profile));
 
         // when
-        UserSearchResponse response =
+        Optional<UserSearchResponse> response =
                 userSearchService.searchByNicknameAndTag(nickname, tagInput);
 
         // then
         verify(userProfileRepository).findByNicknameAndTag(nickname, normalizedTag);
-        assertThat(response.getUserId()).isEqualTo(userId);
-        assertThat(response.getNickname()).isEqualTo(nickname);
-        assertThat(response.getTag()).isEqualTo(normalizedTag);
+        assertThat(response).isPresent();
+        assertThat(response.get().getUserId()).isEqualTo(userId);
+        assertThat(response.get().getNickname()).isEqualTo(nickname);
+        assertThat(response.get().getTag()).isEqualTo(normalizedTag);
     }
 
     @Test
@@ -90,13 +100,15 @@ public class SearchUserUseCaseTest {
     void search_by_nickname_is_case_sensitive() {
         // given
         String nickname = "Kim";
+        Pageable pageable = PageRequest.of(0, 20);
 
-        when(userProfileRepository.findByNicknameContaining(nickname)).thenReturn(List.of());
+        when(userProfileRepository.findByNicknameContaining(nickname, pageable))
+                .thenReturn(Page.empty(pageable));
 
         // when
-        userSearchService.searchByNickname(nickname);
+        userSearchService.searchByNickname(nickname, pageable);
 
         // then
-        verify(userProfileRepository).findByNicknameContaining(nickname);
+        verify(userProfileRepository).findByNicknameContaining(nickname, pageable);
     }
 }
