@@ -2,11 +2,12 @@ package com.gumraze.drive.drive_backend.user.controller;
 
 import com.gumraze.drive.drive_backend.common.api.ApiResponse;
 import com.gumraze.drive.drive_backend.common.api.ResultCode;
+import com.gumraze.drive.drive_backend.user.dto.UserMeResponse;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateResponseDto;
 import com.gumraze.drive.drive_backend.user.dto.UserProfilePrefillResponseDto;
-import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
 import com.gumraze.drive.drive_backend.user.service.UserProfileService;
+import com.gumraze.drive.drive_backend.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -17,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
@@ -26,45 +28,22 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserProfileService userProfileService;
+    private final UserService userService;
 
     @GetMapping("/me")
-    @Operation(
-            summary = "내 프로필 상태 조회",
-            description = "Access Token 기반으로 사용자 정보를 반환합니다."
-    )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "200",
-                    description = "조회 성공",
-                    content = @Content(schema = @Schema(implementation = UserProfileResponseDto.class))
-            ),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
-    })
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<ApiResponse<UserProfileResponseDto>> me(
-            Authentication authentication
+    public ResponseEntity<ApiResponse<UserMeResponse>> me(
+            @AuthenticationPrincipal Long userId
     ) {
-        // 인증 정보에서 userId 조회
-        Long userId = (Long) authentication.getPrincipal();
-
-        // userId로 프로필 조회
-        UserProfileResponseDto profile = userProfileService.getMyProfile(userId);
+        UserMeResponse body = userService.getUserMe(userId);
 
         ResultCode code = ResultCode.OK;
-
         // 프로필이 존재하면, 프로필 조회 성공
         return ResponseEntity
                 .status(code.httpStatus())
-                .body(ApiResponse.success(code, "내 프로필 조회 성공", profile));
+                .body(ApiResponse.success(code, "내 프로필 조회 성공", body));
     }
 
-    /**
-     * Create a user profile from the provided request and mark the account as ACTIVE.
-     *
-     * @param authentication the authenticated principal whose ID is used as the owner of the new profile
-     * @param request the profile creation payload
-     * @return an ApiResponse containing a UserProfileCreateResponseDto with the created user's ID and a success message
-     */
     @PostMapping("/me/profile")
     @Operation(
             summary = "프로필 생성",

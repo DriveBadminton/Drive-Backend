@@ -2,10 +2,10 @@ package com.gumraze.drive.drive_backend.user.controller;
 
 import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenValidator;
 import com.gumraze.drive.drive_backend.config.SecurityConfig;
-import com.gumraze.drive.drive_backend.user.constants.UserRole;
 import com.gumraze.drive.drive_backend.user.constants.UserStatus;
-import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
+import com.gumraze.drive.drive_backend.user.dto.UserMeResponse;
 import com.gumraze.drive.drive_backend.user.service.UserProfileService;
+import com.gumraze.drive.drive_backend.user.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,22 +34,19 @@ public class UserControllerTest {
     @MockitoBean
     private UserProfileService userProfileService;
 
+    @MockitoBean
+    private UserService userService;
+
     @Test
     @DisplayName("PENDING 사용자가 /users/me 조회 시 status만 반환한다.")
     void get_me_returns_pending_user_status() throws Exception {
         // given: 사용자는 현재 PENDING 상태임.
-        UserProfileResponseDto responseDto = UserProfileResponseDto.builder()
-                .id(1L)
-                .role(UserRole.USER)
+        UserMeResponse responseDto = UserMeResponse.builder()
                 .status(UserStatus.PENDING)
-                .regionalGrade(null)
-                .nationalGrade(null)
-                .provinceName(null)
-                .districtName(null)
                 .build();
 
         // stub
-        when(userProfileService.getMyProfile(1L))
+        when(userService.getUserMe(1L))
                 .thenReturn(responseDto);
         when(jwtAccessTokenValidator.validateAndGetUserId("token"))
                 .thenReturn(Optional.of(1L));
@@ -60,12 +57,40 @@ public class UserControllerTest {
                 // then: 응답은 status만 포함되어야 함.
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.id").value(responseDto.getId()))
                 .andExpect(jsonPath("$.data.status").value(UserStatus.PENDING.name()))
-                .andExpect(jsonPath("$.data.role").value(UserRole.USER.name()))
-                .andExpect(jsonPath("$.data.regionalGrade").value(nullValue()))
-                .andExpect(jsonPath("$.data.nationalGrade").value(nullValue()))
-                .andExpect(jsonPath("$.data.provinceName").value(nullValue()))
-                .andExpect(jsonPath("$.data.districtName").value(nullValue()));
+                .andExpect(jsonPath("$.data.profileImageUrl").value(nullValue()))
+                .andExpect(jsonPath("$.data.nickname").value(nullValue()));
+    }
+
+    @Test
+    @DisplayName("ACTIVE 사용자가 /users/me 조회 시 프로필 정보를 반환한다.")
+    void get_user_me_return_profile_when_active() throws Exception {
+        // given
+        UserMeResponse response = UserMeResponse.builder()
+                .status(UserStatus.ACTIVE)
+                .nickname("테스트 닉네임")
+                .profileImageUrl("http://profile-image.com")
+                .build();
+
+        when(userService.getUserMe(1L)).thenReturn(response);
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.of(1L));
+
+        mockMvc.perform(get("/users/me")
+                .header("Authorization", "Bearer token")
+                .accept("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.status").value(UserStatus.ACTIVE.name()))
+                .andExpect(jsonPath("$.data.nickname").value("테스트 닉네임"))
+                .andExpect(jsonPath("$.data.profileImageUrl").value("http://profile-image.com"));
+    }
+
+    @Test
+    @DisplayName("토큰이 없으면 401을 반환한다.")
+    void get_user_me_returns_unauthorized_when_token_is_missing() throws Exception {
+        mockMvc.perform(get("/users/me")
+                        .accept("application/json"))
+                .andExpect(status().isUnauthorized());
     }
 }
