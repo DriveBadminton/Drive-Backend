@@ -16,7 +16,6 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final UserService userService;
     private final UserProfileRepository userProfileRepository;
 
     @Override
