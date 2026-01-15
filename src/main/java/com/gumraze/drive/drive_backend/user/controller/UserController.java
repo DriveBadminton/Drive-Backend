@@ -2,11 +2,9 @@ package com.gumraze.drive.drive_backend.user.controller;
 
 import com.gumraze.drive.drive_backend.common.api.ApiResponse;
 import com.gumraze.drive.drive_backend.common.api.ResultCode;
-import com.gumraze.drive.drive_backend.user.dto.UserMeResponse;
-import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
-import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateResponseDto;
-import com.gumraze.drive.drive_backend.user.dto.UserProfilePrefillResponseDto;
+import com.gumraze.drive.drive_backend.user.dto.*;
 import com.gumraze.drive.drive_backend.user.service.UserProfileService;
+import com.gumraze.drive.drive_backend.user.service.UserSearchService;
 import com.gumraze.drive.drive_backend.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -21,6 +19,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/users")
@@ -28,7 +28,24 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserProfileService userProfileService;
+    private final UserSearchService userSearchService;
     private final UserService userService;
+
+    @GetMapping
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<List<UserSearchResponse>>> searchUsers(
+            @RequestParam String nickname,
+            @RequestParam(required = false) String tag
+    ) {
+        List<UserSearchResponse> body = (tag == null || tag.isBlank())
+                ? userSearchService.searchByNickname(nickname)
+                : List.of(userSearchService.searchByNicknameAndTag(nickname, tag));
+
+        ResultCode code = ResultCode.OK;
+        return ResponseEntity
+                .status(code.httpStatus())
+                .body(ApiResponse.success(code, "유저 검색 성공", body));
+    }
 
     @GetMapping("/me")
     @SecurityRequirement(name = "bearerAuth")
