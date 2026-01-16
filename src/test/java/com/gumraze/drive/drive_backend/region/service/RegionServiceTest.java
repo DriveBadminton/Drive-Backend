@@ -2,8 +2,8 @@ package com.gumraze.drive.drive_backend.region.service;
 
 import com.gumraze.drive.drive_backend.region.entity.RegionDistrict;
 import com.gumraze.drive.drive_backend.region.entity.RegionProvince;
-import com.gumraze.drive.drive_backend.region.repository.JpaRegionDistrictRepository;
-import com.gumraze.drive.drive_backend.region.repository.JpaRegionProvinceRepository;
+import com.gumraze.drive.drive_backend.region.repository.RegionDistrictRepository;
+import com.gumraze.drive.drive_backend.region.repository.RegionProvinceRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,8 +22,8 @@ import static org.mockito.Mockito.when;
 class RegionServiceTest {
 
     // 가짜 객체 생성
-    @Mock private JpaRegionProvinceRepository jpaRegionProvinceRepository;
-    @Mock private JpaRegionDistrictRepository jpaRegionDistrictRepository;
+    @Mock private RegionProvinceRepository regionProvinceRepository;
+    @Mock private RegionDistrictRepository regionDistrictRepository;
 
     @InjectMocks    // 테스트 대상 클래스의 실제 인스턴스를 만들고, 그 안에 @Mock으로 만든 객체를 자동 주입함.
     private RegionServiceImpl regionService;
@@ -43,7 +43,7 @@ class RegionServiceTest {
         when(p3.getId()).thenReturn(3L);
 
         // repo는 정렬되지 않은 리스트를 반환한다고 가정함.
-        when(jpaRegionProvinceRepository.findAll())
+        when(regionProvinceRepository.findAll())
                 .thenReturn(List.of(p2, p1, p3));
 
         // when: province 목록 조회 메서드를 호출 할 때,
@@ -68,7 +68,7 @@ class RegionServiceTest {
         when(d3.getId()).thenReturn(3L);
 
         // jpa repo에서 정렬되지 않은 리스트를 반환한다고 가정함.
-        when(jpaRegionDistrictRepository.findAllByProvinceId(1L))
+        when(regionDistrictRepository.findAllByProvinceId(1L))
                 .thenReturn(List.of(d3, d1, d2));
 
         // when: provinceId를 받아서 district 목록을 id 오름차순으로 조회함.
