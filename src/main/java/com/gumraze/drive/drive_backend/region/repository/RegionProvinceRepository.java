@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface JpaRegionProvinceRepository extends JpaRepository<RegionProvince, Long> {
+public interface RegionProvinceRepository extends JpaRepository<RegionProvince, Long> {
     /***
      * id 오름차순으로 정렬된 시/도 데이터 조회
      */

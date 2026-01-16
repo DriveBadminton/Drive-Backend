@@ -2,6 +2,7 @@ package com.gumraze.drive.drive_backend.user.service;
 
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
 import com.gumraze.drive.drive_backend.user.dto.UserProfilePrefillResponseDto;
+import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
 
 public interface UserProfileService {
 
@@ -13,5 +14,8 @@ public interface UserProfileService {
 
     // 제3자 로그인 계정의 닉네임 요청
     UserProfilePrefillResponseDto getProfilePrefill(Long userId);
+
+    // 프로필 조회
+    UserProfileResponseDto getMyProfile(Long userId);
 
 }

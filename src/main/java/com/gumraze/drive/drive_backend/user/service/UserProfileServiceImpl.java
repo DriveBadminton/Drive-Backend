@@ -1,5 +1,6 @@
 package com.gumraze.drive.drive_backend.user.service;
 
+import com.gumraze.drive.drive_backend.common.exception.NotFoundException;
 import com.gumraze.drive.drive_backend.region.entity.RegionDistrict;
 import com.gumraze.drive.drive_backend.region.service.RegionService;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
@@ -7,6 +8,7 @@ import com.gumraze.drive.drive_backend.user.constants.GradeType;
 import com.gumraze.drive.drive_backend.user.constants.UserStatus;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
 import com.gumraze.drive.drive_backend.user.dto.UserProfilePrefillResponseDto;
+import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
 import com.gumraze.drive.drive_backend.user.entity.User;
 import com.gumraze.drive.drive_backend.user.entity.UserGradeHistory;
 import com.gumraze.drive.drive_backend.user.entity.UserProfile;
@@ -112,6 +114,34 @@ public class UserProfileServiceImpl implements UserProfileService{
     public UserProfilePrefillResponseDto getProfilePrefill(Long userId) {
         Optional<String> nickname = userNicknameProvider.findNicknameByUserId(userId);
         return new UserProfilePrefillResponseDto(nickname.orElse(null), nickname.isPresent());
+    }
+
+    @Override
+    public UserProfileResponseDto getMyProfile(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new NotFoundException("사용자를 찾을 수 없습니다.")
+        );
+
+        UserProfile profile = userProfileRepository.findByUserId(userId).orElseThrow(
+                () -> new NotFoundException("사용자의 프로필을 찾을 수 없습니다.")
+        );
+
+        return UserProfileResponseDto.builder()
+                        .status(user.getStatus())
+                        .nickname(profile.getNickname())
+                        .tag(profile.getTag())
+                        .profileImageUrl(profile.getProfileImageUrl())
+                        .birth(profile.getBirth())
+                        .birthVisible(profile.isBirthVisible())
+                        .gender(profile.getGender())
+                        .regionalGrade(profile.getRegionalGrade())
+                        .nationalGrade(profile.getNationalGrade())
+                        .districtName(profile.getRegionDistrict().getName())
+                        .provinceName(profile.getRegionDistrict().getProvince().getName())
+                        .tagChangedAt(profile.getTagChangedAt())
+                        .createdAt(profile.getCreatedAt())
+                        .updatedAt(profile.getUpdatedAt())
+                        .build();
     }
 
     // Helper
