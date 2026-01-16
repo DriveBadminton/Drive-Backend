@@ -3,8 +3,6 @@ package com.gumraze.drive.drive_backend.user.service;
 import com.gumraze.drive.drive_backend.common.exception.NotFoundException;
 import com.gumraze.drive.drive_backend.region.entity.RegionDistrict;
 import com.gumraze.drive.drive_backend.region.entity.RegionProvince;
-import com.gumraze.drive.drive_backend.region.repository.RegionDistrictRepository;
-import com.gumraze.drive.drive_backend.region.repository.RegionProvinceRepository;
 import com.gumraze.drive.drive_backend.user.constants.Gender;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
 import com.gumraze.drive.drive_backend.user.constants.UserRole;
@@ -35,12 +33,6 @@ public class GetMyProfileDetailUseCaseTest {
 
     @Mock
     private UserProfileRepository userProfileRepository;
-
-    @Mock
-    private RegionDistrictRepository regionDistrictRepository;
-
-    @Mock
-    private RegionProvinceRepository regionProvinceRepository;
 
     @InjectMocks
     private UserProfileServiceImpl userProfileService;
