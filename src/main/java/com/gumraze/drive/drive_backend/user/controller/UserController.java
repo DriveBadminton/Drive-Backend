@@ -164,4 +164,17 @@ public class UserController {
                 .status(code.httpStatus())
                 .body(ApiResponse.success(code, "제3자 로그인 닉네임 조회 성공", body));
     }
+
+    @GetMapping("/me/profile")
+    public ResponseEntity<ApiResponse<UserProfileResponseDto>> getMyProfile(
+            @AuthenticationPrincipal Long userId
+    ) {
+        UserProfileResponseDto body = userProfileService.getMyProfile(userId);
+
+        ResultCode code = ResultCode.OK;
+
+        return ResponseEntity
+                .status(code.httpStatus())
+                .body(ApiResponse.success(code, "내 프로필 조회 성공", body));
+    }
 }

@@ -2,8 +2,11 @@ package com.gumraze.drive.drive_backend.user.controller;
 
 import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenValidator;
 import com.gumraze.drive.drive_backend.config.SecurityConfig;
+import com.gumraze.drive.drive_backend.user.constants.Gender;
+import com.gumraze.drive.drive_backend.user.constants.Grade;
 import com.gumraze.drive.drive_backend.user.constants.UserStatus;
 import com.gumraze.drive.drive_backend.user.dto.UserMeResponse;
+import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
 import com.gumraze.drive.drive_backend.user.dto.UserSearchResponse;
 import com.gumraze.drive.drive_backend.user.service.UserProfileService;
 import com.gumraze.drive.drive_backend.user.service.UserSearchService;
@@ -21,6 +24,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -191,5 +195,52 @@ public class UserControllerTest {
                 )
                 .andExpect(status().isBadRequest());
         verifyNoInteractions(userSearchService);
+    }
+
+    @Test
+    @DisplayName("내 프로필 상세조회 성공 테스트")
+    void get_my_profile_detail_success() throws Exception {
+        // given
+        Long userId = 1L;
+
+        UserProfileResponseDto response =
+                UserProfileResponseDto.builder()
+                        .status(UserStatus.ACTIVE)
+                        .nickname("테스트 닉네임")
+                        .tag("AB12")
+                        .profileImageUrl("http://profile-image.com")
+                        .birth(LocalDateTime.of(2000, 1, 1, 0, 0))
+                        .birthVisible(true)
+                        .gender(Gender.MALE)
+                        .regionalGrade(Grade.D)
+                        .nationalGrade(Grade.D)
+                        .districtName("테스트 구")
+                        .provinceName("테스트 시/도")
+                        .tagChangedAt(LocalDateTime.of(2022, 1, 1, 0, 0))
+                        .createdAt(LocalDateTime.of(2022, 1, 1, 0, 0))
+                        .updatedAt(LocalDateTime.of(2022, 1, 1, 0, 0))
+                        .build();
+
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.of(userId));
+        when(userProfileService.getMyProfile(userId))
+                .thenReturn(response);
+
+        // when & then
+        mockMvc.perform(get("/users/me/profile")
+                        .header("Authorization", "Bearer token")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.data.nickname").value("테스트 닉네임"))
+                .andExpect(jsonPath("$.data.tag").value("AB12"))
+                .andExpect(jsonPath("$.data.profileImageUrl").value("http://profile-image.com"))
+                .andExpect(jsonPath("$.data.birthVisible").value(true))
+                .andExpect(jsonPath("$.data.gender").value("MALE"))
+                .andExpect(jsonPath("$.data.regionalGrade").value("D급"))
+                .andExpect(jsonPath("$.data.nationalGrade").value("D급"))
+                .andExpect(jsonPath("$.data.districtName").value("테스트 구"))
+                .andExpect(jsonPath("$.data.provinceName").value("테스트 시/도"));
     }
 }
