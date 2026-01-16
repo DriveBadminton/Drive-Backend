@@ -2,10 +2,15 @@
 name: CI - 이미지 빌드 및 푸시
 
 on:
+  # main으로 들어가기 전 검증
   pull_request:
     branches: [ "main" ]
+
+  # 통합(dev) 및 배포(main) 트리거
   push:
-    branches: [ "main" ]
+    branches:
+      - dev
+      - main
 
 permissions:
   contents: read
@@ -13,7 +18,9 @@ permissions:
 
 jobs:
   build:
+    name: 테스트 및 (조건부) 이미지 빌드
     runs-on: ubuntu-latest
+
     steps:
       - name: 코드 체크아웃
         uses: actions/checkout@v4
@@ -27,8 +34,10 @@ jobs:
       - name: Gradle 테스트 및 빌드
         run: ./gradlew clean test bootJar
 
+      # ===== 아래부터는 main push에서만 실행 =====
+
       - name: GHCR 로그인
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -36,7 +45,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Docker 이미지 빌드 및 푸시
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           IMAGE=ghcr.io/drivebadminton/drive-backend:latest
           docker build -t $IMAGE .
