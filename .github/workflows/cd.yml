@@ -2,16 +2,21 @@
 name: CD - EC2 배포
 
 on:
-  push:
-    branches: [ main ]
+  workflow_run:
+    workflows: ["CI - 이미지 빌드 및 푸시"]
+    types:
+      - completed
   workflow_dispatch:
 
 jobs:
   deploy:
-    name: EC2 배포
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+
     steps:
-      - name: SSH로 배포
+      - name: EC2 배포
         uses: appleboy/ssh-action@v1.0.3
         env:
           GHCR_USERNAME: ${{ github.actor }}
@@ -23,7 +28,6 @@ jobs:
           envs: GHCR_USERNAME,GHCR_PASSWORD
           script: |
             cd ~/Drive-Backend
-            git pull --ff-only
             echo "$GHCR_PASSWORD" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
             docker compose pull
             docker compose up -d --remove-orphans

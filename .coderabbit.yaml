@@ -6,13 +6,10 @@ reviews:
   auto_review:
     enabled: true
     auto_incremental_review: true
-    auto_review:
-      enabled: true
-      auto_incremental_review: true
-      base_branches:
-        - main
-        - dev
-      review_status: true
+    base_branches:
+      - main
+      - dev
+
   review_status: true
   commit_status: true
   profile: "chill"
