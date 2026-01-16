@@ -2,11 +2,10 @@ package com.gumraze.drive.drive_backend.user.controller;
 
 import com.gumraze.drive.drive_backend.common.api.ApiResponse;
 import com.gumraze.drive.drive_backend.common.api.ResultCode;
-import com.gumraze.drive.drive_backend.user.dto.UserMeResponse;
-import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
-import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateResponseDto;
-import com.gumraze.drive.drive_backend.user.dto.UserProfilePrefillResponseDto;
+import com.gumraze.drive.drive_backend.common.exception.NotFoundException;
+import com.gumraze.drive.drive_backend.user.dto.*;
 import com.gumraze.drive.drive_backend.user.service.UserProfileService;
+import com.gumraze.drive.drive_backend.user.service.UserSearchService;
 import com.gumraze.drive.drive_backend.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,10 +15,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -28,7 +32,31 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserProfileService userProfileService;
+    private final UserSearchService userSearchService;
     private final UserService userService;
+
+    @GetMapping
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<Page<UserSearchResponse>>> searchUsers(
+            @RequestParam String nickname,
+            @RequestParam(required = false) String tag,
+            Pageable pageable
+    ) {
+        Page<UserSearchResponse> body;
+
+        if (tag == null || tag.isBlank()) {
+            body = userSearchService.searchByNickname(nickname, pageable);
+        } else {
+            UserSearchResponse found = userSearchService.searchByNicknameAndTag(nickname, tag)
+                    .orElseThrow(() -> new NotFoundException("유저가 없습니다."));
+            body = new PageImpl<>(List.of(found), pageable, 1);
+        }
+
+        ResultCode code = ResultCode.OK;
+        return ResponseEntity
+                .status(code.httpStatus())
+                .body(ApiResponse.success(code, "유저 검색 성공", body));
+    }
 
     @GetMapping("/me")
     @SecurityRequirement(name = "bearerAuth")
