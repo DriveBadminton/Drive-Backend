@@ -1,5 +1,6 @@
 package com.gumraze.drive.drive_backend.user.service;
 
+import com.gumraze.drive.drive_backend.common.exception.NotFoundException;
 import com.gumraze.drive.drive_backend.region.entity.RegionDistrict;
 import com.gumraze.drive.drive_backend.region.entity.RegionProvince;
 import com.gumraze.drive.drive_backend.region.repository.RegionDistrictRepository;
@@ -24,8 +25,8 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class GetMyProfileDetailUseCaseTest {
@@ -96,5 +97,44 @@ public class GetMyProfileDetailUseCaseTest {
         assertThat(result.getNationalGrade()).isEqualTo(Grade.D);
         assertThat(result.getDistrictName()).isEqualTo("테스트 구");
         assertThat(result.getProvinceName()).isEqualTo("테스트 시/도");
+    }
+
+    @Test
+    @DisplayName("프로필이 없으면 NotFoundException 발생")
+    void get_my_profile_throws_when_profile_missing() {
+        // given
+        Long userId = 1L;
+
+        User user = User.builder()
+                .id(userId)
+                .status(UserStatus.ACTIVE)
+                .role(UserRole.USER)
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userProfileRepository.findByUserId(userId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> userProfileService.getMyProfile(userId))
+                .isInstanceOf(NotFoundException.class);
+
+        verify(userRepository).findById(userId);
+        verify(userProfileRepository).findByUserId(userId);
+    }
+
+    @Test
+    @DisplayName("사용자가 없으면 NotFoundException 발생")
+    void get_my_profile_throws_when_user_missing() {
+        // given
+        Long userId = 1L;
+
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> userProfileService.getMyProfile(userId))
+                .isInstanceOf(NotFoundException.class);
+
+        verify(userRepository).findById(userId);
+        verifyNoInteractions(userProfileRepository);
     }
 }
