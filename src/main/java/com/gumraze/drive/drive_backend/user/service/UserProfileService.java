@@ -1,6 +1,7 @@
 package com.gumraze.drive.drive_backend.user.service;
 
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
+import com.gumraze.drive.drive_backend.user.dto.UserProfileIdentityUpdateRequest;
 import com.gumraze.drive.drive_backend.user.dto.UserProfilePrefillResponseDto;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
 import com.gumraze.drive.drive_backend.user.entity.UserProfileUpdateRequest;
@@ -22,4 +23,6 @@ public interface UserProfileService {
     // 프로필 수정
     void updateMyProfile(Long userId, UserProfileUpdateRequest request);
 
+    // 닉네임 + 태그 수정
+    void updateNicknameAndTags(Long userId, UserProfileIdentityUpdateRequest request);
 }
