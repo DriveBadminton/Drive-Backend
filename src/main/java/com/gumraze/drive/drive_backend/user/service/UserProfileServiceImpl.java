@@ -1,5 +1,6 @@
 package com.gumraze.drive.drive_backend.user.service;
 
+import com.gumraze.drive.drive_backend.common.exception.ForbiddenException;
 import com.gumraze.drive.drive_backend.common.exception.NotFoundException;
 import com.gumraze.drive.drive_backend.region.entity.RegionDistrict;
 import com.gumraze.drive.drive_backend.region.service.RegionService;
@@ -7,16 +8,19 @@ import com.gumraze.drive.drive_backend.user.constants.Grade;
 import com.gumraze.drive.drive_backend.user.constants.GradeType;
 import com.gumraze.drive.drive_backend.user.constants.UserStatus;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileCreateRequest;
+import com.gumraze.drive.drive_backend.user.dto.UserProfileIdentityUpdateRequest;
 import com.gumraze.drive.drive_backend.user.dto.UserProfilePrefillResponseDto;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
 import com.gumraze.drive.drive_backend.user.entity.User;
 import com.gumraze.drive.drive_backend.user.entity.UserGradeHistory;
 import com.gumraze.drive.drive_backend.user.entity.UserProfile;
+import com.gumraze.drive.drive_backend.user.entity.UserProfileUpdateRequest;
 import com.gumraze.drive.drive_backend.user.repository.UserGradeHistoryRepository;
 import com.gumraze.drive.drive_backend.user.repository.UserProfileRepository;
 import com.gumraze.drive.drive_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDate;
@@ -35,6 +39,7 @@ public class UserProfileServiceImpl implements UserProfileService{
     private final RegionService regionService;
     private final UserNicknameProvider userNicknameProvider;
     private final UserGradeHistoryRepository userGradeHistoryRepository;
+
     private static final String TAG_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private final SecureRandom secureRandom = new SecureRandom();
 
@@ -144,7 +149,105 @@ public class UserProfileServiceImpl implements UserProfileService{
                         .build();
     }
 
-    // Helper
+    @Override
+    @Transactional
+    public void updateMyProfile(Long userId, UserProfileUpdateRequest request) {
+        UserProfile profile = userProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new NotFoundException("사용자의 프로필을 찾을 수 없습니다."));
+
+        if (request.getRegionalGrade() != null) {
+            profile.setRegionalGrade(request.getRegionalGrade());
+        }
+
+        if (request.getNationalGrade() != null) {
+            profile.setNationalGrade(request.getNationalGrade());
+        }
+
+        if (request.getBirth() != null) {
+            LocalDate birth = LocalDate.parse(
+                    request.getBirth(),
+                    DateTimeFormatter.BASIC_ISO_DATE.withLocale(Locale.KOREA)
+            );
+            profile.setBirth(birth.atStartOfDay());
+        }
+
+        Boolean birthVisible = request.getBirthVisible();
+        if (birthVisible != null) {
+            profile.setBirthVisible(birthVisible);
+        }
+
+        if (request.getDistrictId() != null) {
+            RegionDistrict regionDistrict =
+                    regionService.findDistrictsById(request.getDistrictId())
+                            .orElseThrow(() -> new IllegalArgumentException("지역이 존재하지 않습니다."));
+            profile.setRegionDistrict(regionDistrict);
+        }
+
+        if (request.getProfileImageUrl() != null) {
+            profile.setProfileImageUrl(request.getProfileImageUrl());
+        }
+
+        if (request.getGender() != null) {
+            profile.setGender(request.getGender());
+        }
+
+        profile.setUpdatedAt(LocalDateTime.now());
+        userProfileRepository.save(profile);
+    }
+
+    @Override
+    @Transactional
+    public void updateNicknameAndTags(Long userId, UserProfileIdentityUpdateRequest request) {
+        UserProfile profile = userProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new NotFoundException("사용자의 프로필을 찾을 수 없습니다."));
+
+        String newNickname = request.getNickname();
+        String newTagRaw = request.getTag();
+
+        boolean nicknameRequested = newNickname != null && !newNickname.isBlank();
+        boolean tagRequested = newTagRaw != null && !newTagRaw.isBlank();
+
+        if (!nicknameRequested && !tagRequested) {
+            throw new IllegalArgumentException("닉네임 또는 태그가 필요합니다.");
+        }
+
+        String finalNickname = nicknameRequested ? newNickname : profile.getNickname();
+        String normalizedTag = tagRequested
+                ? newTagRaw.replaceAll("[^A-Za-z0-9]", "").toUpperCase(Locale.ROOT)
+                : profile.getTag();
+
+        boolean nicknameChanged = !finalNickname.equals(profile.getNickname());
+        boolean tagChanged = !normalizedTag.equals(profile.getTag());
+
+        // 태그 변경 시 90일 제한
+        if (tagChanged) {
+            LocalDateTime lastChanged = profile.getTagChangedAt();
+            if (lastChanged != null && lastChanged.isAfter(LocalDateTime.now().minusDays(90))) {
+                throw new ForbiddenException("태그 변경은 90일 이내에 한 번만 가능합니다.");
+            }
+        }
+
+        // 닉네임 태그 중복 검사
+        userProfileRepository.findByNicknameAndTag(finalNickname, normalizedTag)
+                .filter(existing -> !existing.getUser().getId().equals(userId))
+                .ifPresent(existing -> {
+                    throw new ForbiddenException("이미 존재하는 닉네임과 태그입니다.");
+                });
+
+        if (nicknameChanged) {
+            profile.setNickname(finalNickname);
+        }
+
+        if (tagChanged) {
+            profile.setTag(normalizedTag);
+            profile.setTagChangedAt(LocalDateTime.now());
+        }
+
+        profile.setUpdatedAt(LocalDateTime.now());
+        userProfileRepository.save(profile);
+    }
+
+    // Helper Method
     private String generateTag() {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 4; i++) {
