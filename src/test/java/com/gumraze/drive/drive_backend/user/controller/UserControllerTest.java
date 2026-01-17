@@ -1,13 +1,16 @@
 package com.gumraze.drive.drive_backend.user.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gumraze.drive.drive_backend.auth.token.JwtAccessTokenValidator;
 import com.gumraze.drive.drive_backend.config.SecurityConfig;
 import com.gumraze.drive.drive_backend.user.constants.Gender;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
 import com.gumraze.drive.drive_backend.user.constants.UserStatus;
 import com.gumraze.drive.drive_backend.user.dto.UserMeResponse;
+import com.gumraze.drive.drive_backend.user.dto.UserProfileIdentityUpdateRequest;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
 import com.gumraze.drive.drive_backend.user.dto.UserSearchResponse;
+import com.gumraze.drive.drive_backend.user.entity.UserProfileUpdateRequest;
 import com.gumraze.drive.drive_backend.user.service.UserProfileService;
 import com.gumraze.drive.drive_backend.user.service.UserSearchService;
 import com.gumraze.drive.drive_backend.user.service.UserService;
@@ -31,9 +34,9 @@ import java.util.Optional;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -54,6 +57,8 @@ public class UserControllerTest {
 
     @MockitoBean
     private UserService userService;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Test
     @DisplayName("PENDING 사용자가 /users/me 조회 시 status만 반환한다.")
@@ -242,5 +247,67 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.data.nationalGrade").value("D급"))
                 .andExpect(jsonPath("$.data.districtName").value("테스트 구"))
                 .andExpect(jsonPath("$.data.provinceName").value("테스트 시/도"));
+    }
+
+    @Test
+    @DisplayName("기본 프로필 수정 성공")
+    void update_my_profile_success() throws Exception {
+        // given
+        Long userId = 1L;
+        UserProfileUpdateRequest request =
+                UserProfileUpdateRequest.builder()
+                        .birthVisible(true)
+                        .gender(Gender.MALE)
+                        .regionalGrade(Grade.D)
+                        .nationalGrade(Grade.D)
+                        .build();
+
+        String body = objectMapper.writeValueAsString(request);
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.of(userId));
+        doNothing().when(userProfileService)
+                .updateMyProfile(eq(userId), any(UserProfileUpdateRequest.class));
+
+
+        mockMvc.perform(patch("/users/me/profile")
+                          .header("Authorization", "Bearer token")
+                          .contentType(MediaType.APPLICATION_JSON)
+                          .accept(MediaType.APPLICATION_JSON)
+                          .content(body))
+                  .andExpect(status().isOk())
+                  .andExpect(jsonPath("$.success").value(true))
+                  .andExpect(jsonPath("$.code").value("OK"))
+                  .andExpect(jsonPath("$.message").value("내 프로필 수정 성공"));
+    }
+
+    @Test
+    @DisplayName("닉네임/태그 변경 성공 테스트")
+    void update_identity_success() throws Exception {
+        // given
+        Long userId = 1L;
+
+        UserProfileIdentityUpdateRequest request =
+                UserProfileIdentityUpdateRequest.builder()
+                        .nickname("newNickname")
+                        .tag("SON7")
+                        .build();
+
+        String body = objectMapper.writeValueAsString(request);
+
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.of(userId));
+        doNothing().when(userProfileService)
+                .updateNicknameAndTags(eq(userId), any(UserProfileIdentityUpdateRequest.class));
+
+        // when & then
+        mockMvc.perform(patch("/users/me/profile/identity")
+                .header("Authorization", "Bearer token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.code").value("OK"))
+                .andExpect(jsonPath("$.message").value("닉네임/태그 변경 성공"));
     }
 }
