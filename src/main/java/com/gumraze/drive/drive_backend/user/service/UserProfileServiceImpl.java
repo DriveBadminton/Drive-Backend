@@ -12,6 +12,7 @@ import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
 import com.gumraze.drive.drive_backend.user.entity.User;
 import com.gumraze.drive.drive_backend.user.entity.UserGradeHistory;
 import com.gumraze.drive.drive_backend.user.entity.UserProfile;
+import com.gumraze.drive.drive_backend.user.entity.UserProfileUpdateRequest;
 import com.gumraze.drive.drive_backend.user.repository.UserGradeHistoryRepository;
 import com.gumraze.drive.drive_backend.user.repository.UserProfileRepository;
 import com.gumraze.drive.drive_backend.user.repository.UserRepository;
@@ -144,7 +145,55 @@ public class UserProfileServiceImpl implements UserProfileService{
                         .build();
     }
 
-    // Helper
+    @Override
+    public void updateMyProfile(Long userId, UserProfileUpdateRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+
+        UserProfile profile = userProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new NotFoundException("사용자의 프로필을 찾을 수 없습니다."));
+
+        if (request.getRegionalGrade() != null) {
+            profile.setRegionalGrade(request.getRegionalGrade());
+        }
+
+        if (request.getNationalGrade() != null) {
+            profile.setNationalGrade(request.getNationalGrade());
+        }
+
+        if (request.getBirth() != null) {
+            LocalDate birth = LocalDate.parse(
+                    request.getBirth(),
+                    DateTimeFormatter.BASIC_ISO_DATE.withLocale(Locale.KOREA)
+            );
+            profile.setBirth(birth.atStartOfDay());
+        }
+
+        Boolean birthVisible = request.getBirthVisible();
+        if (birthVisible != null) {
+            profile.setBirthVisible(birthVisible);
+        }
+
+        if (request.getDistrictId() != null) {
+            RegionDistrict regionDistrict =
+                    regionService.findDistrictsById(request.getDistrictId())
+                            .orElseThrow(() -> new IllegalArgumentException("지역이 존재하지 않습니다."));
+            profile.setRegionDistrict(regionDistrict);
+        }
+
+        if (request.getProfileImageUrl() != null) {
+            profile.setProfileImageUrl(request.getProfileImageUrl());
+        }
+
+        if (request.getGender() != null) {
+            profile.setGender(request.getGender());
+        }
+
+        profile.setUpdatedAt(LocalDateTime.now());
+        userProfileRepository.save(profile);
+    }
+
+    // Helper Method
     private String generateTag() {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 4; i++) {
