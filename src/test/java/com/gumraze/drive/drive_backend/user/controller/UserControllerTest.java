@@ -7,6 +7,7 @@ import com.gumraze.drive.drive_backend.user.constants.Gender;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
 import com.gumraze.drive.drive_backend.user.constants.UserStatus;
 import com.gumraze.drive.drive_backend.user.dto.UserMeResponse;
+import com.gumraze.drive.drive_backend.user.dto.UserProfileIdentityUpdateRequest;
 import com.gumraze.drive.drive_backend.user.dto.UserProfileResponseDto;
 import com.gumraze.drive.drive_backend.user.dto.UserSearchResponse;
 import com.gumraze.drive.drive_backend.user.entity.UserProfileUpdateRequest;
@@ -277,5 +278,36 @@ public class UserControllerTest {
                   .andExpect(jsonPath("$.success").value(true))
                   .andExpect(jsonPath("$.code").value("OK"))
                   .andExpect(jsonPath("$.message").value("내 프로필 수정 성공"));
+    }
+
+    @Test
+    @DisplayName("닉네임/태그 변경 성공 테스트")
+    void update_identity_success() throws Exception {
+        // given
+        Long userId = 1L;
+
+        UserProfileIdentityUpdateRequest request =
+                UserProfileIdentityUpdateRequest.builder()
+                        .nickname("newNickname")
+                        .tag("SON7")
+                        .build();
+
+        String body = objectMapper.writeValueAsString(request);
+
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.of(userId));
+        doNothing().when(userProfileService)
+                .updateNicknameAndTags(eq(userId), any(UserProfileIdentityUpdateRequest.class));
+
+        // when & then
+        mockMvc.perform(patch("/users/me/profile/identity")
+                .header("Authorization", "Bearer token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.code").value("OK"))
+                .andExpect(jsonPath("$.message").value("닉네임/태그 변경 성공"));
     }
 }

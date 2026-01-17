@@ -191,4 +191,17 @@ public class UserController {
                 .status(code.httpStatus())
                 .body(ApiResponse.success(code, "내 프로필 수정 성공", null));
     }
+
+    @PatchMapping("/me/profile/identity")
+    public ResponseEntity<ApiResponse<Void>> updateIdentity(
+            @AuthenticationPrincipal Long userId,
+            @RequestBody UserProfileIdentityUpdateRequest request
+    ) {
+        userProfileService.updateNicknameAndTags(userId, request);
+        ResultCode code = ResultCode.OK;
+
+        return ResponseEntity
+                .status(code.httpStatus())
+                .body(ApiResponse.success(code, "닉네임/태그 변경 성공", null));
+    }
 }
