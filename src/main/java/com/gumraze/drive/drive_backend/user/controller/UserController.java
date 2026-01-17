@@ -4,6 +4,7 @@ import com.gumraze.drive.drive_backend.common.api.ApiResponse;
 import com.gumraze.drive.drive_backend.common.api.ResultCode;
 import com.gumraze.drive.drive_backend.common.exception.NotFoundException;
 import com.gumraze.drive.drive_backend.user.dto.*;
+import com.gumraze.drive.drive_backend.user.entity.UserProfileUpdateRequest;
 import com.gumraze.drive.drive_backend.user.service.UserProfileService;
 import com.gumraze.drive.drive_backend.user.service.UserSearchService;
 import com.gumraze.drive.drive_backend.user.service.UserService;
@@ -176,5 +177,18 @@ public class UserController {
         return ResponseEntity
                 .status(code.httpStatus())
                 .body(ApiResponse.success(code, "내 프로필 조회 성공", body));
+    }
+
+    @PatchMapping("/me/profile")
+    public ResponseEntity<ApiResponse<Void>> updateMyProfile(
+            @AuthenticationPrincipal Long userId,
+            @RequestBody UserProfileUpdateRequest request
+    ) {
+        userProfileService.updateMyProfile(userId, request);
+        ResultCode code = ResultCode.OK;
+
+        return ResponseEntity
+                .status(code.httpStatus())
+                .body(ApiResponse.success(code, "내 프로필 수정 성공", null));
     }
 }
