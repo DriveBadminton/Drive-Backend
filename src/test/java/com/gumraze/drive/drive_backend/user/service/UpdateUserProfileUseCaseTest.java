@@ -1,6 +1,7 @@
 package com.gumraze.drive.drive_backend.user.service;
 
-import com.gumraze.drive.drive_backend.common.exception.ForbiddenException;
+import com.gumraze.drive.drive_backend.common.exception.ConflictException;
+import com.gumraze.drive.drive_backend.common.exception.UnprocessableEntityException;
 import com.gumraze.drive.drive_backend.region.entity.RegionDistrict;
 import com.gumraze.drive.drive_backend.region.service.RegionService;
 import com.gumraze.drive.drive_backend.user.constants.Gender;
@@ -80,7 +81,6 @@ public class UpdateUserProfileUseCaseTest {
                 .regionDistrict(oldDistrict)
                 .build();
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userProfileRepository.findByUserId(userId)).thenReturn(Optional.of(profile));
         when(regionService.findDistrictsById(2L)).thenReturn(Optional.of(newDistrict));
 
@@ -111,7 +111,6 @@ public class UpdateUserProfileUseCaseTest {
         UserProfile profile = UserProfile.builder().user(user).build();
 
         when(userProfileRepository.findByUserId(userId)).thenReturn(Optional.of(profile));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         UserProfileUpdateRequest request = UserProfileUpdateRequest.builder()
                 .birth("invalid-date")
@@ -141,9 +140,6 @@ public class UpdateUserProfileUseCaseTest {
                         .build();
 
         when(userProfileRepository.findByUserId(userId)).thenReturn(Optional.of(profile));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(userProfileRepository.findByNicknameAndTag(request.getNickname(), profile.getTag()))
-                .thenReturn(Optional.empty());
 
         // when
         userProfileService.updateNicknameAndTags(userId, request);
@@ -171,7 +167,6 @@ public class UpdateUserProfileUseCaseTest {
                         .tag("SON7")
                         .build();
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userProfileRepository.findByUserId(userId)).thenReturn(Optional.of(profile));
         when(userProfileRepository.findByNicknameAndTag(profile.getNickname(), request.getTag()))
                 .thenReturn(Optional.empty());
@@ -204,7 +199,6 @@ public class UpdateUserProfileUseCaseTest {
                         .tag("SON7")
                         .build();
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userProfileRepository.findByUserId(userId)).thenReturn(Optional.of(profile));
         when(userProfileRepository.findByNicknameAndTag("newNickname", "SON7"))
                 .thenReturn(Optional.empty());
@@ -243,13 +237,12 @@ public class UpdateUserProfileUseCaseTest {
                         .tag("SON7")
                         .build();
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userProfileRepository.findByUserId(userId)).thenReturn(Optional.of(profile));
         when(userProfileRepository.findByNicknameAndTag(otherProfile.getNickname(), otherProfile.getTag()))
                 .thenReturn(Optional.of(otherProfile));
 
         assertThatThrownBy(() -> userProfileService.updateNicknameAndTags(userId, request))
-                .isInstanceOf(ForbiddenException.class);
+                .isInstanceOf(ConflictException.class);
     }
 
     @Test
@@ -257,7 +250,6 @@ public class UpdateUserProfileUseCaseTest {
     void update_tag_fail_test() {
         // given
         Long userId = 1L;
-
         User user = User.builder().id(userId).build();
         LocalDateTime lastChangedAt = LocalDateTime.now().minusDays(30);
 
@@ -272,12 +264,10 @@ public class UpdateUserProfileUseCaseTest {
                         .tag("SON7")
                         .build();
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userProfileRepository.findByUserId(userId)).thenReturn(Optional.of(profile));
 
         // when & then
         assertThatThrownBy(() -> userProfileService.updateNicknameAndTags(userId, request))
-                .isInstanceOf(ForbiddenException.class);
+                .isInstanceOf(UnprocessableEntityException.class);
     }
-
 }
