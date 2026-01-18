@@ -1,7 +1,9 @@
 package com.gumraze.drive.drive_backend.common.api;
 
+import com.gumraze.drive.drive_backend.common.exception.ConflictException;
 import com.gumraze.drive.drive_backend.common.exception.ForbiddenException;
 import com.gumraze.drive.drive_backend.common.exception.NotFoundException;
+import com.gumraze.drive.drive_backend.common.exception.UnprocessableEntityException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -91,6 +93,28 @@ public class GlobalExceptionHandler {
     ) {
         log.warn("[필수 파라미터 누락]: {}", ex.getParameterName());
         ResultCode code = ResultCode.MISSING_PARAMETER;
+        return ResponseEntity
+                .status(code.httpStatus())
+                .body(ApiResponse.failure(code, ex.getMessage()));
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConflict(
+            ConflictException ex
+    ) {
+        log.warn("[리소스 충돌]: {}", ex.getMessage());
+        ResultCode code = ResultCode.CONFLICT;
+        return ResponseEntity
+                .status(code.httpStatus())
+                .body(ApiResponse.failure(code, ex.getMessage()));
+    }
+
+    @ExceptionHandler(UnprocessableEntityException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUnprocessableEntity(
+            UnprocessableEntityException ex
+    ) {
+        log.warn("[비즈니스 규칙 위반]: {}", ex.getMessage());
+        ResultCode code = ResultCode.UNPROCESSABLE_ENTITY;
         return ResponseEntity
                 .status(code.httpStatus())
                 .body(ApiResponse.failure(code, ex.getMessage()));
