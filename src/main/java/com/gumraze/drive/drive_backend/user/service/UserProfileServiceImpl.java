@@ -1,7 +1,8 @@
 package com.gumraze.drive.drive_backend.user.service;
 
-import com.gumraze.drive.drive_backend.common.exception.ForbiddenException;
+import com.gumraze.drive.drive_backend.common.exception.ConflictException;
 import com.gumraze.drive.drive_backend.common.exception.NotFoundException;
+import com.gumraze.drive.drive_backend.common.exception.UnprocessableEntityException;
 import com.gumraze.drive.drive_backend.region.entity.RegionDistrict;
 import com.gumraze.drive.drive_backend.region.service.RegionService;
 import com.gumraze.drive.drive_backend.user.constants.Grade;
@@ -223,7 +224,7 @@ public class UserProfileServiceImpl implements UserProfileService{
         if (tagChanged) {
             LocalDateTime lastChanged = profile.getTagChangedAt();
             if (lastChanged != null && lastChanged.isAfter(LocalDateTime.now().minusDays(90))) {
-                throw new ForbiddenException("태그 변경은 90일 이내에 한 번만 가능합니다.");
+                throw new UnprocessableEntityException("태그 변경은 90일 이내에 한 번만 가능합니다.");
             }
         }
 
@@ -231,7 +232,7 @@ public class UserProfileServiceImpl implements UserProfileService{
         userProfileRepository.findByNicknameAndTag(finalNickname, normalizedTag)
                 .filter(existing -> !existing.getUser().getId().equals(userId))
                 .ifPresent(existing -> {
-                    throw new ForbiddenException("이미 존재하는 닉네임과 태그입니다.");
+                    throw new ConflictException("이미 존재하는 닉네임과 태그입니다.");
                 });
 
         if (nicknameChanged) {
