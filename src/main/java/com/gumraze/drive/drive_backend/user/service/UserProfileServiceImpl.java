@@ -217,6 +217,10 @@ public class UserProfileServiceImpl implements UserProfileService{
                 ? newTagRaw.replaceAll("[^A-Za-z0-9]", "").toUpperCase(Locale.ROOT)
                 : profile.getTag();
 
+        if (tagRequested && normalizedTag.length() != 4) {
+            throw new IllegalArgumentException("태그는 4글자로 입력해야 합니다.");
+        }
+
         boolean nicknameChanged = !finalNickname.equals(profile.getNickname());
         boolean tagChanged = !normalizedTag.equals(profile.getTag());
 
