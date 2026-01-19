@@ -42,11 +42,16 @@ public interface AuthApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
                     description = "로그인 성공",
-                    content = @Content(schema = @Schema(implementation = OAuthLoginResponseDto.class))
+                    content = @Content
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
                     description = "요청 검증 실패",
+                    content = @Content
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "서버 오류가 발생했습니다.",
                     content = @Content
             )
     })
@@ -62,11 +67,16 @@ public interface AuthApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
                     description = "리프레시 성공",
-                    content = @Content(schema = @Schema(implementation = OAuthRefreshTokenResponseDto.class))
+                    content = @Content
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
                     description = "요청 검증 실패",
+                    content = @Content
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "서버 오류가 발생했습니다.",
                     content = @Content
             )
     })
@@ -88,7 +98,12 @@ public interface AuthApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
                     description = "로그아웃 성공",
-                    content = @Content(schema = @Schema(implementation = Void.class))
+                    content = @Content
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "서버 오류가 발생했습니다.",
+                    content = @Content
             )
     })
     ResponseEntity<ApiResponse<Void>> logout(
