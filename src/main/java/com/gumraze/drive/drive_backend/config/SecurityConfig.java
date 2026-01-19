@@ -131,7 +131,9 @@ public class SecurityConfig {
                 "https://api.drive-minton.com",
                 "https://drive-minton.com",
                 "http://localhost:3000",
-                "https://localhost:3000"
+                "http://localhost:3001",
+                "https://localhost:3001",
+                "https://drive-minton.local"
         ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
