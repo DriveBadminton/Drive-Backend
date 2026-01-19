@@ -43,6 +43,11 @@ public interface AuthApi {
                     responseCode = "200",
                     description = "로그인 성공",
                     content = @Content(schema = @Schema(implementation = OAuthLoginResponseDto.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "요청 검증 실패",
+                    content = @Content
             )
     })
     ResponseEntity<ApiResponse<OAuthLoginResponseDto>> login(
@@ -58,6 +63,11 @@ public interface AuthApi {
                     responseCode = "200",
                     description = "리프레시 성공",
                     content = @Content(schema = @Schema(implementation = OAuthRefreshTokenResponseDto.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "요청 검증 실패",
+                    content = @Content
             )
     })
     ResponseEntity<ApiResponse<OAuthRefreshTokenResponseDto>> refresh(
