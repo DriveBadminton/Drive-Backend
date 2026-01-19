@@ -16,7 +16,8 @@ public interface RegionApi {
 
     @Operation(
             summary = "시/도 조회",
-            description = "전체 시/도 목록을 조회합니다."
+            description = "전체 시/도 목록을 조회합니다.",
+            security = {}
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -34,7 +35,8 @@ public interface RegionApi {
 
     @Operation(
             summary = "시/군/구 조회",
-            description = "시/도 ID로 시/군/구 목록을 조회합니다."
+            description = "시/도 ID로 시/군/구 목록을 조회합니다.",
+            security = {}
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
