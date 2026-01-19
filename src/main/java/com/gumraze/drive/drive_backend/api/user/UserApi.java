@@ -81,7 +81,7 @@ public interface UserApi {
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "200",
+                    responseCode = "201",
                     description = "프로필 생성 성공",
                     content = @Content
             ),
