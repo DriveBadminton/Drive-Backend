@@ -65,6 +65,11 @@ public interface UserApi {
                     content = @Content
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "요청 검증 실패",
+                    content = @Content
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "403",
                     description = "접근 권한 없음",
                     content = @Content
@@ -138,6 +143,11 @@ public interface UserApi {
                     responseCode = "401",
                     description = "인증 실패",
                     content = @Content
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "사용자의 프로필을 찾을 수 없습니다.",
+                    content = @Content
             )
     })
     @SecurityRequirement(name = "bearerAuth")
@@ -163,6 +173,11 @@ public interface UserApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
                     description = "요청 검증 실패",
+                    content = @Content
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "사용자의 프로필을 찾을 수 없습니다.",
                     content = @Content
             )
     })
@@ -190,6 +205,21 @@ public interface UserApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
                     description = "요청 검증 실패",
+                    content = @Content
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "사용자의 프로필을 찾을 수 없습니다.",
+                    content = @Content
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "409",
+                    description = "이미 존재하는 닉네임과 태그입니다.",
+                    content = @Content
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "422",
+                    description = "요청을 처리할 수 없습니다.",
                     content = @Content
             )
     })
