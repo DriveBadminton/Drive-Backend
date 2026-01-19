@@ -7,7 +7,7 @@ public enum ResultCode {
     /* ===== Success ===== */
     OK(HttpStatus.OK, "요청 성공"),
     CREATED(HttpStatus.CREATED, "생성 성공"),
-    OAUTH_LOGIN_SUCCESS(HttpStatus.CREATED, "OAuth 로그인 성공"),
+    OAUTH_LOGIN_SUCCESS(HttpStatus.OK, "OAuth 로그인 성공"),
     OAUTH_REFRESH_TOKEN_SUCCESS(HttpStatus.OK, "액세스 토큰 리프레시 성공"),
     LOGOUT_SUCCESS(HttpStatus.OK, "로그아웃 성공"),
 
