@@ -8,6 +8,7 @@ import com.gumraze.drive.drive_backend.user.entity.UserAuth;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -34,18 +35,38 @@ public class UserAuthRepositoryImpl implements UserAuthRepository {
         UserAuth userAuth = UserAuth.builder()
                 .user(user)
                 .provider(provider)
-                .providerUserId(userInfo.providerUserId())
+                .providerUserId(userInfo.getProviderUserId())
                 .build();
 
-        userAuth.updateFromOAuth(userInfo);
+        userAuth.setEmail(userInfo.getEmail());
+        userAuth.setNickname(userInfo.getNickname());
+        userAuth.setProfileImageUrl(userInfo.getProfileImageUrl());
+        userAuth.setGender(userInfo.getGender());
+        userAuth.setThumbnailImageUrl(userInfo.getThumbnailImageUrl());
+        userAuth.setAgeRange(userInfo.getAgeRange());
+        userAuth.setBirthday(userInfo.getBirthday());
+        userAuth.setIsEmailVerified(userInfo.getEmailVerified());
+        userAuth.setIsPhoneNumberVerified(userInfo.getPhoneNumberVerified());
+        userAuth.setUpdatedAt(LocalDateTime.now());
+
         jpaUserAuthRepository.save(userAuth);
     }
 
     @Override
     public void updateProfile(AuthProvider provider, OAuthUserInfo userInfo) {
         // 동일 provider와 id가 있으면 최신 프로필로 갱신
-        jpaUserAuthRepository.findByProviderAndProviderUserId(provider, userInfo.providerUserId())
-                .ifPresent(userAuth -> userAuth.updateFromOAuth(userInfo));
-
+        jpaUserAuthRepository.findByProviderAndProviderUserId(provider, userInfo.getProviderUserId())
+                .ifPresent(userAuth -> {
+                    userAuth.setEmail(userInfo.getEmail());
+                    userAuth.setNickname(userInfo.getNickname());
+                    userAuth.setProfileImageUrl(userInfo.getProfileImageUrl());
+                    userAuth.setGender(userInfo.getGender());
+                    userAuth.setThumbnailImageUrl(userInfo.getThumbnailImageUrl());
+                    userAuth.setAgeRange(userInfo.getAgeRange());
+                    userAuth.setBirthday(userInfo.getBirthday());
+                    userAuth.setIsEmailVerified(userInfo.getEmailVerified());
+                    userAuth.setIsPhoneNumberVerified(userInfo.getPhoneNumberVerified());
+                    userAuth.setUpdatedAt(LocalDateTime.now());
+                });
     }
 }

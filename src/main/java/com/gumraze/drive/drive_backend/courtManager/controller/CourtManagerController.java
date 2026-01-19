@@ -1,5 +1,6 @@
 package com.gumraze.drive.drive_backend.courtManager.controller;
 
+import com.gumraze.drive.drive_backend.api.courtManager.CourtManagerApi;
 import com.gumraze.drive.drive_backend.common.api.ApiResponse;
 import com.gumraze.drive.drive_backend.common.api.ResultCode;
 import com.gumraze.drive.drive_backend.courtManager.dto.*;
@@ -13,10 +14,11 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-public class CourtManagerController {
+public class CourtManagerController implements CourtManagerApi {
 
     private final FreeGameService freeGameService;
 
+    @Override
     @PostMapping("/free-games")
     public ResponseEntity<ApiResponse<CreateFreeGameResponse>> createFreeGame(
             @AuthenticationPrincipal Long userId,
@@ -31,6 +33,7 @@ public class CourtManagerController {
                 .body(ApiResponse.success(ResultCode.CREATED, "자유게임 생성 성공", response));
     }
 
+    @Override
     @GetMapping("/free-games/{gameId}")
     public ResponseEntity<ApiResponse<FreeGameDetailResponse>> getFreeGameDetail(
             @AuthenticationPrincipal Long userId,
@@ -43,6 +46,7 @@ public class CourtManagerController {
                 .body(ApiResponse.success(ResultCode.OK, "자유게임 상세 조회 성공", response));
     }
 
+    @Override
     @PatchMapping("/free-games/{gameId}")
     public ResponseEntity<ApiResponse<UpdateFreeGameResponse>> updateFreeGameInfo(
             @AuthenticationPrincipal Long userId,
@@ -56,6 +60,7 @@ public class CourtManagerController {
                 .body(ApiResponse.success(ResultCode.OK, "자유게임 기본 정보 수정 성공", response));
     }
 
+    @Override
     @GetMapping("/free-games/{gameId}/rounds-and-matches")
     public ResponseEntity<ApiResponse<FreeGameRoundMatchResponse>> getFreeGameRoundMatchResponse(
             @AuthenticationPrincipal Long userId,
@@ -68,6 +73,7 @@ public class CourtManagerController {
                 .body(ApiResponse.success(ResultCode.OK, "자유게임 라운드 및 매치 정보 조회 성공", response));
     }
 
+    @Override
     @PatchMapping("/free-games/{gameId}/rounds-and-matches")
     public ResponseEntity<ApiResponse<UpdateFreeGameRoundMatchResponse>> updateFreeGameRoundMatch(
             @AuthenticationPrincipal Long userId,

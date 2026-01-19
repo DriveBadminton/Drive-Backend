@@ -38,13 +38,6 @@ public class AuthServiceImpl implements AuthService {
         this.allowedProviders = allowedProviders;
     }
 
-    /**
-     * Authenticates or registers a user via the specified OAuth provider and issues new access and refresh tokens.
-     *
-     * @param request contains the OAuth provider, authorization code, and redirect URI required to obtain provider user info
-     * @return an OAuthLoginResult containing the resolved local user ID, a newly generated access token, and a rotated refresh token
-     * @throws IllegalArgumentException if the provider from the request is not allowed
-     */
     @Override
     public OAuthLoginResult login(OAuthLoginRequestDto request) {
         if (!allowedProviders.getAllowedProviders().contains(request.getProvider())) {
@@ -60,7 +53,7 @@ public class AuthServiceImpl implements AuthService {
         Long userId = userAuthRepository
                 .findUserId(
                         request.getProvider(),
-                        userInfo.providerUserId()
+                        userInfo.getProviderUserId()
                 )
                 .orElseGet(() -> {
                     // 신규 사용자 생성

@@ -355,9 +355,9 @@ class AuthServiceTest {
                 "kakao-123"
         ).orElseThrow();
 
-        assertThat(saved.email()).isEqualTo("user@kakao.com");
-        assertThat(saved.nickname()).isEqualTo("홍길동");
-        assertThat(saved.profileImageUrl()).isEqualTo("http://profile-image.com");
-        assertThat(saved.thumbnailImageUrl()).isEqualTo("http://thumb-image.com");
+        assertThat(saved.getEmail()).isEqualTo("user@kakao.com");
+        assertThat(saved.getNickname()).isEqualTo("홍길동");
+        assertThat(saved.getProfileImageUrl()).isEqualTo("http://profile-image.com");
+        assertThat(saved.getThumbnailImageUrl()).isEqualTo("http://thumb-image.com");
     }
 }

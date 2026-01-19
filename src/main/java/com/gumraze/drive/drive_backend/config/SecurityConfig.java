@@ -129,8 +129,9 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
                 "https://api.drive-minton.com",
-                "http://www.drive-minton.com",
-                "http://localhost:3000"
+                "https://www.drive-minton.com",
+                "http://localhost:3000",
+                "https://localhost:3000"
         ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
@@ -151,4 +152,6 @@ public class SecurityConfig {
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         objectMapper.writeValue(response.getWriter(), ApiResponse.failure(code));
     }
+
+
 }

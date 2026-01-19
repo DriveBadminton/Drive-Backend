@@ -35,8 +35,7 @@ dependencies {
 	implementation 'org.flywaydb:flyway-database-postgresql'
 
 	// 최신 springdoc
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14'
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-api:2.8.14'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.15'
 
 	// postgreSQL 의존성 추가
 	implementation 'org.postgresql:postgresql'
