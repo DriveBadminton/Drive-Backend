@@ -1,5 +1,6 @@
 package com.gumraze.drive.drive_backend.region.controller;
 
+import com.gumraze.drive.drive_backend.api.region.RegionApi;
 import com.gumraze.drive.drive_backend.common.api.ApiResponse;
 import com.gumraze.drive.drive_backend.common.api.ResultCode;
 import com.gumraze.drive.drive_backend.region.dto.RegionDistrictResponseDto;
@@ -15,7 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/regions")
-public class RegionController {
+public class RegionController implements RegionApi {
 
     private final RegionService regionService;
 
@@ -24,6 +25,7 @@ public class RegionController {
     }
 
 
+    @Override
     @GetMapping(value = "/provinces")
     public ResponseEntity<ApiResponse<List<RegionProvinceResponseDto>>> getProvinces() {
 
@@ -40,6 +42,7 @@ public class RegionController {
                 .body(ApiResponse.success(code, body));
     }
 
+    @Override
     @GetMapping(value = "/{provinceId}/districts")
     public ResponseEntity<ApiResponse<List<RegionDistrictResponseDto>>> getDistricts(
             @PathVariable Long provinceId
