@@ -129,7 +129,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
                 "https://api.drive-minton.com",
-                "https://www.drive-minton.com",
+                "https://drive-minton.com",
                 "http://localhost:3000",
                 "https://localhost:3000"
         ));
