@@ -168,4 +168,37 @@ public interface CourtManagerApi {
             Long gameId,
             UpdateFreeGameRoundMatchRequest request
     );
+
+    @Operation(
+            summary = "자유게임 참가자 목록 조회",
+            description = "자유게임 참가자 목록을 조회합니다. include=stats인 경우 매치 집계 정보를 포함합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "자유게임 참가자 목록 조회 성공",
+                    content = @Content
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패",
+                    content = @Content
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "접근 권한 없음",
+                    content = @Content
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "자유게임을 찾을 수 없습니다.",
+                    content = @Content
+            )
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    ResponseEntity<ApiResponse<FreeGameParticipantsResponse>> getFreeGameParticipants(
+            Long userId,
+            Long gameId,
+            String include
+    );
 }
