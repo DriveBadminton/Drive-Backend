@@ -12,4 +12,6 @@ public interface FreeGameService {
     FreeGameRoundMatchResponse getFreeGameRoundMatchResponse(Long userId, Long gameId);
 
     UpdateFreeGameRoundMatchResponse updateFreeGameRoundMatch(Long userId, Long gameId, UpdateFreeGameRoundMatchRequest request);
+
+    FreeGameParticipantsResponse getFreeGameParticipants(Long userId, Long gameId, boolean includeStats);
 }
