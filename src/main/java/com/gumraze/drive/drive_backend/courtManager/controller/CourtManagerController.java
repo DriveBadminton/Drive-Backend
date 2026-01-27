@@ -87,4 +87,20 @@ public class CourtManagerController implements CourtManagerApi {
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(ResultCode.OK, "자유게임 라운드 및 매치 정보 수정 성공", response));
     }
+
+    @Override
+    @GetMapping("/free-games/{gameId}/participants")
+    public ResponseEntity<ApiResponse<FreeGameParticipantsResponse>> getFreeGameParticipants(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long gameId,
+            @RequestParam(name = "include", required = false) String include
+    ) {
+        boolean includeStats = "stats".equalsIgnoreCase(include);
+        FreeGameParticipantsResponse response =
+                freeGameService.getFreeGameParticipants(userId, gameId, includeStats);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success(ResultCode.OK, "자유게임 참가자 목록 조회 성공", response));
+    }
 }

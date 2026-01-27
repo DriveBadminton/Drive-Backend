@@ -576,6 +576,85 @@ class CourtManagerControllerTest {
 
     }
 
+    @Test
+    @DisplayName("자유게임 참가자 목록 조회 성공 (include=stats)")
+    void get_free_game_participants_with_stats_success() throws Exception {
+        // given
+        Long gameId = 101L;
+        FreeGameParticipantResponse participant = FreeGameParticipantResponse.builder()
+                .participantId(201L)
+                .userId(10L)
+                .displayName("KimA")
+                .gender(Gender.MALE)
+                .grade(Grade.ROOKIE)
+                .ageGroup(30)
+                .assignedMatchCount(3)
+                .completedMatchCount(2)
+                .winCount(1)
+                .lossCount(1)
+                .build();
+        FreeGameParticipantsResponse response = FreeGameParticipantsResponse.builder()
+                .gameId(gameId)
+                .matchRecordMode(MatchRecordMode.RESULT)
+                .participants(List.of(participant))
+                .build();
+
+        when(freeGameService.getFreeGameParticipants(1L, gameId, true))
+                .thenReturn(response);
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.of(1L));
+
+        // when & then
+        mockMvc.perform(get("/free-games/{gameId}/participants", gameId)
+                        .queryParam("include", "stats")
+                        .header("Authorization", "Bearer token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.code").value("OK"))
+                .andExpect(jsonPath("$.data.gameId").value(101))
+                .andExpect(jsonPath("$.data.participants[0].assignedMatchCount").value(3))
+                .andExpect(jsonPath("$.data.participants[0].completedMatchCount").value(2))
+                .andExpect(jsonPath("$.data.participants[0].winCount").value(1))
+                .andExpect(jsonPath("$.data.participants[0].lossCount").value(1));
+    }
+
+    @Test
+    @DisplayName("자유게임 참가자 목록 조회 성공 (include 없음)")
+    void get_free_game_participants_without_stats_success() throws Exception {
+        // given
+        Long gameId = 101L;
+        FreeGameParticipantResponse participant = FreeGameParticipantResponse.builder()
+                .participantId(201L)
+                .userId(10L)
+                .displayName("KimA")
+                .gender(Gender.MALE)
+                .grade(Grade.ROOKIE)
+                .ageGroup(30)
+                .build();
+        FreeGameParticipantsResponse response = FreeGameParticipantsResponse.builder()
+                .gameId(gameId)
+                .matchRecordMode(MatchRecordMode.RESULT)
+                .participants(List.of(participant))
+                .build();
+
+        when(freeGameService.getFreeGameParticipants(1L, gameId, false))
+                .thenReturn(response);
+        when(jwtAccessTokenValidator.validateAndGetUserId("token"))
+                .thenReturn(Optional.of(1L));
+
+        // when & then
+        mockMvc.perform(get("/free-games/{gameId}/participants", gameId)
+                        .header("Authorization", "Bearer token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.code").value("OK"))
+                .andExpect(jsonPath("$.data.gameId").value(101))
+                .andExpect(jsonPath("$.data.participants[0].assignedMatchCount").doesNotExist())
+                .andExpect(jsonPath("$.data.participants[0].completedMatchCount").doesNotExist())
+                .andExpect(jsonPath("$.data.participants[0].winCount").doesNotExist())
+                .andExpect(jsonPath("$.data.participants[0].lossCount").doesNotExist());
+    }
+
     /*
      * Test Helper Method
      */
