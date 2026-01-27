@@ -421,6 +421,117 @@ public class FreeGameServiceImpl implements FreeGameService {
         return UpdateFreeGameRoundMatchResponse.from(gameId);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public FreeGameParticipantsResponse getFreeGameParticipants(
+            Long userId,
+            Long gameId,
+            boolean includeStats
+    ) {
+        // organizer 권한 검증 및 게임 조회
+        FreeGame freeGame = validateGameAndOrganizer(gameId, userId);
+
+        // 참가자 기본 목록은 ID 오름차순 정렬
+        List<GameParticipant> participants = gameParticipantRepository.findByFreeGameId(gameId).stream()
+                .sorted(Comparator.comparing(GameParticipant::getId))
+                .toList();
+
+        MatchRecordMode matchRecordMode = freeGame.getMatchRecordMode();
+
+        // stats 미요청 또는 참가자 없음: 기본 정보만 반환
+        if (!includeStats || participants.isEmpty()) {
+            List<FreeGameParticipantResponse> participantResponses = participants.stream()
+                    .map(participant -> FreeGameParticipantResponse.builder()
+                            .participantId(participant.getId())
+                            .userId(participant.getUser() != null ? participant.getUser().getId() : null)
+                            .displayName(participant.getDisplayName())
+                            .gender(participant.getGender())
+                            .grade(participant.getGrade())
+                            .ageGroup(participant.getAgeGroup())
+                            .build())
+                    .toList();
+
+            return FreeGameParticipantsResponse.builder()
+                    .gameId(gameId)
+                    .matchRecordMode(matchRecordMode)
+                    .participants(participantResponses)
+                    .build();
+        }
+
+        // 참가자별 통계 초기화
+        Map<Long, ParticipantStats> statsByParticipantId = new HashMap<>();
+        for (GameParticipant participant : participants) {
+            statsByParticipantId.put(participant.getId(), new ParticipantStats());
+        }
+
+        List<FreeGameRound> rounds = freeGameRoundRepository.findByFreeGameIdOrderByRoundNumber(gameId);
+        if (!rounds.isEmpty()) {
+            List<Long> roundIds = rounds.stream()
+                    .map(FreeGameRound::getId)
+                    .toList();
+            List<FreeGameMatch> matches = freeGameMatchRepository.findByRoundIdInOrderByCourtNumber(roundIds);
+
+            for (FreeGameMatch match : matches) {
+                // 매치에 배정된 참가자 ID 수집
+                Set<Long> matchParticipantIds = new HashSet<>();
+                addParticipantId(matchParticipantIds, match.getTeamAPlayer1());
+                addParticipantId(matchParticipantIds, match.getTeamAPlayer2());
+                addParticipantId(matchParticipantIds, match.getTeamBPlayer1());
+                addParticipantId(matchParticipantIds, match.getTeamBPlayer2());
+
+                // 배정된 매치 수 카운트
+                for (Long participantId : matchParticipantIds) {
+                    ParticipantStats stats = statsByParticipantId.get(participantId);
+                    if (stats != null) {
+                        stats.assignedMatchCount++;
+                    }
+                }
+
+                // 완료된 매치 수 카운트
+                if (match.getMatchStatus() == MatchStatus.COMPLETED) {
+                    for (Long participantId : matchParticipantIds) {
+                        ParticipantStats stats = statsByParticipantId.get(participantId);
+                        if (stats != null) {
+                            stats.completedMatchCount++;
+                        }
+                    }
+                }
+
+                // RESULT 모드일 때만 승/패 집계
+                if (matchRecordMode == MatchRecordMode.RESULT) {
+                    applyWinLossCounts(match, statsByParticipantId);
+                }
+            }
+        }
+
+        List<FreeGameParticipantResponse> participantResponses = participants.stream()
+                .map(participant -> {
+                    ParticipantStats stats = statsByParticipantId.get(participant.getId());
+                    Integer winCount = matchRecordMode == MatchRecordMode.RESULT ? stats.winCount : null;
+                    Integer lossCount = matchRecordMode == MatchRecordMode.RESULT ? stats.lossCount : null;
+
+                    return FreeGameParticipantResponse.builder()
+                            .participantId(participant.getId())
+                            .userId(participant.getUser() != null ? participant.getUser().getId() : null)
+                            .displayName(participant.getDisplayName())
+                            .gender(participant.getGender())
+                            .grade(participant.getGrade())
+                            .ageGroup(participant.getAgeGroup())
+                            .assignedMatchCount(stats.assignedMatchCount)
+                            .completedMatchCount(stats.completedMatchCount)
+                            .winCount(winCount)
+                            .lossCount(lossCount)
+                            .build();
+                })
+                .toList();
+
+        return FreeGameParticipantsResponse.builder()
+                .gameId(gameId)
+                .matchRecordMode(matchRecordMode)
+                .participants(participantResponses)
+                .build();
+    }
+
     private String suffix(int count) {
         return String.valueOf((char) ('A' + count - 1));
     }
@@ -442,5 +553,68 @@ public class FreeGameServiceImpl implements FreeGameService {
         }
 
         return freeGame;
+    }
+
+    private void addParticipantId(Set<Long> target, GameParticipant participant) {
+        // null 참가자는 무시
+        if (participant != null) {
+            target.add(participant.getId());
+        }
+    }
+
+    private void applyWinLossCounts(
+            FreeGameMatch match,
+            Map<Long, ParticipantStats> statsByParticipantId
+    ) {
+        // 승/패가 확정된 매치만 집계
+        MatchResult result = match.getMatchResult();
+        if (result != MatchResult.TEAM_A_WIN && result != MatchResult.TEAM_B_WIN) {
+            return;
+        }
+
+        // 팀별 참가자 ID 구성
+        Set<Long> teamAIds = new HashSet<>();
+        addParticipantId(teamAIds, match.getTeamAPlayer1());
+        addParticipantId(teamAIds, match.getTeamAPlayer2());
+
+        Set<Long> teamBIds = new HashSet<>();
+        addParticipantId(teamBIds, match.getTeamBPlayer1());
+        addParticipantId(teamBIds, match.getTeamBPlayer2());
+
+        if (result == MatchResult.TEAM_A_WIN) {
+            for (Long participantId : teamAIds) {
+                ParticipantStats stats = statsByParticipantId.get(participantId);
+                if (stats != null) {
+                    stats.winCount++;
+                }
+            }
+            for (Long participantId : teamBIds) {
+                ParticipantStats stats = statsByParticipantId.get(participantId);
+                if (stats != null) {
+                    stats.lossCount++;
+                }
+            }
+            return;
+        }
+
+        for (Long participantId : teamBIds) {
+            ParticipantStats stats = statsByParticipantId.get(participantId);
+            if (stats != null) {
+                stats.winCount++;
+            }
+        }
+        for (Long participantId : teamAIds) {
+            ParticipantStats stats = statsByParticipantId.get(participantId);
+            if (stats != null) {
+                stats.lossCount++;
+            }
+        }
+    }
+
+    private static class ParticipantStats {
+        private int assignedMatchCount;
+        private int completedMatchCount;
+        private int winCount;
+        private int lossCount;
     }
 }
