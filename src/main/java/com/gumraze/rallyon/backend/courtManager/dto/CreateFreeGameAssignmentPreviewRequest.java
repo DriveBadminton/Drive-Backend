@@ -141,7 +141,7 @@ public record CreateFreeGameAssignmentPreviewRequest(
      * 사용자가 선택한 AI 배정 선호 정책이다.
      *
      * <p>현재 프론트에서 직접 조정하는 정책만 이 요청에 포함한다.
-     * 서버의 고정 정책은 별도로 적용하고, 응답의 appliedPolicies로 다시 돌려줄 수 있다.
+     * 서버의 고정 정책은 별도로 적용하되, v1 응답에는 포함하지 않는다.
      *
      * @param partnerPolicy 파트너 pair를 우선적으로 같은 코트 슬롯에 반영할지 여부
      * @param existingAssignmentPolicy 현재 슬롯 배정을 유지할지, 전체를 다시 배정할지 여부
