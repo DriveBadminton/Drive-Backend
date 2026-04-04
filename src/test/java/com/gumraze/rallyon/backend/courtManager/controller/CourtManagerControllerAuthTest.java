@@ -2,6 +2,7 @@ package com.gumraze.rallyon.backend.courtManager.adapter.in.web;
 
 import com.gumraze.rallyon.backend.common.exception.ForbiddenException;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.AddFreeGameParticipantUseCase;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.CreateFreeGameAssignmentPreviewUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.CreateFreeGameUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameDetailUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameParticipantDetailUseCase;
@@ -56,6 +57,7 @@ class CourtManagerControllerAuthTest {
     @Autowired private ObjectMapper objectMapper;
 
     @MockitoBean private CreateFreeGameUseCase createFreeGameUseCase;
+    @MockitoBean private CreateFreeGameAssignmentPreviewUseCase createFreeGameAssignmentPreviewUseCase;
     @MockitoBean private GetFreeGameDetailUseCase getFreeGameDetailUseCase;
     @MockitoBean private UpdateFreeGameInfoUseCase updateFreeGameInfoUseCase;
     @MockitoBean private GetFreeGameRoundsAndMatchesUseCase getFreeGameRoundsAndMatchesUseCase;
@@ -65,6 +67,7 @@ class CourtManagerControllerAuthTest {
     @MockitoBean private GetFreeGameParticipantDetailUseCase getFreeGameParticipantDetailUseCase;
     @MockitoBean private GetPublicFreeGameDetailUseCase getPublicFreeGameDetailUseCase;
     @MockitoBean private CreateFreeGameCommandMapper createFreeGameCommandMapper;
+    @MockitoBean private CreateFreeGameAssignmentPreviewCommandMapper createFreeGameAssignmentPreviewCommandMapper;
     @MockitoBean private UpdateFreeGameInfoCommandMapper updateFreeGameInfoCommandMapper;
     @MockitoBean private UpdateFreeGameRoundsAndMatchesCommandMapper updateFreeGameRoundsAndMatchesCommandMapper;
     @MockitoBean private AddFreeGameParticipantCommandMapper addFreeGameParticipantCommandMapper;

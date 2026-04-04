@@ -5,6 +5,7 @@ import com.gumraze.rallyon.backend.api.courtManager.FreeGameParticipantApi;
 import com.gumraze.rallyon.backend.api.courtManager.FreeGameQueryApi;
 import com.gumraze.rallyon.backend.api.courtManager.PublicFreeGameApi;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.AddFreeGameParticipantUseCase;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.CreateFreeGameAssignmentPreviewUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.CreateFreeGameUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameDetailUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameParticipantDetailUseCase;
@@ -13,7 +14,10 @@ import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameR
 import com.gumraze.rallyon.backend.courtManager.application.port.in.GetPublicFreeGameDetailUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.UpdateFreeGameInfoUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.UpdateFreeGameRoundsAndMatchesUseCase;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.command.CreateFreeGameAssignmentPreviewCommand;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.command.CreateFreeGameCommand;
+import com.gumraze.rallyon.backend.courtManager.dto.CreateFreeGameAssignmentPreviewRequest;
+import com.gumraze.rallyon.backend.courtManager.dto.CreateFreeGameAssignmentPreviewResponse;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.query.GetFreeGameDetailQuery;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.query.GetFreeGameParticipantDetailQuery;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.query.GetFreeGameParticipantsQuery;
@@ -56,6 +60,7 @@ public class CourtManagerController implements
         PublicFreeGameApi {
 
     private final CreateFreeGameUseCase createFreeGameUseCase;
+    private final CreateFreeGameAssignmentPreviewUseCase createFreeGameAssignmentPreviewUseCase;
     private final GetFreeGameDetailUseCase getFreeGameDetailUseCase;
     private final UpdateFreeGameInfoUseCase updateFreeGameInfoUseCase;
     private final GetFreeGameRoundsAndMatchesUseCase getFreeGameRoundsAndMatchesUseCase;
@@ -65,6 +70,7 @@ public class CourtManagerController implements
     private final GetFreeGameParticipantDetailUseCase getFreeGameParticipantDetailUseCase;
     private final GetPublicFreeGameDetailUseCase getPublicFreeGameDetailUseCase;
     private final CreateFreeGameCommandMapper createFreeGameCommandMapper;
+    private final CreateFreeGameAssignmentPreviewCommandMapper createFreeGameAssignmentPreviewCommandMapper;
     private final UpdateFreeGameInfoCommandMapper updateFreeGameInfoCommandMapper;
     private final UpdateFreeGameRoundsAndMatchesCommandMapper updateFreeGameRoundsAndMatchesCommandMapper;
     private final AddFreeGameParticipantCommandMapper addFreeGameParticipantCommandMapper;
@@ -79,6 +85,17 @@ public class CourtManagerController implements
         UUID gameId = createFreeGameUseCase.create(accountId, command);
         return ResponseEntity.created(URI.create("/free-games/" + gameId))
                 .body(new CreateFreeGameResponse(gameId));
+    }
+
+    @Override
+    @PostMapping("/assignment-previews")
+    public ResponseEntity<CreateFreeGameAssignmentPreviewResponse> createFreeGameAssignmentPreview(
+            @AuthenticationPrincipal UUID accountId,
+            @RequestBody @Valid CreateFreeGameAssignmentPreviewRequest request
+    ) {
+        CreateFreeGameAssignmentPreviewCommand command = createFreeGameAssignmentPreviewCommandMapper.toCommand(request);
+        createFreeGameAssignmentPreviewUseCase.create(command);
+        return ResponseEntity.ok().build();
     }
 
     @Override
