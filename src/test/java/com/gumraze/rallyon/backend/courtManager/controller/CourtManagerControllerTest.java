@@ -12,7 +12,9 @@ import com.gumraze.rallyon.backend.courtManager.application.port.in.GetPublicFre
 import com.gumraze.rallyon.backend.courtManager.application.port.in.UpdateFreeGameInfoUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.UpdateFreeGameRoundsAndMatchesUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.command.AddFreeGameParticipantCommand;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.command.CreateFreeGameAssignmentPreviewCommand;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.command.CreateFreeGameCommand;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.result.CreateFreeGameAssignmentPreviewResult;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.command.UpdateFreeGameInfoCommand;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.command.UpdateFreeGameRoundsAndMatchesCommand;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.query.GetFreeGameDetailQuery;
@@ -25,6 +27,7 @@ import com.gumraze.rallyon.backend.courtManager.constants.MatchResult;
 import com.gumraze.rallyon.backend.courtManager.constants.MatchStatus;
 import com.gumraze.rallyon.backend.courtManager.constants.RoundStatus;
 import com.gumraze.rallyon.backend.courtManager.dto.AddFreeGameParticipantRequest;
+import com.gumraze.rallyon.backend.courtManager.dto.CreateFreeGameAssignmentPreviewRequest;
 import com.gumraze.rallyon.backend.courtManager.dto.CreateFreeGameRequest;
 import com.gumraze.rallyon.backend.courtManager.dto.CreateFreeGameResponse;
 import com.gumraze.rallyon.backend.courtManager.dto.FreeGameDetailResponse;
@@ -149,6 +152,92 @@ class CourtManagerControllerTest {
 
         verify(createFreeGameCommandMapper).toCommand(request);
         verify(createFreeGameUseCase).create(accountId, command);
+    }
+
+    @Test
+    @DisplayName("코트 배정 프리뷰 생성 요청을 use case로 전달한다")
+    void createFreeGameAssignmentPreview_success() throws Exception {
+        UUID accountId = UUID.randomUUID();
+        CreateFreeGameAssignmentPreviewRequest request =
+                new CreateFreeGameAssignmentPreviewRequest(
+                        List.of(
+                                new CreateFreeGameAssignmentPreviewRequest.ParticipantRequest(
+                                        "p1",
+                                        "서승재",
+                                        Gender.MALE,
+                                        20,
+                                        Grade.S,
+                                        1
+                                )
+                        ),
+                        List.of(
+                                new CreateFreeGameAssignmentPreviewRequest.RoundRequest(
+                                        1,
+                                        List.of(
+                                                new CreateFreeGameAssignmentPreviewRequest.CourtRequest(
+                                                        1,
+                                                        Arrays.asList("p1", null, null, null)
+                                                )
+                                        )
+                                )
+                        ),
+                        List.of(
+                                new CreateFreeGameAssignmentPreviewRequest.PartnerPairRequest("p1", "p2")
+                        ),
+                        new CreateFreeGameAssignmentPreviewRequest.PreferencesRequest(
+                                CreateFreeGameAssignmentPreviewRequest.PartnerPolicy.PREFER_PARTNERS,
+                                CreateFreeGameAssignmentPreviewRequest.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS
+                        )
+                );
+        CreateFreeGameAssignmentPreviewCommand command =
+                new CreateFreeGameAssignmentPreviewCommand(
+                        List.of(
+                                new CreateFreeGameAssignmentPreviewCommand.Participant(
+                                        "p1",
+                                        "서승재",
+                                        Gender.MALE,
+                                        20,
+                                        Grade.S,
+                                        1
+                                )
+                        ),
+                        List.of(
+                                new CreateFreeGameAssignmentPreviewCommand.Round(
+                                        1,
+                                        List.of(
+                                                new CreateFreeGameAssignmentPreviewCommand.Court(
+                                                        1,
+                                                        Arrays.asList("p1", null, null, null)
+                                                )
+                                        )
+                                )
+                        ),
+                        List.of(
+                                new CreateFreeGameAssignmentPreviewCommand.PartnerPairs("p1", "p2")
+                        ),
+                        new CreateFreeGameAssignmentPreviewCommand.Preferences(
+                                CreateFreeGameAssignmentPreviewCommand.PartnerPolicy.PREFER_PARTNERS,
+                                CreateFreeGameAssignmentPreviewCommand.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS
+                        )
+                );
+        CreateFreeGameAssignmentPreviewResult result =
+                new CreateFreeGameAssignmentPreviewResult(
+                        List.of(),
+                        List.of()
+                );
+
+        given(createFreeGameAssignmentPreviewCommandMapper.toCommand(request)).willReturn(command);
+        given(createFreeGameAssignmentPreviewUseCase.create(command)).willReturn(result);
+
+        mockMvc.perform(post("/free-games/assignment-previews")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .with(authenticatedUser(accountId))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        verify(createFreeGameAssignmentPreviewCommandMapper).toCommand(request);
+        verify(createFreeGameAssignmentPreviewUseCase).create(command);
     }
 
     @Test
