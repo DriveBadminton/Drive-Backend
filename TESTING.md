@@ -33,6 +33,7 @@ Role split:
 - Make the test fail for the intended reason before changing production code.
 - Do the minimum work required to return to green.
 - Refactor only after the test is green again.
+- Prefer BDD style in new or touched tests.
 - Prefer `given / when / then` comments when they improve scanability.
 - When using `given / when / then` comments, write them as `// given: ...`, `// when: ...`, `// then: ...`.
 - Keep the comment text short and noun-phrase oriented so the setup, action, and expectation scan quickly.
@@ -142,10 +143,12 @@ mockMvc.perform(get("/free-games/{gameId}", gameId))
 
 Mockito defaults:
 
-- use `when(...)` for stubbing
-- use `verify(...)` for meaningful interaction checks
+- prefer `given(...).willReturn(...)` for stubbing in new or touched tests
+- prefer `then(mock).should(...)` for interaction verification in new or touched tests
+- treat the `andExpect(...)` block as the `then` section in MockMvc tests
 - use `ArgumentCaptor` when saved state is the assertion target
 - avoid `verifyNoMoreInteractions()` unless the interaction boundary itself is the behavior being protected
+- `when(...)` and `verify(...)` are acceptable in legacy tests or when static import conflicts make the BDD form less clear
 
 JUnit assertions such as `assertEquals` are allowed in legacy tests or very small cases, but new tests should prefer AssertJ.
 
