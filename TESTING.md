@@ -34,6 +34,8 @@ Role split:
 - Do the minimum work required to return to green.
 - Refactor only after the test is green again.
 - Prefer `given / when / then` comments when they improve scanability.
+- When using `given / when / then` comments, write them as `// given: ...`, `// when: ...`, `// then: ...`.
+- Keep the comment text short and noun-phrase oriented so the setup, action, and expectation scan quickly.
 - Name tests by behavior, not implementation detail.
 - Name test methods with `method_underCondition_expectedResult`.
 - Use English camelCase for test method names.
