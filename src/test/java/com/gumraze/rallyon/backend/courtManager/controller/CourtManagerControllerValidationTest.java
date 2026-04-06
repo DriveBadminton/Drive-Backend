@@ -61,6 +61,7 @@ class CourtManagerControllerValidationTest {
     @MockitoBean private UpdateFreeGameInfoCommandMapper updateFreeGameInfoCommandMapper;
     @MockitoBean private UpdateFreeGameRoundsAndMatchesCommandMapper updateFreeGameRoundsAndMatchesCommandMapper;
     @MockitoBean private AddFreeGameParticipantCommandMapper addFreeGameParticipantCommandMapper;
+    @MockitoBean private CreateFreeGameAssignmentPreviewResponseMapper createFreeGameAssignmentPreviewResponseMapper;
     @MockitoBean private JwtDecoder jwtDecoder;
 
     @Test
