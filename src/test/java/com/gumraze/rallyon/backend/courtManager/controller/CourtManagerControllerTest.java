@@ -67,7 +67,7 @@ class CourtManagerControllerTest {
 
     @Test
     @DisplayName("자유게임 생성 요청을 create use case로 전달한다")
-    void createFreeGame_success() throws Exception {
+    void createFreeGame_withValidRequest_returnsCreated() throws Exception {
         UUID accountId = UUID.randomUUID();
         UUID gameId = UUID.randomUUID();
         CreateFreeGameRequest request = new CreateFreeGameRequest(
@@ -113,7 +113,7 @@ class CourtManagerControllerTest {
 
     @Test
     @DisplayName("코트 배정 프리뷰 생성 요청을 use case로 전달한다")
-    void createFreeGameAssignmentPreview_success() throws Exception {
+    void createFreeGameAssignmentPreview_withValidRequest_returnsOk() throws Exception {
         UUID accountId = UUID.randomUUID();
         CreateFreeGameAssignmentPreviewRequest request =
                 new CreateFreeGameAssignmentPreviewRequest(
@@ -199,7 +199,7 @@ class CourtManagerControllerTest {
 
     @Test
     @DisplayName("자유게임 상세 조회 성공")
-    void getFreeGameDetail_success() throws Exception {
+    void getFreeGameDetail_withExistingGame_returnsOk() throws Exception {
         UUID accountId = UUID.randomUUID();
         UUID gameId = UUID.randomUUID();
         FreeGameDetailResponse response = freeGameDetailResponse(accountId, gameId);
@@ -216,7 +216,7 @@ class CourtManagerControllerTest {
 
     @Test
     @DisplayName("자유게임 기본 정보 수정 성공")
-    void updateFreeGameInfo_success() throws Exception {
+    void updateFreeGameInfo_withValidRequest_returnsOk() throws Exception {
         UUID accountId = UUID.randomUUID();
         UUID gameId = UUID.randomUUID();
         UpdateFreeGameRequest request = new UpdateFreeGameRequest(
@@ -254,7 +254,7 @@ class CourtManagerControllerTest {
 
     @Test
     @DisplayName("자유게임 라운드/매치 조회 성공")
-    void getFreeGameRoundMatch_success() throws Exception {
+    void getFreeGameRoundMatch_withExistingGame_returnsOk() throws Exception {
         UUID accountId = UUID.randomUUID();
         UUID gameId = UUID.randomUUID();
         UUID teamA1 = UUID.randomUUID();
@@ -296,7 +296,7 @@ class CourtManagerControllerTest {
 
     @Test
     @DisplayName("라운드/매치 수정 PATCH 성공")
-    void updateRoundsAndMatches_patch_success() throws Exception {
+    void updateRoundsAndMatches_withValidRequest_returnsOk() throws Exception {
         UUID accountId = UUID.randomUUID();
         UUID gameId = UUID.randomUUID();
         UUID teamA1 = UUID.randomUUID();
@@ -349,7 +349,7 @@ class CourtManagerControllerTest {
 
     @Test
     @DisplayName("참가자 추가 성공")
-    void addFreeGameParticipant_success() throws Exception {
+    void addFreeGameParticipant_withValidRequest_returnsCreated() throws Exception {
         UUID accountId = UUID.randomUUID();
         UUID gameId = UUID.randomUUID();
         UUID participantId = UUID.randomUUID();
@@ -383,7 +383,7 @@ class CourtManagerControllerTest {
 
     @Test
     @DisplayName("자유게임 참가자 목록 조회 성공")
-    void get_free_game_participants_with_stats_success() throws Exception {
+    void getFreeGameParticipantsWithStats_withExistingGame_returnsOk() throws Exception {
         UUID gameId = UUID.randomUUID();
         UUID accountId = UUID.randomUUID();
         UUID participantAccountId = UUID.randomUUID();
@@ -405,7 +405,7 @@ class CourtManagerControllerTest {
 
     @Test
     @DisplayName("자유게임 참가자 상세 조회 성공")
-    void get_free_game_participant_detail_success() throws Exception {
+    void getFreeGameParticipantDetail_withExistingParticipant_returnsOk() throws Exception {
         UUID accountId = UUID.randomUUID();
         UUID gameId = UUID.randomUUID();
         UUID participantId = UUID.randomUUID();
@@ -426,7 +426,7 @@ class CourtManagerControllerTest {
 
     @Test
     @DisplayName("공개 자유게임 상세 조회 성공")
-    void get_public_free_game_detail_success() throws Exception {
+    void getPublicFreeGameDetail_withExistingGame_returnsOk() throws Exception {
         String shareCode = "public-share-code";
         UUID organizerId = UUID.randomUUID();
         UUID gameId = UUID.randomUUID();
@@ -442,7 +442,7 @@ class CourtManagerControllerTest {
 
     @Test
     @DisplayName("참가자 상세 조회 시 존재하지 않는 participantId면 실패")
-    void get_free_game_participant_detail_with_unknown_participant_then_not_found() throws Exception {
+    void getFreeGameParticipantDetail_withUnknownParticipant_returnsNotFound() throws Exception {
         UUID accountId = UUID.randomUUID();
         UUID gameId = UUID.randomUUID();
         UUID participantId = UUID.randomUUID();
