@@ -6,8 +6,12 @@ import com.gumraze.rallyon.backend.courtManager.application.port.in.result.Creat
 import com.gumraze.rallyon.backend.courtManager.application.port.out.GenerateFreeGameAssignmentPreviewPort;
 import lombok.RequiredArgsConstructor;
 
-import java.util.List;
-
+/**
+ * AI 응답을 코트 배정 프리뷰 결과로 변환하는 outbound adapter다.
+ *
+ * <p>이 adapter는 AI 클라이언트 호출을 위임하고,
+ * structured output을 application result로 변환한다.
+ */
 @RequiredArgsConstructor
 public class AssignmentPreviewAiAdapter implements GenerateFreeGameAssignmentPreviewPort {
 
