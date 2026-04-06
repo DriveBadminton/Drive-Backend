@@ -177,6 +177,21 @@ public final class FreeGameFixtures {
 - Avoid large abstract base test classes as the default reuse mechanism.
 - Avoid extracting helpers that hide the test intent or are only used once.
 
+## AI-Assisted Test Review
+
+- For meaningful changes, ask the agent to review missing tests before or alongside implementation.
+- Ask the agent to propose tests by layer:
+  - controller
+  - service / use-case
+  - adapter
+  - integration
+- Ask for edge cases, validation, authentication / authorization, and regression risks, not just the happy path.
+- Prefer a two-step flow:
+  1. review and list the required tests
+  2. implement the selected tests
+- After implementation, run the smallest relevant test suite and report the result.
+- Keep the review request concrete. Include the changed files, the expected behavior, and any boundaries that should not be tested in this step.
+
 ## Execution
 
 Run the full suite for meaningful backend changes:
