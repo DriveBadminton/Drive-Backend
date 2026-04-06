@@ -60,6 +60,7 @@ class CourtManagerControllerTest {
 
     @MockitoBean private CreateFreeGameCommandMapper createFreeGameCommandMapper;
     @MockitoBean private CreateFreeGameAssignmentPreviewCommandMapper createFreeGameAssignmentPreviewCommandMapper;
+    @MockitoBean private CreateFreeGameAssignmentPreviewResponseMapper createFreeGameAssignmentPreviewResponseMapper;
     @MockitoBean private UpdateFreeGameInfoCommandMapper updateFreeGameInfoCommandMapper;
     @MockitoBean private UpdateFreeGameRoundsAndMatchesCommandMapper updateFreeGameRoundsAndMatchesCommandMapper;
     @MockitoBean private AddFreeGameParticipantCommandMapper addFreeGameParticipantCommandMapper;
@@ -112,89 +113,37 @@ class CourtManagerControllerTest {
     }
 
     @Test
-    @DisplayName("코트 배정 프리뷰 생성 요청을 use case로 전달한다")
-    void createFreeGameAssignmentPreview_withValidRequest_returnsOk() throws Exception {
+    @DisplayName("코트 배정 프리뷰 생성 시 응답 본문을 반환한다")
+    void createFreeGameAssignmentPreview_withValidRequest_returnsPreviewResponse() throws Exception {
+        // given: 유효한 프리뷰 생성 요청과 변환 결과 준비
         UUID accountId = UUID.randomUUID();
-        CreateFreeGameAssignmentPreviewRequest request =
-                new CreateFreeGameAssignmentPreviewRequest(
-                        List.of(
-                                new CreateFreeGameAssignmentPreviewRequest.ParticipantRequest(
-                                        "p1",
-                                        "서승재",
-                                        Gender.MALE,
-                                        20,
-                                        Grade.S,
-                                        1
-                                )
-                        ),
-                        List.of(
-                                new CreateFreeGameAssignmentPreviewRequest.RoundRequest(
-                                        1,
-                                        List.of(
-                                                new CreateFreeGameAssignmentPreviewRequest.CourtRequest(
-                                                        1,
-                                                        Arrays.asList("p1", null, null, null)
-                                                )
-                                        )
-                                )
-                        ),
-                        List.of(
-                                new CreateFreeGameAssignmentPreviewRequest.PartnerPairRequest("p1", "p2")
-                        ),
-                        new CreateFreeGameAssignmentPreviewRequest.PreferencesRequest(
-                                CreateFreeGameAssignmentPreviewRequest.PartnerPolicy.PREFER_PARTNERS,
-                                CreateFreeGameAssignmentPreviewRequest.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS
-                        )
-                );
-        CreateFreeGameAssignmentPreviewCommand command =
-                new CreateFreeGameAssignmentPreviewCommand(
-                        List.of(
-                                new CreateFreeGameAssignmentPreviewCommand.Participant(
-                                        "p1",
-                                        "서승재",
-                                        Gender.MALE,
-                                        20,
-                                        Grade.S,
-                                        1
-                                )
-                        ),
-                        List.of(
-                                new CreateFreeGameAssignmentPreviewCommand.Round(
-                                        1,
-                                        List.of(
-                                                new CreateFreeGameAssignmentPreviewCommand.Court(
-                                                        1,
-                                                        Arrays.asList("p1", null, null, null)
-                                                )
-                                        )
-                                )
-                        ),
-                        List.of(
-                                new CreateFreeGameAssignmentPreviewCommand.PartnerPairs("p1", "p2")
-                        ),
-                        new CreateFreeGameAssignmentPreviewCommand.Preferences(
-                                CreateFreeGameAssignmentPreviewCommand.PartnerPolicy.PREFER_PARTNERS,
-                                CreateFreeGameAssignmentPreviewCommand.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS
-                        )
-                );
-        CreateFreeGameAssignmentPreviewResult result =
-                new CreateFreeGameAssignmentPreviewResult(
-                        List.of(),
-                        List.of()
-                );
+        CreateFreeGameAssignmentPreviewRequest request = previewRequest();
+        CreateFreeGameAssignmentPreviewCommand command = previewCommand();
+        CreateFreeGameAssignmentPreviewResult result = previewResult();
+        CreateFreeGameAssignmentPreviewResponse response = previewResponse();
 
         given(createFreeGameAssignmentPreviewCommandMapper.toCommand(request)).willReturn(command);
         given(createFreeGameAssignmentPreviewUseCase.create(command)).willReturn(result);
+        given(createFreeGameAssignmentPreviewResponseMapper.toResponse(result)).willReturn(response);
 
+        // when: 프리뷰 생성 요청 수행
         mockMvc.perform(post("/free-games/assignment-previews")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
                         .with(authenticatedUser(accountId))
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                // then: 프리뷰 응답 본문 반환 검증
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rounds[0].roundNumber").value(1))
+                .andExpect(jsonPath("$.rounds[0].courts[0].courtNumber").value(1))
+                .andExpect(jsonPath("$.rounds[0].courts[0].slots[0]").value("p1"))
+                .andExpect(jsonPath("$.rounds[0].courts[0].slots[1]").value("p2"))
+                .andExpect(jsonPath("$.warnings[0].code").value("PARTIAL_ASSIGNMENT"))
+                .andExpect(jsonPath("$.warnings[0].message").value("일부 슬롯은 비어 있습니다."));
 
         verify(createFreeGameAssignmentPreviewCommandMapper).toCommand(request);
         verify(createFreeGameAssignmentPreviewUseCase).create(command);
+        verify(createFreeGameAssignmentPreviewResponseMapper).toResponse(result);
     }
 
     @Test
@@ -455,5 +404,131 @@ class CourtManagerControllerTest {
                         .accept(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.detail").value("존재하지 않는 참가자입니다. participantId: " + participantId));
+    }
+
+    private CreateFreeGameAssignmentPreviewRequest previewRequest() {
+        return new CreateFreeGameAssignmentPreviewRequest(
+                List.of(
+                        new CreateFreeGameAssignmentPreviewRequest.ParticipantRequest(
+                                "p1",
+                                "서승재",
+                                Gender.MALE,
+                                20,
+                                Grade.S,
+                                1
+                        ),
+                        new CreateFreeGameAssignmentPreviewRequest.ParticipantRequest(
+                                "p2",
+                                "김원호",
+                                Gender.MALE,
+                                20,
+                                Grade.A,
+                                0
+                        )
+                ),
+                List.of(
+                        new CreateFreeGameAssignmentPreviewRequest.RoundRequest(
+                                1,
+                                List.of(
+                                        new CreateFreeGameAssignmentPreviewRequest.CourtRequest(
+                                                1,
+                                                Arrays.asList("p1", null, null, null)
+                                        )
+                                )
+                        )
+                ),
+                List.of(
+                        new CreateFreeGameAssignmentPreviewRequest.PartnerPairRequest("p1", "p2")
+                ),
+                new CreateFreeGameAssignmentPreviewRequest.PreferencesRequest(
+                        CreateFreeGameAssignmentPreviewRequest.PartnerPolicy.PREFER_PARTNERS,
+                        CreateFreeGameAssignmentPreviewRequest.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS
+                )
+        );
+    }
+
+    private CreateFreeGameAssignmentPreviewCommand previewCommand() {
+        return new CreateFreeGameAssignmentPreviewCommand(
+                List.of(
+                        new CreateFreeGameAssignmentPreviewCommand.Participant(
+                                "p1",
+                                "서승재",
+                                Gender.MALE,
+                                20,
+                                Grade.S,
+                                1
+                        ),
+                        new CreateFreeGameAssignmentPreviewCommand.Participant(
+                                "p2",
+                                "김원호",
+                                Gender.MALE,
+                                20,
+                                Grade.A,
+                                0
+                        )
+                ),
+                List.of(
+                        new CreateFreeGameAssignmentPreviewCommand.Round(
+                                1,
+                                List.of(
+                                        new CreateFreeGameAssignmentPreviewCommand.Court(
+                                                1,
+                                                Arrays.asList("p1", null, null, null)
+                                        )
+                                )
+                        )
+                ),
+                List.of(
+                        new CreateFreeGameAssignmentPreviewCommand.PartnerPairs("p1", "p2")
+                ),
+                new CreateFreeGameAssignmentPreviewCommand.Preferences(
+                        CreateFreeGameAssignmentPreviewCommand.PartnerPolicy.PREFER_PARTNERS,
+                        CreateFreeGameAssignmentPreviewCommand.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS
+                )
+        );
+    }
+
+    private CreateFreeGameAssignmentPreviewResult previewResult() {
+        return new CreateFreeGameAssignmentPreviewResult(
+                List.of(
+                        new CreateFreeGameAssignmentPreviewResult.Round(
+                                1,
+                                List.of(
+                                        new CreateFreeGameAssignmentPreviewResult.Court(
+                                                1,
+                                                Arrays.asList("p1", "p2", null, null)
+                                        )
+                                )
+                        )
+                ),
+                List.of(
+                        new CreateFreeGameAssignmentPreviewResult.Warning(
+                                "PARTIAL_ASSIGNMENT",
+                                "일부 슬롯은 비어 있습니다."
+                        )
+                )
+        );
+    }
+
+    private CreateFreeGameAssignmentPreviewResponse previewResponse() {
+        return new CreateFreeGameAssignmentPreviewResponse(
+                List.of(
+                        new CreateFreeGameAssignmentPreviewResponse.RoundResponse(
+                                1,
+                                List.of(
+                                        new CreateFreeGameAssignmentPreviewResponse.CourtResponse(
+                                                1,
+                                                Arrays.asList("p1", "p2", null, null)
+                                        )
+                                )
+                        )
+                ),
+                List.of(
+                        new CreateFreeGameAssignmentPreviewResponse.WarningResponse(
+                                "PARTIAL_ASSIGNMENT",
+                                "일부 슬롯은 비어 있습니다."
+                        )
+                )
+        );
     }
 }
