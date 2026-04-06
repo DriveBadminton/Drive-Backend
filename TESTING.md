@@ -35,6 +35,9 @@ Role split:
 - Refactor only after the test is green again.
 - Prefer `given / when / then` comments when they improve scanability.
 - Name tests by behavior, not implementation detail.
+- Name test methods with `method_underCondition_expectedResult`.
+- Use English camelCase for test method names.
+- Keep `@DisplayName` for human-readable scenario text when it improves clarity.
 - Prefer one test for one reason to fail.
 - Prefer AssertJ for assertions in new or touched tests.
 - Avoid style-only rewrites in untouched stable tests.
