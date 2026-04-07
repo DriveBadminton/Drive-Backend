@@ -9,32 +9,62 @@ public final class AssignmentPreviewAiSchema {
     }
 
     public static final String ASSIGNMENT_PREVIEW_JSON_SCHEMA = """
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["rounds", "warnings"],
-              "properties": {
-                "rounds": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "required": ["roundNumber", "courts"],
-                    "properties": {
-                      "roundNumber": {
-                        "type": "integer"
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rounds", "warnings"],
+          "properties": {
+            "rounds": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["roundNumber", "courts"],
+                "properties": {
+                  "roundNumber": {
+                    "type": "integer"
+                  },
+                  "courts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["courtNumber", "slots"],
+                      "properties": {
+                        "courtNumber": {
+                          "type": "integer"
                         },
-                      "courts": {
-                        "type": "array",
+                        "slots": {
+                          "type": "array",
+                          "minItems": 4,
+                          "maxItems": 4,
+                          "items": {
+                            "type": ["string", "null"]
+                          }
                         }
                       }
                     }
-                  },
-                  "warnings": {
-                    "type": "array"
                   }
                 }
               }
-            """;
-
-
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["code", "message"],
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+        """;
 }
