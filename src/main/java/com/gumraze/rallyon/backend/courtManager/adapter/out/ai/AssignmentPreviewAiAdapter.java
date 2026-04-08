@@ -5,6 +5,7 @@ import com.gumraze.rallyon.backend.courtManager.application.port.in.command.Crea
 import com.gumraze.rallyon.backend.courtManager.application.port.in.result.CreateFreeGameAssignmentPreviewResult;
 import com.gumraze.rallyon.backend.courtManager.application.port.out.GenerateFreeGameAssignmentPreviewPort;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 /**
  * AI 응답을 코트 배정 프리뷰 결과로 변환하는 outbound adapter다.
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
  * <p>이 adapter는 AI 클라이언트 호출을 위임하고,
  * structured output을 application result로 변환한다.
  */
+@Component
 @RequiredArgsConstructor
 public class AssignmentPreviewAiAdapter implements GenerateFreeGameAssignmentPreviewPort {
 

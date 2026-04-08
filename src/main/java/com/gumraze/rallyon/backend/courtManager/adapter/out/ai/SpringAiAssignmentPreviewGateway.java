@@ -10,8 +10,10 @@ import org.springframework.ai.openai.OpenAiChatModel;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.ResponseFormat;
+import org.springframework.stereotype.Component;
 import java.util.Map;
 
+@Component
 @RequiredArgsConstructor
 public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGateway {
 
