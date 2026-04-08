@@ -15,14 +15,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AssignmentPreviewAiAdapter implements GenerateFreeGameAssignmentPreviewPort {
 
-    private final AssignmentPreviewAiClient assignmentPreviewAiClient;
+    private final AssignmentPreviewAiGateway assignmentPreviewAiGateway;
 
     @Override
     public CreateFreeGameAssignmentPreviewResult generate(CreateFreeGameAssignmentPreviewCommand command) {
         try {
 
-        AssignmentPreviewAiResponse response = assignmentPreviewAiClient.generate(command);
-        return new CreateFreeGameAssignmentPreviewResult(
+            AssignmentPreviewAiResponse response = assignmentPreviewAiGateway.generate(command);
+            return new CreateFreeGameAssignmentPreviewResult(
                 response.rounds().stream()
                         .map(round -> new CreateFreeGameAssignmentPreviewResult.Round(
                                 round.roundNumber(),

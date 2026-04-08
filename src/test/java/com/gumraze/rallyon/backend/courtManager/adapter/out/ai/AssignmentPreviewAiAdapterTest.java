@@ -23,7 +23,7 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 public class AssignmentPreviewAiAdapterTest {
 
-    @Mock private AssignmentPreviewAiClient aiClient;
+    @Mock private AssignmentPreviewAiGateway aiGateway;
     @InjectMocks private AssignmentPreviewAiAdapter adapter;
 
     @Test
@@ -33,7 +33,7 @@ public class AssignmentPreviewAiAdapterTest {
         CreateFreeGameAssignmentPreviewCommand command = previewCommand();
         AssignmentPreviewAiResponse aiResponse = previewAiResponse();
 
-        given(aiClient.generate(command)).willReturn(aiResponse);
+        given(aiGateway.generate(command)).willReturn(aiResponse);
 
         // when: AI 프리뷰 생성 수행
         CreateFreeGameAssignmentPreviewResult result = adapter.generate(command);
@@ -49,7 +49,7 @@ public class AssignmentPreviewAiAdapterTest {
         then(result.warnings()).hasSize(1);
         then(result.warnings().getFirst().code()).isEqualTo("PARTIAL_ASSIGNMENT");
         then(result.warnings().getFirst().message()).isEqualTo("일부 슬롯은 비어 있습니다.");
-        verify(aiClient).generate(command);
+        verify(aiGateway).generate(command);
 
     }
 
@@ -59,7 +59,7 @@ public class AssignmentPreviewAiAdapterTest {
         // given: 프리뷰 생성 입력과 AI 호출 실패 준비
         CreateFreeGameAssignmentPreviewCommand command = previewCommand();
 
-        given(aiClient.generate(command))
+        given(aiGateway.generate(command))
                 .willThrow(new RuntimeException("LLM Model Timeout"));
 
         // when & then: 서비스 불가 예외 반환 검증
