@@ -1,6 +1,7 @@
 package com.gumraze.rallyon.backend.courtManager.adapter.in.web;
 
 import com.gumraze.rallyon.backend.common.exception.NotFoundException;
+import com.gumraze.rallyon.backend.common.exception.ServiceUnavailableException;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.*;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.command.*;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.query.*;
@@ -406,6 +407,34 @@ class CourtManagerControllerTest {
                 .andExpect(jsonPath("$.detail").value("존재하지 않는 참가자입니다. participantId: " + participantId));
     }
 
+    @Test
+    @DisplayName("코트 배정 프리뷰 AI 생성 시 AI 서비스를 사용할 수 없으면 503을 반환한다")
+    void createFreeGameAssignmentPreview_whenAiServiceUnavailable_returnsServiceUnavailable() throws Exception {
+        // given: 유효한 프리뷰 생성 요청과 command 반환 결과를 준비
+        UUID accountId = UUID.randomUUID();
+        CreateFreeGameAssignmentPreviewRequest request = previewRequest();
+        CreateFreeGameAssignmentPreviewCommand command = previewCommand();
+
+
+        given(createFreeGameAssignmentPreviewCommandMapper.toCommand(request))
+                .willReturn(command);
+        given(createFreeGameAssignmentPreviewUseCase.create(command))
+                .willThrow(new ServiceUnavailableException("AI 코트 배정 프리뷰를 현재 생성할 수 없습니다."));
+
+        // when: 프리뷰 생성 요청을 수행한다.
+        mockMvc.perform(post("/free-games/assignment-previews")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_PROBLEM_JSON)
+                        .with(authenticatedUser(accountId))
+                        .content(objectMapper.writeValueAsString(request)))
+                // then: 503 problem detail 응답을 반환한다.
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.status").value(503))
+                .andExpect(jsonPath("$.detail").value("AI 코트 배정 프리뷰를 현재 생성할 수 없습니다."));
+
+    }
+
+    // helper method
     private CreateFreeGameAssignmentPreviewRequest previewRequest() {
         return new CreateFreeGameAssignmentPreviewRequest(
                 List.of(
