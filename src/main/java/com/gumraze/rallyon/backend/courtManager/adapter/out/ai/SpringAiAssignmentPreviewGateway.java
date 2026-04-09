@@ -1,13 +1,13 @@
 package com.gumraze.rallyon.backend.courtManager.adapter.out.ai;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.command.CreateFreeGameAssignmentPreviewCommand;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.ResponseFormat;
 import org.springframework.stereotype.Component;
@@ -41,7 +41,7 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
             );
             promptText = ASSIGNMENT_PREVIEW_PROMPT + objectMapper.writeValueAsString(command);
 
-        } catch (JsonProcessingException ex) {
+        } catch (JacksonException ex) {
             throw new IllegalStateException("OpenAI로부터 응답을 읽을 수 없습니다.", ex);
         }
 
@@ -78,7 +78,7 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
                     responseText,
                     AssignmentPreviewAiResponse.class
             );
-        } catch (JsonProcessingException ex) {
+        } catch (JacksonException ex) {
             throw new IllegalStateException("OpenAI로부터 응답을 읽을 수 없습니다.", ex);
         }
     }

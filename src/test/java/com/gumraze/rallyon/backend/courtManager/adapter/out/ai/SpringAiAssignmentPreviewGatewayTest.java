@@ -1,7 +1,8 @@
 package com.gumraze.rallyon.backend.courtManager.adapter.out.ai;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.command.CreateFreeGameAssignmentPreviewCommand;
 import com.gumraze.rallyon.backend.user.constants.Gender;
 import com.gumraze.rallyon.backend.user.constants.Grade;
@@ -16,10 +17,8 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.ResponseFormat;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -109,8 +108,8 @@ public class SpringAiAssignmentPreviewGatewayTest {
         // given: command 직렬화에 실패하는 gateway를 준비한다.
         ObjectMapper objectMapper = new ObjectMapper() {
             @Override
-            public String writeValueAsString(Object value) throws JsonProcessingException {
-                throw new JsonProcessingException("serialize failed") {
+            public String writeValueAsString(Object value) throws JacksonException {
+                throw new JacksonException("serialize failed") {
                 };
             }
         };
@@ -121,7 +120,7 @@ public class SpringAiAssignmentPreviewGatewayTest {
         assertThatThrownBy(() -> gateway.generate(null))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("OpenAI로부터 응답을 읽을 수 없습니다.")
-                .hasCauseInstanceOf(JsonProcessingException.class);
+                .hasCauseInstanceOf(JacksonException.class);
     }
 
     @Test
@@ -140,7 +139,7 @@ public class SpringAiAssignmentPreviewGatewayTest {
         assertThatThrownBy(() -> gateway.generate(null))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("OpenAI로부터 응답을 읽을 수 없습니다.")
-                .hasCauseInstanceOf(JsonProcessingException.class);
+                .hasCauseInstanceOf(JacksonException.class);
     }
 
     @Test
@@ -240,8 +239,8 @@ public class SpringAiAssignmentPreviewGatewayTest {
         ObjectMapper objectMapper = new ObjectMapper() {
             @Override
             public <T> T readValue(String content, TypeReference<T> valueTypeRef)
-                    throws JsonProcessingException {
-                throw new JsonProcessingException("schema parse failed") {
+                    throws JacksonException {
+                throw new JacksonException("schema parse failed") {
                 };
             }
         };
@@ -252,7 +251,7 @@ public class SpringAiAssignmentPreviewGatewayTest {
         assertThatThrownBy(() -> gateway.generate(null))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("OpenAI로부터 응답을 읽을 수 없습니다.")
-                .hasCauseInstanceOf(JsonProcessingException.class);
+                .hasCauseInstanceOf(JacksonException.class);
     }
 
 
