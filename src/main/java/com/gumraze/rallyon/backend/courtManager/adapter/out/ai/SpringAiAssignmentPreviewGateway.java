@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGateway {
 
+    private final AssignmentPreviewPlanningInputMapper planningInputMapper;
+
     private static final String INVALID_OUTPUT_MESSAGE = "OpenAI 응답 구조가 요청과 일치하지 않습니다.";
     private static final String ASSIGNMENT_PREVIEW_PROMPT = """
             다음 자유게임 상태를 기준으로 코트 배정 프리뷰를 생성하세요.
@@ -51,7 +53,7 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
                     new TypeReference<Map<String, Object>>() {
                     }
             );
-            promptText = ASSIGNMENT_PREVIEW_PROMPT + objectMapper.writeValueAsString(command);
+            promptText = ASSIGNMENT_PREVIEW_PROMPT + serializePlanningInput(command);
 
         } catch (JacksonException ex) {
             throw new IllegalStateException("OpenAI로부터 응답을 읽을 수 없습니다.", ex);
@@ -79,6 +81,9 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
             validateRoundStructure(command, aiResponse);
             return aiResponse;
         } catch (IllegalStateException ex) {
+            if (!INVALID_OUTPUT_MESSAGE.equals(ex.getMessage())) {
+                throw ex;
+            }
             AssignmentPreviewAiResponse repairedResponse =
                     requestAssignmentPreview(buildRepairPrompt(command), options);
             validateRoundStructure(command, repairedResponse);
@@ -94,10 +99,12 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
             return;
         }
 
+        validateResponseShapeNotNull(response);
+        validateWarningsShape(response);
         validateParticipantIds(command, response);
 
         if (command.rounds().size() != response.rounds().size()) {
-            throw new IllegalStateException(INVALID_OUTPUT_MESSAGE);
+            throw invalidOutput();
         }
 
         for (int i = 0; i < command.rounds().size(); i++) {
@@ -120,11 +127,11 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
             AssignmentPreviewAiResponse.Round responseRound
     ) {
         if (!requestedRound.roundNumber().equals(responseRound.roundNumber())) {
-            throw new IllegalStateException(INVALID_OUTPUT_MESSAGE);
+            throw invalidOutput();
         }
 
         if (requestedRound.courts().size() != responseRound.courts().size()) {
-            throw new IllegalStateException(INVALID_OUTPUT_MESSAGE);
+            throw invalidOutput();
         }
 
         validateDuplicateParticipantsInRound(responseRound);
@@ -142,11 +149,11 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
                     responseRound.courts().get(j);
 
             if (!requestedCourt.courtNumber().equals(responseCourt.courtNumber())) {
-                throw new IllegalStateException(INVALID_OUTPUT_MESSAGE);
+                throw invalidOutput();
             }
 
             if (responseCourt.slots().size() != 4) {
-                throw new IllegalStateException(INVALID_OUTPUT_MESSAGE);
+                throw invalidOutput();
             }
         }
     }
@@ -169,7 +176,7 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
                 String responseSlot = responseSlots.get(j);
 
                 if (requestedSlot != null && !requestedSlot.equals(responseSlot)) {
-                    throw new IllegalStateException(INVALID_OUTPUT_MESSAGE);
+                    throw invalidOutput();
                 }
             }
         }
@@ -187,7 +194,7 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
             for (AssignmentPreviewAiResponse.Court court : round.courts()) {
                 for (String slot : court.slots()) {
                     if (slot != null && !participantIds.contains(slot)) {
-                        throw new IllegalStateException(INVALID_OUTPUT_MESSAGE);
+                        throw invalidOutput();
                     }
                 }
             }
@@ -200,7 +207,7 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
         for (AssignmentPreviewAiResponse.Court court : responseRound.courts()) {
             for (String slot : court.slots()) {
                 if (slot != null && !assignedParticipants.add(slot)) {
-                    throw new IllegalStateException(INVALID_OUTPUT_MESSAGE);
+                    throw invalidOutput();
                 }
             }
         }
@@ -230,10 +237,54 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
 
     private String buildRepairPrompt(CreateFreeGameAssignmentPreviewCommand command) {
         try {
-            return ASSIGNMENT_PREVIEW_REPAIR_PROMPT + objectMapper.writeValueAsString(command);
+            return ASSIGNMENT_PREVIEW_REPAIR_PROMPT + serializePlanningInput(command);
         } catch (JacksonException ex) {
             throw new IllegalStateException("OpenAI로부터 응답을 읽을 수 없습니다.", ex);
         }
     }
 
+    private String serializePlanningInput(CreateFreeGameAssignmentPreviewCommand command)
+            throws JacksonException {
+        if (command == null) {
+            return objectMapper.writeValueAsString(null);
+        }
+
+        AssignmentPreviewPlanningInput planningInput = planningInputMapper.from(command);
+        return objectMapper.writeValueAsString(planningInput);
+    }
+
+    private void validateResponseShapeNotNull(AssignmentPreviewAiResponse response) {
+        if (response.rounds() == null) {
+            throw invalidOutput();
+        }
+
+        for (AssignmentPreviewAiResponse.Round round : response.rounds()) {
+            if (round == null || round.roundNumber() == null || round.courts() == null) {
+                throw invalidOutput();
+            }
+
+            for (AssignmentPreviewAiResponse.Court court : round.courts()) {
+                if (court == null || court.courtNumber() == null || court.slots() == null) {
+                    throw invalidOutput();
+                }
+            }
+        }
+    }
+
+    private void validateWarningsShape(AssignmentPreviewAiResponse response) {
+        if (response.warnings() == null) {
+            throw invalidOutput();
+        }
+
+        for (AssignmentPreviewAiResponse.Warning warning : response.warnings()) {
+            if (warning == null || warning.code() == null || warning.message() == null) {
+                throw invalidOutput();
+            }
+        }
+    }
+
+    private IllegalStateException invalidOutput() {
+        return new IllegalStateException(INVALID_OUTPUT_MESSAGE);
+    }
+    
 }
