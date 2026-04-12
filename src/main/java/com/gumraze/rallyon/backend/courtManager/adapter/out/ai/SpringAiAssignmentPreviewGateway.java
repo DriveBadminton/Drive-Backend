@@ -26,14 +26,30 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
     private static final String INVALID_OUTPUT_MESSAGE = "OpenAI 응답 구조가 요청과 일치하지 않습니다.";
     private static final String ASSIGNMENT_PREVIEW_PROMPT = """
             다음 자유게임 상태를 기준으로 코트 배정 프리뷰를 생성하세요.
+            아래 우선순위를 순서대로 지키세요.
+            1. 입력과 동일한 rounds / courts 구조를 유지하세요.
+            2. 같은 라운드 안에 동일 참가자를 두 번 배정하지 마세요.
+            3. constraintGuidance.preserveFixedSlots=true 이면 fixed=true 슬롯의 participantId를 절대 변경하지 마세요.
+            4. policyGuidance.fillEmptySlotsOnly=true 이면 기존 non-null 슬롯을 유지한 채 null 슬롯을 최대한 채우세요.
+            5. partnerGuidance.preferProvidedPartnerPairs=true 이면 가능한 범위에서 partnerPairs를 우선 반영하세요.
+            6. 추가로 배정할 수 없는 슬롯이 남으면 warnings에 PARTIAL_ASSIGNMENT를 포함하세요.
+            7. 파트너 선호를 완전히 만족하지 못하면 warnings에 PARTNER_CONSTRAINT_PARTIAL를 포함하세요.
+            8. 배정을 개선할 수 없어 기존 상태를 유지한 경우에도 warnings를 비워두지 마세요.
             결과는 rounds와 warnings를 포함한 JSON만 반환하세요.
             입력 데이터:
             """;
 
     private static final String ASSIGNMENT_PREVIEW_REPAIR_PROMPT = """
             이전 응답은 요청 구조와 일치하지 않았습니다.
-            입력과 동일한 rounds / courts 구조를 반드시 유지해서 다시 생성하세요.
-            FILL_EMPTY_SLOTS 정책이면 기존 non-null 슬롯은 그대로 유지하세요.
+            이번에는 아래 규칙을 모두 만족하도록 다시 생성하세요.
+            1. 입력과 동일한 rounds / courts 구조를 반드시 유지하세요.
+            2. 같은 라운드 안에 동일 참가자를 두 번 배정하지 마세요.
+            3. constraintGuidance.preserveFixedSlots=true 이면 fixed=true 슬롯의 participantId를 절대 변경하지 마세요.
+            4. policyGuidance.fillEmptySlotsOnly=true 이면 기존 non-null 슬롯을 유지한 채 null 슬롯을 최대한 채우세요.
+            5. partnerGuidance.preferProvidedPartnerPairs=true 이면 가능한 범위에서 partnerPairs를 우선 반영하세요.
+            6. 추가로 배정할 수 없는 슬롯이 남으면 warnings에 PARTIAL_ASSIGNMENT를 포함하세요.
+            7. 파트너 선호를 완전히 만족하지 못하면 warnings에 PARTNER_CONSTRAINT_PARTIAL를 포함하세요.
+            8. 배정을 개선할 수 없어 기존 상태를 유지한 경우에도 warnings를 비워두지 마세요.
             결과는 rounds와 warnings를 포함한 JSON만 반환하세요.
             입력 데이터:
             """;

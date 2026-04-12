@@ -130,6 +130,42 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
     }
 
     @Test
+    @DisplayName("초기 prompt에 배정 우선순위와 warning 규칙을 포함한다.")
+    void generate_includesAssignmentPriorityAndWarningRulesInPrompt() {
+        // given: 정상 응답을 반환하는 Spring AI와 gateway를 준비한다.
+        given(chatModel.call(any(Prompt.class)))
+                .willReturn(getChatResponse("""
+                    {
+                      "rounds": [
+                        {
+                          "roundNumber": 1,
+                          "courts": [
+                            {
+                              "courtNumber": 1,
+                              "slots": ["p1", null, null, null]
+                            }
+                          ]
+                        }
+                      ],
+                      "warnings": []
+                    }
+                    """));
+
+        // when: AI 프리뷰 생성을 수행한다.
+        getGateway().generate(getSingleRoundCommand());
+
+        // then: prompt에 핵심 배정 규칙과 warning 정책이 포함된다.
+        String prompt = getSingleCapturedPrompt().getContents();
+        then(prompt).contains("아래 우선순위를 순서대로 지키세요.");
+        then(prompt).contains("같은 라운드 안에 동일 참가자를 두 번 배정하지 마세요.");
+        then(prompt).contains("null 슬롯을 최대한 채우세요.");
+        then(prompt).contains("partnerPairs를 우선 반영하세요.");
+        then(prompt).contains("PARTIAL_ASSIGNMENT");
+        then(prompt).contains("PARTNER_CONSTRAINT_PARTIAL");
+        then(prompt).contains("warnings를 비워두지 마세요.");
+    }
+
+    @Test
     @DisplayName("OpenAI 응답이 비어 있으면 IllegalStateException을 던진다")
     void generate_whenResponseIsEmpty_throwsIllegalStateException() {
         // given: 비어 있는 응답을 반환하는 Spring AI와 gateway를 준비한다.
@@ -372,6 +408,67 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
         then(repairPrompt.getContents()).contains("\"partnerGuidance\"");
         then(repairPrompt.getContents()).contains("\"preferProvidedPartnerPairs\":true");
         then(repairPrompt.getContents()).contains("\"preferredPairCount\":0");
+    }
+
+    @Test
+    @DisplayName("재시도 prompt에 구조 유지와 warning 규칙을 다시 명시한다.")
+    void generate_whenRetrying_includesAssignmentPriorityAndWarningRulesInRepairPrompt() {
+        // given: 첫 번째 응답은 invalid이고 두 번째 응답은 유효하다.
+        given(chatModel.call(any(Prompt.class)))
+                .willReturn(
+                        getChatResponse("""
+                            {
+                              "rounds": [
+                                {
+                                  "roundNumber": 1,
+                                  "courts": [
+                                    {
+                                      "courtNumber": 1,
+                                      "slots": ["p1", null, null, null]
+                                    }
+                                  ]
+                                }
+                              ],
+                              "warnings": []
+                            }
+                            """),
+                        getChatResponse("""
+                            {
+                              "rounds": [
+                                {
+                                  "roundNumber": 1,
+                                  "courts": [
+                                    {
+                                      "courtNumber": 1,
+                                      "slots": ["p1", null, null, null]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "roundNumber": 2,
+                                  "courts": [
+                                    {
+                                      "courtNumber": 1,
+                                      "slots": ["p1", null, null, null]
+                                    }
+                                  ]
+                                }
+                              ],
+                              "warnings": []
+                            }
+                            """)
+                );
+
+        // when: 재시도가 필요한 프리뷰 생성을 수행한다.
+        getGateway().generate(getTwoRoundCommand());
+
+        // then: 재시도 prompt에 구조/경고 규칙이 포함된다.
+        String repairPrompt = getCapturedPrompts(2).get(1).getContents();
+        then(repairPrompt).contains("이번에는 아래 규칙을 모두 만족하도록 다시 생성하세요.");
+        then(repairPrompt).contains("같은 라운드 안에 동일 참가자를 두 번 배정하지 마세요.");
+        then(repairPrompt).contains("PARTIAL_ASSIGNMENT");
+        then(repairPrompt).contains("PARTNER_CONSTRAINT_PARTIAL");
+        then(repairPrompt).contains("warnings를 비워두지 마세요.");
     }
 
     @Test
