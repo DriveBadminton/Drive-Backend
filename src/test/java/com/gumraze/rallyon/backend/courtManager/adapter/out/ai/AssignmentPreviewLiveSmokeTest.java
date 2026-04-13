@@ -55,7 +55,6 @@ class AssignmentPreviewLiveSmokeTest {
                 .openAiApi(openAiApi)
                 .defaultOptions(OpenAiChatOptions.builder()
                         .model(modelName)
-                        .temperature(0.0)
                         .build())
                 .build();
 
