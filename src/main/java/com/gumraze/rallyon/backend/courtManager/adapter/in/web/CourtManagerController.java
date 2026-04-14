@@ -8,7 +8,6 @@ import com.gumraze.rallyon.backend.courtManager.application.port.in.*;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.command.CreateFreeGameAssignmentPreviewCommand;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.command.CreateFreeGameCommand;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.query.*;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.result.CreateFreeGameAssignmentPreviewResult;
 import com.gumraze.rallyon.backend.courtManager.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +27,8 @@ public class CourtManagerController implements
         PublicFreeGameApi {
 
     private final CreateFreeGameUseCase createFreeGameUseCase;
-    private final CreateFreeGameAssignmentPreviewUseCase createFreeGameAssignmentPreviewUseCase;
+    private final SubmitFreeGameAssignmentPreviewUseCase submitFreeGameAssignmentPreviewUseCase;
+    private final GetFreeGameAssignmentPreviewStatusUseCase getFreeGameAssignmentPreviewStatusUseCase;
     private final GetFreeGameDetailUseCase getFreeGameDetailUseCase;
     private final UpdateFreeGameInfoUseCase updateFreeGameInfoUseCase;
     private final GetFreeGameRoundsAndMatchesUseCase getFreeGameRoundsAndMatchesUseCase;
@@ -42,7 +42,7 @@ public class CourtManagerController implements
     private final UpdateFreeGameInfoCommandMapper updateFreeGameInfoCommandMapper;
     private final UpdateFreeGameRoundsAndMatchesCommandMapper updateFreeGameRoundsAndMatchesCommandMapper;
     private final AddFreeGameParticipantCommandMapper addFreeGameParticipantCommandMapper;
-    private final CreateFreeGameAssignmentPreviewResponseMapper createFreeGameAssignmentPreviewResponseMapper;
+    private final AssignmentPreviewJobResponseMapper assignmentPreviewJobResponseMapper;
 
     @Override
     @PostMapping
@@ -58,17 +58,30 @@ public class CourtManagerController implements
 
     @Override
     @PostMapping("/assignment-previews")
-    public ResponseEntity<CreateFreeGameAssignmentPreviewResponse> createFreeGameAssignmentPreview(
+    public ResponseEntity<CreateFreeGameAssignmentPreviewJobResponse> createFreeGameAssignmentPreview(
             @AuthenticationPrincipal UUID accountId,
             @RequestBody @Valid CreateFreeGameAssignmentPreviewRequest request
     ) {
         CreateFreeGameAssignmentPreviewCommand command =
                 createFreeGameAssignmentPreviewCommandMapper.toCommand(request);
-        CreateFreeGameAssignmentPreviewResult result =
-                createFreeGameAssignmentPreviewUseCase.create(command);
-        CreateFreeGameAssignmentPreviewResponse response =
-                createFreeGameAssignmentPreviewResponseMapper.toResponse(result);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.accepted().body(
+                assignmentPreviewJobResponseMapper.toSubmitResponse(
+                        submitFreeGameAssignmentPreviewUseCase.submit(accountId, command)
+                )
+        );
+    }
+
+    @Override
+    @GetMapping("/assignment-previews/{jobId}")
+    public ResponseEntity<GetFreeGameAssignmentPreviewJobResponse> getFreeGameAssignmentPreviewStatus(
+            @AuthenticationPrincipal UUID accountId,
+            @PathVariable UUID jobId
+    ) {
+        return ResponseEntity.ok(
+                assignmentPreviewJobResponseMapper.toStatusResponse(
+                        getFreeGameAssignmentPreviewStatusUseCase.getStatus(accountId, jobId)
+                )
+        );
     }
 
     @Override

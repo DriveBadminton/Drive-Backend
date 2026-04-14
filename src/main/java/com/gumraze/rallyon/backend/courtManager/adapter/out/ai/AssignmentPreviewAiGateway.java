@@ -11,11 +11,23 @@ import com.gumraze.rallyon.backend.courtManager.application.port.in.command.Crea
 public interface AssignmentPreviewAiGateway {
 
     /**
+     * AI를 통해 코트 배정 프리뷰를 생성하고 실행 메타데이터를 반환한다.
+     *
+     * @param command 현재 참가자, 코트 슬롯, 파트너 관계, 배정 선호 정책
+     * @return AI가 반환한 코트 배정 프리뷰 구조와 실행 메타데이터
+     */
+    AssignmentPreviewAiGenerationResult generateExecution(
+            CreateFreeGameAssignmentPreviewCommand command
+    );
+
+    /**
      * AI를 통해 코트 배정 프리뷰를 생성한다.
      *
      * @param command 현재 참가자, 코트 슬롯, 파트너 관계, 배정 선호 정책
      * @return AI가 반환한 코트 배정 프리뷰 구조
      */
-    AssignmentPreviewAiResponse generate(CreateFreeGameAssignmentPreviewCommand command);
+    default AssignmentPreviewAiResponse generate(CreateFreeGameAssignmentPreviewCommand command) {
+        return generateExecution(command).response();
+    }
 
 }

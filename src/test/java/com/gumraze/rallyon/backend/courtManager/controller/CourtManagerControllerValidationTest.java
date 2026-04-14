@@ -1,13 +1,14 @@
 package com.gumraze.rallyon.backend.courtManager.adapter.in.web;
 
 import com.gumraze.rallyon.backend.courtManager.application.port.in.AddFreeGameParticipantUseCase;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.CreateFreeGameAssignmentPreviewUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.CreateFreeGameUseCase;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameAssignmentPreviewStatusUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameDetailUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameParticipantDetailUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameParticipantsUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameRoundsAndMatchesUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.GetPublicFreeGameDetailUseCase;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.SubmitFreeGameAssignmentPreviewUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.UpdateFreeGameInfoUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.UpdateFreeGameRoundsAndMatchesUseCase;
 import com.gumraze.rallyon.backend.courtManager.dto.AddFreeGameParticipantRequest;
@@ -47,7 +48,8 @@ class CourtManagerControllerValidationTest {
     @Autowired private ObjectMapper objectMapper;
 
     @MockitoBean private CreateFreeGameUseCase createFreeGameUseCase;
-    @MockitoBean private CreateFreeGameAssignmentPreviewUseCase createFreeGameAssignmentPreviewUseCase;
+    @MockitoBean private SubmitFreeGameAssignmentPreviewUseCase submitFreeGameAssignmentPreviewUseCase;
+    @MockitoBean private GetFreeGameAssignmentPreviewStatusUseCase getFreeGameAssignmentPreviewStatusUseCase;
     @MockitoBean private GetFreeGameDetailUseCase getFreeGameDetailUseCase;
     @MockitoBean private UpdateFreeGameInfoUseCase updateFreeGameInfoUseCase;
     @MockitoBean private GetFreeGameRoundsAndMatchesUseCase getFreeGameRoundsAndMatchesUseCase;
@@ -61,7 +63,7 @@ class CourtManagerControllerValidationTest {
     @MockitoBean private UpdateFreeGameInfoCommandMapper updateFreeGameInfoCommandMapper;
     @MockitoBean private UpdateFreeGameRoundsAndMatchesCommandMapper updateFreeGameRoundsAndMatchesCommandMapper;
     @MockitoBean private AddFreeGameParticipantCommandMapper addFreeGameParticipantCommandMapper;
-    @MockitoBean private CreateFreeGameAssignmentPreviewResponseMapper createFreeGameAssignmentPreviewResponseMapper;
+    @MockitoBean private AssignmentPreviewJobResponseMapper assignmentPreviewJobResponseMapper;
     @MockitoBean private JwtDecoder jwtDecoder;
 
     @Test

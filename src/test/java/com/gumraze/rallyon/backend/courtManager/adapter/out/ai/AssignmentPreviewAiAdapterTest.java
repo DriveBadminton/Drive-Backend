@@ -3,6 +3,7 @@ package com.gumraze.rallyon.backend.courtManager.adapter.out.ai;
 import com.gumraze.rallyon.backend.common.exception.ServiceUnavailableException;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.command.CreateFreeGameAssignmentPreviewCommand;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.result.CreateFreeGameAssignmentPreviewResult;
+import com.gumraze.rallyon.backend.courtManager.application.port.out.result.FreeGameAssignmentPreviewGeneration;
 import com.gumraze.rallyon.backend.user.constants.Gender;
 import com.gumraze.rallyon.backend.user.constants.Grade;
 import org.junit.jupiter.api.DisplayName;
@@ -32,8 +33,20 @@ public class AssignmentPreviewAiAdapterTest {
         // given: 프리뷰 생성 입력과 AI 응답 준비
         CreateFreeGameAssignmentPreviewCommand command = previewCommand();
         AssignmentPreviewAiResponse aiResponse = previewAiResponse();
+        AssignmentPreviewAiGenerationResult gatewayResult =
+                new AssignmentPreviewAiGenerationResult(
+                        aiResponse,
+                        "gpt-5-mini",
+                        false,
+                        1200L,
+                        null,
+                        320,
+                        640,
+                        180,
+                        1200
+                );
 
-        given(aiGateway.generate(command)).willReturn(aiResponse);
+        given(aiGateway.generateExecution(command)).willReturn(gatewayResult);
 
         // when: AI 프리뷰 생성 수행
         CreateFreeGameAssignmentPreviewResult result = adapter.generate(command);
@@ -49,7 +62,7 @@ public class AssignmentPreviewAiAdapterTest {
         then(result.warnings()).hasSize(1);
         then(result.warnings().getFirst().code()).isEqualTo("PARTIAL_ASSIGNMENT");
         then(result.warnings().getFirst().message()).isEqualTo("일부 슬롯은 비어 있습니다.");
-        verify(aiGateway).generate(command);
+        verify(aiGateway).generateExecution(command);
 
     }
 
@@ -59,7 +72,7 @@ public class AssignmentPreviewAiAdapterTest {
         // given: 프리뷰 생성 입력과 AI 호출 실패 준비
         CreateFreeGameAssignmentPreviewCommand command = previewCommand();
 
-        given(aiGateway.generate(command))
+        given(aiGateway.generateExecution(command))
                 .willThrow(new RuntimeException("LLM Model Timeout"));
 
         // when & then: 서비스 불가 예외 반환 검증
@@ -67,6 +80,40 @@ public class AssignmentPreviewAiAdapterTest {
                 .isInstanceOf(ServiceUnavailableException.class)
                 .hasMessageContaining("AI 코트 배정 프리뷰를 현재 생성할 수 없습니다.")
                 .hasCauseInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    @DisplayName("AI 실행 메타데이터를 application generation으로 변환한다.")
+    void generateExecution_withValidAiResponse_returnsGeneration() {
+        CreateFreeGameAssignmentPreviewCommand command = previewCommand();
+        AssignmentPreviewAiGenerationResult gatewayResult =
+                new AssignmentPreviewAiGenerationResult(
+                        previewAiResponse(),
+                        "gpt-5-mini",
+                        true,
+                        900L,
+                        800L,
+                        300,
+                        580,
+                        170,
+                        1200
+                );
+
+        given(aiGateway.generateExecution(command)).willReturn(gatewayResult);
+
+        FreeGameAssignmentPreviewGeneration result = adapter.generateExecution(command);
+
+        then(result.model()).isEqualTo("gpt-5-mini");
+        then(result.repairAttempted()).isTrue();
+        then(result.initialAiElapsedMs()).isEqualTo(900L);
+        then(result.repairAiElapsedMs()).isEqualTo(800L);
+        then(result.planningInputChars()).isEqualTo(300);
+        then(result.promptChars()).isEqualTo(580);
+        then(result.responseChars()).isEqualTo(170);
+        then(result.maxCompletionTokens()).isEqualTo(1200);
+        then(result.preview().rounds().getFirst().courts().getFirst().slots())
+                .containsExactly("p1", "p2", null, null);
+        verify(aiGateway).generateExecution(command);
     }
 
     private CreateFreeGameAssignmentPreviewCommand previewCommand() {

@@ -2,8 +2,8 @@ package com.gumraze.rallyon.backend.api.courtManager;
 
 import com.gumraze.rallyon.backend.api.common.ApiAuthValidationResponses;
 import com.gumraze.rallyon.backend.api.common.ApiBearerAuth;
+import com.gumraze.rallyon.backend.courtManager.dto.CreateFreeGameAssignmentPreviewJobResponse;
 import com.gumraze.rallyon.backend.courtManager.dto.CreateFreeGameAssignmentPreviewRequest;
-import com.gumraze.rallyon.backend.courtManager.dto.CreateFreeGameAssignmentPreviewResponse;
 import com.gumraze.rallyon.backend.courtManager.dto.CreateFreeGameRequest;
 import com.gumraze.rallyon.backend.courtManager.dto.CreateFreeGameResponse;
 import com.gumraze.rallyon.backend.courtManager.dto.UpdateFreeGameRequest;
@@ -28,7 +28,7 @@ public interface FreeGameCommandApi {
     );
 
     @ApiAuthValidationResponses
-    ResponseEntity<CreateFreeGameAssignmentPreviewResponse> createFreeGameAssignmentPreview(
+    ResponseEntity<CreateFreeGameAssignmentPreviewJobResponse> createFreeGameAssignmentPreview(
             UUID accountId,
             CreateFreeGameAssignmentPreviewRequest request
     );

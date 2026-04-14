@@ -5,7 +5,8 @@ import com.gumraze.rallyon.backend.common.exception.ServiceUnavailableException;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.*;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.command.*;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.query.*;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.result.CreateFreeGameAssignmentPreviewResult;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.result.SubmitFreeGameAssignmentPreviewJobResult;
+import com.gumraze.rallyon.backend.courtManager.constants.AssignmentPreviewJobStatus;
 import com.gumraze.rallyon.backend.courtManager.constants.MatchRecordMode;
 import com.gumraze.rallyon.backend.courtManager.constants.MatchResult;
 import com.gumraze.rallyon.backend.courtManager.constants.MatchStatus;
@@ -25,6 +26,8 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
+
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -49,7 +52,8 @@ class CourtManagerControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean private CreateFreeGameUseCase createFreeGameUseCase;
-    @MockitoBean private CreateFreeGameAssignmentPreviewUseCase createFreeGameAssignmentPreviewUseCase;
+    @MockitoBean private SubmitFreeGameAssignmentPreviewUseCase submitFreeGameAssignmentPreviewUseCase;
+    @MockitoBean private GetFreeGameAssignmentPreviewStatusUseCase getFreeGameAssignmentPreviewStatusUseCase;
     @MockitoBean private GetFreeGameDetailUseCase getFreeGameDetailUseCase;
     @MockitoBean private UpdateFreeGameInfoUseCase updateFreeGameInfoUseCase;
     @MockitoBean private GetFreeGameRoundsAndMatchesUseCase getFreeGameRoundsAndMatchesUseCase;
@@ -61,7 +65,7 @@ class CourtManagerControllerTest {
 
     @MockitoBean private CreateFreeGameCommandMapper createFreeGameCommandMapper;
     @MockitoBean private CreateFreeGameAssignmentPreviewCommandMapper createFreeGameAssignmentPreviewCommandMapper;
-    @MockitoBean private CreateFreeGameAssignmentPreviewResponseMapper createFreeGameAssignmentPreviewResponseMapper;
+    @MockitoBean private AssignmentPreviewJobResponseMapper assignmentPreviewJobResponseMapper;
     @MockitoBean private UpdateFreeGameInfoCommandMapper updateFreeGameInfoCommandMapper;
     @MockitoBean private UpdateFreeGameRoundsAndMatchesCommandMapper updateFreeGameRoundsAndMatchesCommandMapper;
     @MockitoBean private AddFreeGameParticipantCommandMapper addFreeGameParticipantCommandMapper;
@@ -120,12 +124,22 @@ class CourtManagerControllerTest {
         UUID accountId = UUID.randomUUID();
         CreateFreeGameAssignmentPreviewRequest request = previewRequest();
         CreateFreeGameAssignmentPreviewCommand command = previewCommand();
-        CreateFreeGameAssignmentPreviewResult result = previewResult();
-        CreateFreeGameAssignmentPreviewResponse response = previewResponse();
+        SubmitFreeGameAssignmentPreviewJobResult result =
+                new SubmitFreeGameAssignmentPreviewJobResult(
+                        UUID.randomUUID(),
+                        AssignmentPreviewJobStatus.QUEUED,
+                        1000
+                );
+        CreateFreeGameAssignmentPreviewJobResponse response =
+                new CreateFreeGameAssignmentPreviewJobResponse(
+                        result.jobId(),
+                        result.status().name(),
+                        result.pollAfterMs()
+                );
 
         given(createFreeGameAssignmentPreviewCommandMapper.toCommand(request)).willReturn(command);
-        given(createFreeGameAssignmentPreviewUseCase.create(command)).willReturn(result);
-        given(createFreeGameAssignmentPreviewResponseMapper.toResponse(result)).willReturn(response);
+        given(submitFreeGameAssignmentPreviewUseCase.submit(accountId, command)).willReturn(result);
+        given(assignmentPreviewJobResponseMapper.toSubmitResponse(result)).willReturn(response);
 
         // when: 프리뷰 생성 요청 수행
         mockMvc.perform(post("/free-games/assignment-previews")
@@ -134,17 +148,84 @@ class CourtManagerControllerTest {
                         .with(authenticatedUser(accountId))
                         .content(objectMapper.writeValueAsString(request)))
                 // then: 프리뷰 응답 본문 반환 검증
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.rounds[0].roundNumber").value(1))
-                .andExpect(jsonPath("$.rounds[0].courts[0].courtNumber").value(1))
-                .andExpect(jsonPath("$.rounds[0].courts[0].slots[0]").value("p1"))
-                .andExpect(jsonPath("$.rounds[0].courts[0].slots[1]").value("p2"))
-                .andExpect(jsonPath("$.warnings[0].code").value("PARTIAL_ASSIGNMENT"))
-                .andExpect(jsonPath("$.warnings[0].message").value("일부 슬롯은 비어 있습니다."));
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.jobId").value(result.jobId().toString()))
+                .andExpect(jsonPath("$.status").value("QUEUED"))
+                .andExpect(jsonPath("$.pollAfterMs").value(1000));
 
         verify(createFreeGameAssignmentPreviewCommandMapper).toCommand(request);
-        verify(createFreeGameAssignmentPreviewUseCase).create(command);
-        verify(createFreeGameAssignmentPreviewResponseMapper).toResponse(result);
+        verify(submitFreeGameAssignmentPreviewUseCase).submit(accountId, command);
+        verify(assignmentPreviewJobResponseMapper).toSubmitResponse(result);
+    }
+
+    @Test
+    @DisplayName("코트 배정 프리뷰 job 상태 조회 시 완료 응답 본문을 반환한다")
+    void getFreeGameAssignmentPreviewStatus_withOwnedJob_returnsStatusResponse() throws Exception {
+        UUID accountId = UUID.randomUUID();
+        UUID jobId = UUID.randomUUID();
+        LocalDateTime submittedAt = LocalDateTime.of(2026, 4, 13, 14, 0);
+        LocalDateTime startedAt = submittedAt.plusSeconds(1);
+        LocalDateTime completedAt = startedAt.plusSeconds(2);
+        var result = new com.gumraze.rallyon.backend.courtManager.application.port.in.result.GetFreeGameAssignmentPreviewJobStatusResult(
+                jobId,
+                AssignmentPreviewJobStatus.SUCCEEDED,
+                new com.gumraze.rallyon.backend.courtManager.application.port.in.result.CreateFreeGameAssignmentPreviewResult(
+                        List.of(
+                                new com.gumraze.rallyon.backend.courtManager.application.port.in.result.CreateFreeGameAssignmentPreviewResult.Round(
+                                        1,
+                                        List.of(
+                                                new com.gumraze.rallyon.backend.courtManager.application.port.in.result.CreateFreeGameAssignmentPreviewResult.Court(
+                                                        1,
+                                                        Arrays.asList("p1", "p2", null, null)
+                                                )
+                                        )
+                                )
+                        ),
+                        List.of()
+                ),
+                null,
+                submittedAt,
+                startedAt,
+                completedAt
+        );
+        GetFreeGameAssignmentPreviewJobResponse response =
+                new GetFreeGameAssignmentPreviewJobResponse(
+                        jobId,
+                        "SUCCEEDED",
+                        new CreateFreeGameAssignmentPreviewResponse(
+                                List.of(
+                                        new CreateFreeGameAssignmentPreviewResponse.RoundResponse(
+                                                1,
+                                                List.of(
+                                                        new CreateFreeGameAssignmentPreviewResponse.CourtResponse(
+                                                                1,
+                                                                Arrays.asList("p1", "p2", null, null)
+                                                        )
+                                                )
+                                        )
+                                ),
+                                List.of()
+                        ),
+                        null,
+                        submittedAt,
+                        startedAt,
+                        completedAt
+                );
+
+        given(getFreeGameAssignmentPreviewStatusUseCase.getStatus(accountId, jobId)).willReturn(result);
+        given(assignmentPreviewJobResponseMapper.toStatusResponse(result)).willReturn(response);
+
+        mockMvc.perform(get("/free-games/assignment-previews/{jobId}", jobId)
+                        .with(authenticatedUser(accountId))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.jobId").value(jobId.toString()))
+                .andExpect(jsonPath("$.status").value("SUCCEEDED"))
+                .andExpect(jsonPath("$.preview.rounds[0].roundNumber").value(1))
+                .andExpect(jsonPath("$.preview.rounds[0].courts[0].slots[0]").value("p1"));
+
+        verify(getFreeGameAssignmentPreviewStatusUseCase).getStatus(accountId, jobId);
+        verify(assignmentPreviewJobResponseMapper).toStatusResponse(result);
     }
 
     @Test
@@ -418,7 +499,7 @@ class CourtManagerControllerTest {
 
         given(createFreeGameAssignmentPreviewCommandMapper.toCommand(request))
                 .willReturn(command);
-        given(createFreeGameAssignmentPreviewUseCase.create(command))
+        given(submitFreeGameAssignmentPreviewUseCase.submit(accountId, command))
                 .willThrow(new ServiceUnavailableException("AI 코트 배정 프리뷰를 현재 생성할 수 없습니다."));
 
         // when: 프리뷰 생성 요청을 수행한다.
@@ -517,47 +598,4 @@ class CourtManagerControllerTest {
         );
     }
 
-    private CreateFreeGameAssignmentPreviewResult previewResult() {
-        return new CreateFreeGameAssignmentPreviewResult(
-                List.of(
-                        new CreateFreeGameAssignmentPreviewResult.Round(
-                                1,
-                                List.of(
-                                        new CreateFreeGameAssignmentPreviewResult.Court(
-                                                1,
-                                                Arrays.asList("p1", "p2", null, null)
-                                        )
-                                )
-                        )
-                ),
-                List.of(
-                        new CreateFreeGameAssignmentPreviewResult.Warning(
-                                "PARTIAL_ASSIGNMENT",
-                                "일부 슬롯은 비어 있습니다."
-                        )
-                )
-        );
-    }
-
-    private CreateFreeGameAssignmentPreviewResponse previewResponse() {
-        return new CreateFreeGameAssignmentPreviewResponse(
-                List.of(
-                        new CreateFreeGameAssignmentPreviewResponse.RoundResponse(
-                                1,
-                                List.of(
-                                        new CreateFreeGameAssignmentPreviewResponse.CourtResponse(
-                                                1,
-                                                Arrays.asList("p1", "p2", null, null)
-                                        )
-                                )
-                        )
-                ),
-                List.of(
-                        new CreateFreeGameAssignmentPreviewResponse.WarningResponse(
-                                "PARTIAL_ASSIGNMENT",
-                                "일부 슬롯은 비어 있습니다."
-                        )
-                )
-        );
-    }
 }

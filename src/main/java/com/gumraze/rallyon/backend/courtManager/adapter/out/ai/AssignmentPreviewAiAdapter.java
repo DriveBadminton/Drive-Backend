@@ -3,7 +3,9 @@ package com.gumraze.rallyon.backend.courtManager.adapter.out.ai;
 import com.gumraze.rallyon.backend.common.exception.ServiceUnavailableException;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.command.CreateFreeGameAssignmentPreviewCommand;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.result.CreateFreeGameAssignmentPreviewResult;
+import com.gumraze.rallyon.backend.courtManager.application.port.out.GenerateFreeGameAssignmentPreviewExecutionPort;
 import com.gumraze.rallyon.backend.courtManager.application.port.out.GenerateFreeGameAssignmentPreviewPort;
+import com.gumraze.rallyon.backend.courtManager.application.port.out.result.FreeGameAssignmentPreviewGeneration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -15,16 +17,41 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-public class AssignmentPreviewAiAdapter implements GenerateFreeGameAssignmentPreviewPort {
+public class AssignmentPreviewAiAdapter implements
+        GenerateFreeGameAssignmentPreviewPort,
+        GenerateFreeGameAssignmentPreviewExecutionPort {
 
     private final AssignmentPreviewAiGateway assignmentPreviewAiGateway;
 
     @Override
     public CreateFreeGameAssignmentPreviewResult generate(CreateFreeGameAssignmentPreviewCommand command) {
         try {
+            return generateExecution(command).preview();
+        } catch (RuntimeException ex) {
+            throw new ServiceUnavailableException("AI 코트 배정 프리뷰를 현재 생성할 수 없습니다.", ex);
+        }
+    }
 
-            AssignmentPreviewAiResponse response = assignmentPreviewAiGateway.generate(command);
-            return new CreateFreeGameAssignmentPreviewResult(
+    @Override
+    public FreeGameAssignmentPreviewGeneration generateExecution(
+            CreateFreeGameAssignmentPreviewCommand command
+    ) {
+        AssignmentPreviewAiGenerationResult response = assignmentPreviewAiGateway.generateExecution(command);
+        return new FreeGameAssignmentPreviewGeneration(
+                toPreviewResult(response.response()),
+                response.model(),
+                response.repairAttempted(),
+                response.initialAiElapsedMs(),
+                response.repairAiElapsedMs(),
+                response.planningInputChars(),
+                response.promptChars(),
+                response.responseChars(),
+                response.maxCompletionTokens()
+        );
+    }
+
+    private CreateFreeGameAssignmentPreviewResult toPreviewResult(AssignmentPreviewAiResponse response) {
+        return new CreateFreeGameAssignmentPreviewResult(
                 response.rounds().stream()
                         .map(round -> new CreateFreeGameAssignmentPreviewResult.Round(
                                 round.roundNumber(),
@@ -43,8 +70,5 @@ public class AssignmentPreviewAiAdapter implements GenerateFreeGameAssignmentPre
                         ))
                         .toList()
         );
-        } catch (RuntimeException ex) {
-            throw new ServiceUnavailableException("AI 코트 배정 프리뷰를 현재 생성할 수 없습니다.", ex);
-        }
     }
 }
