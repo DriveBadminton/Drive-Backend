@@ -6,18 +6,11 @@ public record AssignmentPreviewPlanningInput(
         List<Participant> participants,
         List<Round> rounds,
         List<PartnerPair> partnerPairs,
-        Preferences preferences,
-        ConstraintGuidance constraintGuidance,
-        PolicyGuidance policyGuidance,
-        PartnerGuidance partnerGuidance
+        Guidance guidance
 ) {
 
     public record Participant(
-            String id,
-            String name,
-            String gender,
-            Integer ageGroup,
-            String grade,
+            String clientId,
             Integer gamesAssigned
     ) {
     }
@@ -35,7 +28,6 @@ public record AssignmentPreviewPlanningInput(
     }
 
     public record Slot(
-            Integer slotIndex,
             String participantId,
             boolean fixed
     ) {
@@ -47,25 +39,9 @@ public record AssignmentPreviewPlanningInput(
     ) {
     }
 
-    public record Preferences(
-            String partnerPolicy,
-            String existingAssignmentPolicy
-    ) {
-    }
-
-    public record ConstraintGuidance(
-            boolean preserveRoundAndCourtStructure,
+    public record Guidance(
             boolean preserveFixedSlots,
-            boolean preventSameParticipantDuplicationInRound
-    ) {
-    }
-
-    public record PolicyGuidance(
-            boolean fillEmptySlotsOnly
-    ) {
-    }
-
-    public record PartnerGuidance(
+            boolean fillEmptySlotsOnly,
             boolean preferProvidedPartnerPairs,
             int preferredPairCount
     ) {

@@ -12,6 +12,7 @@ public record AssignmentPreviewQualityReport(
         int requestedPartnerPairCount,
         int satisfiedPartnerPairCount,
         int remainingEmptySlotCount,
+        boolean repeatedRoundLayoutAcrossRounds,
         List<String> warningCodes,
         boolean pass,
         List<FailureReason> failureReasons
@@ -22,6 +23,7 @@ public record AssignmentPreviewQualityReport(
         UNKNOWN_PARTICIPANT,
         EXISTING_ASSIGNMENT_CHANGED,
         NEGATIVE_FILLED_SLOT_DELTA,
+        REPEATED_ROUND_LAYOUT,
         MISSING_WARNING_FOR_UNCHANGED_EMPTY_SLOTS,
         MISSING_PARTNER_CONSTRAINT_WARNING
     }

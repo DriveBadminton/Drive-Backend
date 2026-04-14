@@ -4,7 +4,6 @@ import com.gumraze.rallyon.backend.courtManager.application.port.in.command.Crea
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.IntStream;
 
 @Component
 public class AssignmentPreviewPlanningInputMapper {
@@ -18,10 +17,6 @@ public class AssignmentPreviewPlanningInputMapper {
                 command.participants().stream()
                         .map(participant -> new AssignmentPreviewPlanningInput.Participant(
                                 participant.clientId(),
-                                participant.name(),
-                                participant.gender().name(),
-                                participant.ageGroup(),
-                                participant.grade().name(),
                                 participant.gamesAssigned()
                         ))
                         .toList(),
@@ -42,66 +37,38 @@ public class AssignmentPreviewPlanningInputMapper {
                                 pair.participantId2()
                         ))
                         .toList(),
-                new AssignmentPreviewPlanningInput.Preferences(
-                        command.preferences().partnerPolicy().name(),
-                        command.preferences().existingAssignmentPolicy().name()
-                ),
-                mapConstraintGuidance(command),
-                mapPolicyGuidance(command),
-                mapPartnerGuidance(command)
+                mapGuidance(command)
         );
     }
 
-    private AssignmentPreviewPlanningInput.ConstraintGuidance mapConstraintGuidance(
+    private AssignmentPreviewPlanningInput.Guidance mapGuidance(
             CreateFreeGameAssignmentPreviewCommand command
     ) {
         boolean preserveFixedSlots =
                 command.preferences().existingAssignmentPolicy()
                         == CreateFreeGameAssignmentPreviewCommand.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS;
-
-        return new AssignmentPreviewPlanningInput.ConstraintGuidance(
-                true,
-                preserveFixedSlots,
-                true
-        );
-    }
-
-
-    private List<AssignmentPreviewPlanningInput.Slot> mapSlots(
-            List<String> slots,
-            boolean fillEmptySlots
-    ) {
-        return IntStream.range(0, slots.size())
-                .mapToObj(index -> {
-                    String participantId = slots.get(index);
-                    boolean fixed = fillEmptySlots && participantId != null;
-                    return new AssignmentPreviewPlanningInput.Slot(index, participantId, fixed);
-                })
-                .toList();
-    }
-
-    private AssignmentPreviewPlanningInput.PolicyGuidance mapPolicyGuidance(
-            CreateFreeGameAssignmentPreviewCommand command
-    ) {
-        return new AssignmentPreviewPlanningInput.PolicyGuidance(
-                command.preferences().existingAssignmentPolicy()
-                        == CreateFreeGameAssignmentPreviewCommand.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS
-        );
-    }
-
-    private AssignmentPreviewPlanningInput.PartnerGuidance mapPartnerGuidance(
-            CreateFreeGameAssignmentPreviewCommand command
-    ) {
         boolean preferProvidedPartnerPairs =
                 command.preferences().partnerPolicy()
                         == CreateFreeGameAssignmentPreviewCommand.PartnerPolicy.PREFER_PARTNERS;
-
         int preferredPairCount = preferProvidedPartnerPairs ? command.partnerPairs().size() : 0;
 
-        return new AssignmentPreviewPlanningInput.PartnerGuidance(
+        return new AssignmentPreviewPlanningInput.Guidance(
+                preserveFixedSlots,
+                preserveFixedSlots,
                 preferProvidedPartnerPairs,
                 preferredPairCount
         );
     }
 
+    private List<AssignmentPreviewPlanningInput.Slot> mapSlots(
+            List<String> slots,
+            boolean fillEmptySlots
+    ) {
+        return slots.stream()
+                .map(participantId -> new AssignmentPreviewPlanningInput.Slot(
+                        participantId,
+                        fillEmptySlots && participantId != null
+                ))
+                .toList();
+    }
 }

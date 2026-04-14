@@ -21,6 +21,7 @@ class AssignmentPreviewFixtureRegressionTest {
             "pass-partner-pair-satisfied.json",
             "pass-partner-pair-partial-with-warning.json",
             "fail-duplicate-participant-in-round.json",
+            "fail-repeated-round-layout.json",
             "fail-unknown-participant-id.json",
             "fail-existing-assignment-changed.json",
             "fail-silent-no-op-with-empty-slots.json"

@@ -60,6 +60,8 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
         then(options.getResponseFormat().getType()).isEqualTo(ResponseFormat.Type.JSON_SCHEMA);
         then(options.getResponseFormat().getJsonSchema().getName()).isEqualTo("assignment_preview");
         then(options.getResponseFormat().getJsonSchema().getStrict()).isTrue();
+        then(options.getTemperature()).isEqualTo(0.0d);
+        then(options.getMaxCompletionTokens()).isEqualTo(1200);
         Map<String, Object> schema = options.getResponseFormat().getJsonSchema().getSchema();
         then(schema.get("type")).isEqualTo("object");
         then(prompt.getContents()).contains("p1");
@@ -109,7 +111,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
         getGateway().generate(null);
 
         // then: prompt instruction 포함 검증
-        then(getSingleCapturedPrompt().getContents()).contains("코트 배정 프리뷰");
+        then(getSingleCapturedPrompt().getContents()).contains("코트 배정 preview");
     }
 
     @Test
@@ -156,13 +158,15 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
 
         // then: prompt에 핵심 배정 규칙과 warning 정책이 포함된다.
         String prompt = getSingleCapturedPrompt().getContents();
-        then(prompt).contains("아래 우선순위를 순서대로 지키세요.");
-        then(prompt).contains("같은 라운드 안에 동일 참가자를 두 번 배정하지 마세요.");
-        then(prompt).contains("null 슬롯을 최대한 채우세요.");
-        then(prompt).contains("partnerPairs를 우선 반영하세요.");
+        then(prompt).contains("규칙:");
+        then(prompt).contains("같은 라운드 중복 참가자 금지");
+        then(prompt).contains("이전 라운드 전체 복제 금지");
+        then(prompt).contains("동일한 court-level 4인 배치 반복 금지");
+        then(prompt).contains("null만 최대한 채우기");
+        then(prompt).contains("partnerPairs 우선");
         then(prompt).contains("PARTIAL_ASSIGNMENT");
         then(prompt).contains("PARTNER_CONSTRAINT_PARTIAL");
-        then(prompt).contains("warnings를 비워두지 마세요.");
+        then(prompt).contains("warnings 비우지 않기");
     }
 
     @Test
@@ -250,7 +254,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                                   "courts": [
                                     {
                                       "courtNumber": 1,
-                                      "slots": ["p1", null, null, null]
+                                      "slots": ["p2", null, null, null]
                                     }
                                   ]
                                 }
@@ -261,12 +265,13 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                 );
 
         // when: 2개 라운드 프리뷰 생성을 요청한다.
-        AssignmentPreviewAiResponse result = getGateway().generate(getTwoRoundCommand());
+        AssignmentPreviewAiResponse result = getGateway().generate(getTwoRoundVariedCommand());
 
         // then: 두 번째 유효 응답을 반환하고 AI를 두 번 호출한다.
         then(result.rounds()).hasSize(2);
         then(result.rounds().get(0).roundNumber()).isEqualTo(1);
         then(result.rounds().get(1).roundNumber()).isEqualTo(2);
+        then(result.rounds().get(1).courts().getFirst().slots()).containsExactly("p2", null, null, null);
         verify(chatModel, times(2)).call(any(Prompt.class));
     }
 
@@ -292,7 +297,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                           "courts": [
                             {
                               "courtNumber": 1,
-                              "slots": ["p1", null, null, null]
+                              "slots": ["p2", null, null, null]
                             }
                           ]
                         }
@@ -302,10 +307,11 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                     """));
 
         // when: 2개 라운드 프리뷰 생성을 요청한다.
-        AssignmentPreviewAiResponse result = getGateway().generate(getTwoRoundCommand());
+        AssignmentPreviewAiResponse result = getGateway().generate(getTwoRoundVariedCommand());
 
         // then: 첫 번째 응답을 그대로 반환하고 재시도하지 않는다.
         then(result.rounds()).hasSize(2);
+        then(result.rounds().get(1).courts().getFirst().slots()).containsExactly("p2", null, null, null);
         verify(chatModel, times(1)).call(any(Prompt.class));
     }
 
@@ -334,9 +340,8 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
         // when: AI 프리뷰 생성을 수행한다.
         getGateway().generate(getSingleRoundCommand());
 
-        // then: prompt에는 slotIndex와 fixed 정보가 포함된다.
+        // then: prompt에는 participantId와 fixed 정보가 포함된다.
         String prompt = getSingleCapturedPrompt().getContents();
-        then(prompt).contains("\"slotIndex\":0");
         then(prompt).contains("\"participantId\":\"p1\"");
         then(prompt).contains("\"fixed\":true");
         then(prompt).contains("\"fixed\":false");
@@ -381,7 +386,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                                   "courts": [
                                     {
                                       "courtNumber": 1,
-                                      "slots": ["p1", null, null, null]
+                                      "slots": ["p2", null, null, null]
                                     }
                                   ]
                                 }
@@ -392,20 +397,14 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                 );
 
         // when: 재시도가 필요한 프리뷰 생성을 수행한다.
-        getGateway().generate(getTwoRoundCommand());
+        getGateway().generate(getTwoRoundVariedCommand());
 
         // then: 두 번째 prompt도 planning input 구조를 포함한다.
         Prompt repairPrompt = getCapturedPrompts(2).get(1);
-        then(repairPrompt.getContents()).contains("이전 응답은 요청 구조와 일치하지 않았습니다.");
-        then(repairPrompt.getContents()).contains("\"slotIndex\":0");
+        then(repairPrompt.getContents()).contains("이전 응답은 요청 구조와 제약을 만족하지 못했습니다.");
         then(repairPrompt.getContents()).contains("\"fixed\":true");
-        then(repairPrompt.getContents()).contains("\"constraintGuidance\"");
-        then(repairPrompt.getContents()).contains("\"policyGuidance\"");
-        then(repairPrompt.getContents()).contains("\"preserveRoundAndCourtStructure\":true");
         then(repairPrompt.getContents()).contains("\"preserveFixedSlots\":true");
-        then(repairPrompt.getContents()).contains("\"preventSameParticipantDuplicationInRound\":true");
         then(repairPrompt.getContents()).contains("\"fillEmptySlotsOnly\":true");
-        then(repairPrompt.getContents()).contains("\"partnerGuidance\"");
         then(repairPrompt.getContents()).contains("\"preferProvidedPartnerPairs\":true");
         then(repairPrompt.getContents()).contains("\"preferredPairCount\":0");
     }
@@ -449,7 +448,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                                   "courts": [
                                     {
                                       "courtNumber": 1,
-                                      "slots": ["p1", null, null, null]
+                                      "slots": ["p2", null, null, null]
                                     }
                                   ]
                                 }
@@ -460,20 +459,89 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                 );
 
         // when: 재시도가 필요한 프리뷰 생성을 수행한다.
-        getGateway().generate(getTwoRoundCommand());
+        getGateway().generate(getTwoRoundVariedCommand());
 
         // then: 재시도 prompt에 구조/경고 규칙이 포함된다.
         String repairPrompt = getCapturedPrompts(2).get(1).getContents();
-        then(repairPrompt).contains("이번에는 아래 규칙을 모두 만족하도록 다시 생성하세요.");
-        then(repairPrompt).contains("같은 라운드 안에 동일 참가자를 두 번 배정하지 마세요.");
+        then(repairPrompt).contains("다시 생성하세요.");
+        then(repairPrompt).contains("같은 라운드 중복 참가자 금지");
+        then(repairPrompt).contains("이전 라운드 전체 복제 금지");
+        then(repairPrompt).contains("동일한 court-level 4인 배치 반복 금지");
         then(repairPrompt).contains("PARTIAL_ASSIGNMENT");
         then(repairPrompt).contains("PARTNER_CONSTRAINT_PARTIAL");
-        then(repairPrompt).contains("warnings를 비워두지 마세요.");
+        then(repairPrompt).contains("warnings 비우지 않기");
     }
 
     @Test
-    @DisplayName("prompt에는 raw command 필드명 clientId 대신 planning input 필드명이 포함된다.")
-    void generate_whenUsingPlanningInput_doesNotIncludeRawCommandFieldNamesInPrompt() {
+    @DisplayName("동일한 round layout 반복은 재시도 prompt에 구체적인 실패 사유를 포함한다.")
+    void generate_whenRoundLayoutIsRepeated_includesSpecificRepairReason() {
+        // given: 첫 번째 응답은 모든 라운드를 동일하게 복제하고, 두 번째 응답은 라운드별로 다르게 반환한다.
+        given(chatModel.call(any(Prompt.class)))
+                .willReturn(
+                        getChatResponse("""
+                            {
+                              "rounds": [
+                                {
+                                  "roundNumber": 1,
+                                  "courts": [
+                                    {
+                                      "courtNumber": 1,
+                                      "slots": ["p1", null, null, null]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "roundNumber": 2,
+                                  "courts": [
+                                    {
+                                      "courtNumber": 1,
+                                      "slots": ["p1", null, null, null]
+                                    }
+                                  ]
+                                }
+                              ],
+                              "warnings": []
+                            }
+                            """),
+                        getChatResponse("""
+                            {
+                              "rounds": [
+                                {
+                                  "roundNumber": 1,
+                                  "courts": [
+                                    {
+                                      "courtNumber": 1,
+                                      "slots": ["p1", null, null, null]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "roundNumber": 2,
+                                  "courts": [
+                                    {
+                                      "courtNumber": 1,
+                                      "slots": ["p2", null, null, null]
+                                    }
+                                  ]
+                                }
+                              ],
+                              "warnings": []
+                            }
+                            """)
+                );
+
+        // when: round 복제가 포함된 프리뷰 생성을 수행한다.
+        getGateway().generate(getTwoRoundVariedCommand());
+
+        // then: repair prompt에 round 복제 실패 사유가 포함된다.
+        String repairPrompt = getCapturedPrompts(2).get(1).getContents();
+        then(repairPrompt).contains("실패 사유:");
+        then(repairPrompt).contains("The previous output copied the same round layout across multiple rounds.");
+    }
+
+    @Test
+    @DisplayName("prompt에는 planning input의 slim participant 필드만 포함된다.")
+    void generate_whenUsingPlanningInput_includesSlimParticipantFieldsInPrompt() {
         // given: 정상 응답을 반환하는 Spring AI와 preview command를 준비한다.
         given(chatModel.call(any(Prompt.class)))
                 .willReturn(getChatResponse("""
@@ -496,11 +564,15 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
         // when: AI 프리뷰 생성을 수행한다.
         getGateway().generate(getSingleRoundCommand());
 
-        // then: prompt에는 planning input의 id / participantId만 포함된다.
+        // then: prompt에는 clientId / gamesAssigned만 포함되고 name 등은 제외된다.
         String prompt = getSingleCapturedPrompt().getContents();
-        then(prompt).contains("\"id\":\"p1\"");
+        then(prompt).contains("\"clientId\":\"p1\"");
+        then(prompt).contains("\"gamesAssigned\":1");
         then(prompt).contains("\"participantId\":\"p1\"");
-        then(prompt).doesNotContain("clientId");
+        then(prompt).doesNotContain("\"name\":");
+        then(prompt).doesNotContain("\"gender\":");
+        then(prompt).doesNotContain("\"ageGroup\":");
+        then(prompt).doesNotContain("\"grade\":");
     }
 
     @Test
@@ -570,12 +642,11 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
         // when: AI 프리뷰 생성을 수행한다.
         getGateway().generate(getSingleRoundCommand());
 
-        // then: prompt에 constraint guidance가 포함된다.
+        // then: prompt에 unified guidance가 포함된다.
         String prompt = getSingleCapturedPrompt().getContents();
-        then(prompt).contains("\"constraintGuidance\"");
-        then(prompt).contains("\"preserveRoundAndCourtStructure\":true");
+        then(prompt).contains("\"guidance\"");
         then(prompt).contains("\"preserveFixedSlots\":true");
-        then(prompt).contains("\"preventSameParticipantDuplicationInRound\":true");
+        then(prompt).contains("\"fillEmptySlotsOnly\":true");
     }
 
     @Test
@@ -616,15 +687,11 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
         // when: AI 프리뷰 생성을 수행한다.
         getGateway().generate(command);
 
-        // then: prompt에 policy guidance와 partner guidance가 포함된다.
+        // then: prompt에 unified guidance의 정책/파트너 필드가 포함된다.
         String prompt = getSingleCapturedPrompt().getContents();
-        then(prompt).contains("\"constraintGuidance\"");
-        then(prompt).contains("\"preserveRoundAndCourtStructure\":true");
+        then(prompt).contains("\"guidance\"");
         then(prompt).contains("\"preserveFixedSlots\":true");
-        then(prompt).contains("\"preventSameParticipantDuplicationInRound\":true");
-        then(prompt).contains("\"policyGuidance\"");
         then(prompt).contains("\"fillEmptySlotsOnly\":true");
-        then(prompt).contains("\"partnerGuidance\"");
         then(prompt).contains("\"preferProvidedPartnerPairs\":true");
         then(prompt).contains("\"preferredPairCount\":1");
     }
@@ -667,11 +734,10 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
         // when: AI 프리뷰 생성을 수행한다.
         getGateway().generate(command);
 
-        // then: prompt에 false/0 guidance가 포함된다.
+        // then: prompt에 unified guidance의 false/0 값이 포함된다.
         String prompt = getSingleCapturedPrompt().getContents();
-        then(prompt).contains("\"constraintGuidance\"");
+        then(prompt).contains("\"guidance\"");
         then(prompt).contains("\"preserveFixedSlots\":false");
-        then(prompt).contains("\"policyGuidance\"");
         then(prompt).contains("\"fillEmptySlotsOnly\":false");
         then(prompt).contains("\"preferProvidedPartnerPairs\":false");
         then(prompt).contains("\"preferredPairCount\":0");

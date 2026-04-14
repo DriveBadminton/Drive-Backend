@@ -3,6 +3,11 @@ spring:
     name: rallyon-backend
   profiles:
     default: local
+  ai:
+    openai:
+      chat:
+        options:
+          model: ${OPENAI_CHAT_MODEL:gpt-5-mini}
 
   jpa:
     open-in-view: false
@@ -100,6 +105,12 @@ app:
       - https://localhost:3433
       - https://rallyon.test
       - https://auth.rallyon.test
+  court-manager:
+    assignment-preview:
+      ai:
+        connect-timeout: ${ASSIGNMENT_PREVIEW_AI_CONNECT_TIMEOUT:5s}
+        connection-request-timeout: ${ASSIGNMENT_PREVIEW_AI_CONNECTION_REQUEST_TIMEOUT:5s}
+        read-timeout: ${ASSIGNMENT_PREVIEW_AI_READ_TIMEOUT:90s}
 
 naver:
   search:

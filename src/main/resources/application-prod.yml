@@ -4,7 +4,7 @@ spring:
       api-key: ${OPENAI_API_KEY}
       chat:
         options:
-          model: ${OPENAI_CHAT_MODEL}
+          model: ${OPENAI_CHAT_MODEL:gpt-5-mini}
   datasource:
     url: jdbc:postgresql://db:5432/${POSTGRES_DB}
     driver-class-name: org.postgresql.Driver

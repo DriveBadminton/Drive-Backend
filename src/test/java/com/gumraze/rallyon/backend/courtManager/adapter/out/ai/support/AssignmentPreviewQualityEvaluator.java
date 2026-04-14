@@ -31,6 +31,7 @@ public class AssignmentPreviewQualityEvaluator {
         int requestedPartnerPairCount = safeList(command.partnerPairs()).size();
         int satisfiedPartnerPairCount = countSatisfiedPartnerPairs(command, response);
         int remainingEmptySlotCount = countRemainingEmptySlots(response);
+        boolean repeatedRoundLayoutAcrossRounds = hasRepeatedRoundLayoutAcrossRounds(response);
         List<String> warningCodes = extractWarningCodes(response);
 
         List<AssignmentPreviewQualityReport.FailureReason> failureReasons = new ArrayList<>();
@@ -49,6 +50,10 @@ public class AssignmentPreviewQualityEvaluator {
 
         if (filledSlotDelta < 0) {
             failureReasons.add(AssignmentPreviewQualityReport.FailureReason.NEGATIVE_FILLED_SLOT_DELTA);
+        }
+
+        if (repeatedRoundLayoutAcrossRounds) {
+            failureReasons.add(AssignmentPreviewQualityReport.FailureReason.REPEATED_ROUND_LAYOUT);
         }
 
         if (remainingEmptySlotCount > 0 && filledSlotDelta <= 0 && warningCodes.isEmpty()) {
@@ -73,6 +78,7 @@ public class AssignmentPreviewQualityEvaluator {
                 requestedPartnerPairCount,
                 satisfiedPartnerPairCount,
                 remainingEmptySlotCount,
+                repeatedRoundLayoutAcrossRounds,
                 warningCodes,
                 failureReasons.isEmpty(),
                 List.copyOf(failureReasons)
@@ -180,6 +186,18 @@ public class AssignmentPreviewQualityEvaluator {
                 .sum();
     }
 
+    private boolean hasRepeatedRoundLayoutAcrossRounds(AssignmentPreviewAiResponse response) {
+        Set<RoundLayoutSignature> seenRoundLayouts = new HashSet<>();
+
+        for (AssignmentPreviewAiResponse.Round round : safeList(response.rounds())) {
+            if (!seenRoundLayouts.add(RoundLayoutSignature.from(round))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private List<String> extractWarningCodes(AssignmentPreviewAiResponse response) {
         return safeList(response.warnings()).stream()
                 .map(AssignmentPreviewAiResponse.Warning::code)
@@ -224,7 +242,21 @@ public class AssignmentPreviewQualityEvaluator {
         return slots.get(slotIndex);
     }
 
-    private <T> List<T> safeList(List<T> values) {
+    private static <T> List<T> safeList(List<T> values) {
         return values == null ? List.of() : values;
+    }
+
+    private record RoundLayoutSignature(List<CourtLayoutSignature> courts) {
+
+        private static RoundLayoutSignature from(AssignmentPreviewAiResponse.Round round) {
+            return new RoundLayoutSignature(
+                    safeList(round.courts()).stream()
+                            .map(court -> new CourtLayoutSignature(court.courtNumber(), safeList(court.slots())))
+                            .toList()
+            );
+        }
+    }
+
+    private record CourtLayoutSignature(Integer courtNumber, List<String> slots) {
     }
 }

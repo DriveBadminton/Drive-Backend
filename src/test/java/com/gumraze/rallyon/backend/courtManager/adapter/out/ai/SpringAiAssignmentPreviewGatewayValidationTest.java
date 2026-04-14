@@ -394,9 +394,65 @@ class SpringAiAssignmentPreviewGatewayValidationTest extends SpringAiAssignmentP
     }
 
     @Test
-    @DisplayName("같은 참가자가 서로 다른 라운드에 배정되는 것은 허용한다.")
-    void generate_whenSameParticipantAppearsInDifferentRounds_returnsAiResponse() {
-        // given: 같은 참가자가 각기 다른 라운드에 한 번씩 배정된 응답을 준비한다.
+    @DisplayName("같은 참가자가 서로 다른 라운드에 배정되더라도 round layout이 다르면 허용한다.")
+    void generate_whenSameParticipantAppearsInDifferentRoundsWithDifferentLayout_returnsAiResponse() {
+        // given: 같은 참가자가 각기 다른 라운드에 배정되지만 전체 round layout은 다르게 만든다.
+        given(chatModel.call(any(Prompt.class)))
+                .willReturn(getChatResponse("""
+                    {
+                      "rounds": [
+                        {
+                          "roundNumber": 1,
+                          "courts": [
+                            {
+                              "courtNumber": 1,
+                              "slots": ["p1", null, null, null]
+                            }
+                          ]
+                        },
+                        {
+                          "roundNumber": 2,
+                          "courts": [
+                            {
+                              "courtNumber": 1,
+                              "slots": ["p1", "p2", null, null]
+                            }
+                          ]
+                        }
+                      ],
+                      "warnings": []
+                    }
+                    """));
+
+        // when: 여러 라운드가 있는 프리뷰를 생성한다.
+        CreateFreeGameAssignmentPreviewCommand command =
+                getCommand(
+                        List.of(
+                                getParticipant("p1", "서승재", 1),
+                                getParticipant("p2", "김원호", 0)
+                        ),
+                        List.of(
+                                getRound(1, Arrays.asList("p1", null, null, null)),
+                                getRound(2, Arrays.asList(null, null, null, null))
+                        ),
+                        List.of(),
+                        getPreferences()
+                );
+
+        AssignmentPreviewAiResponse result = getGateway().generate(command);
+
+        // then: 서로 다른 라운드의 동일 참가자 배정은 정상 응답으로 허용한다.
+        then(result.rounds()).hasSize(2);
+        then(result.rounds().get(0).courts().get(0).slots())
+                .containsExactly("p1", null, null, null);
+        then(result.rounds().get(1).courts().get(0).slots())
+                .containsExactly("p1", "p2", null, null);
+    }
+
+    @Test
+    @DisplayName("여러 라운드가 동일한 round layout을 반복하면 invalid output으로 처리한다.")
+    void generate_whenResponseRepeatsSameRoundLayout_throwsIllegalStateException() {
+        // given: 두 라운드의 코트 배치를 완전히 동일하게 복제한 응답을 준비한다.
         given(chatModel.call(any(Prompt.class)))
                 .willReturn(getChatResponse("""
                     {
@@ -424,15 +480,10 @@ class SpringAiAssignmentPreviewGatewayValidationTest extends SpringAiAssignmentP
                     }
                     """));
 
-        // when: 여러 라운드가 있는 프리뷰를 생성한다.
-        AssignmentPreviewAiResponse result = getGateway().generate(getTwoRoundCommand());
-
-        // then: 서로 다른 라운드의 동일 참가자 배정은 정상 응답으로 허용한다.
-        then(result.rounds()).hasSize(2);
-        then(result.rounds().get(0).courts().get(0).slots())
-                .containsExactly("p1", null, null, null);
-        then(result.rounds().get(1).courts().get(0).slots())
-                .containsExactly("p1", null, null, null);
+        // when & then: round 전체 복제 응답은 invalid output으로 거부한다.
+        assertThatThrownBy(() -> getGateway().generate(getTwoRoundCommand()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("동일한 round layout");
     }
 
     @Test

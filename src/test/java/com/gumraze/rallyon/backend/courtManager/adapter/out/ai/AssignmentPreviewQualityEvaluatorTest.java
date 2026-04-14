@@ -149,6 +149,37 @@ class AssignmentPreviewQualityEvaluatorTest {
     }
 
     @Test
+    @DisplayName("여러 라운드가 동일한 round layout을 반복하면 실패한다.")
+    void evaluate_whenResponseRepeatsSameRoundLayout_reportsFailure() {
+        // given: 두 라운드가 동일한 코트 배치를 그대로 반복하는 응답을 준비한다.
+        CreateFreeGameAssignmentPreviewCommand command = command(
+                List.of(participant("p1"), participant("p2")),
+                List.of(
+                        round(1, court(1, "p1", null, null, null)),
+                        round(2, court(1, null, null, null, null))
+                ),
+                List.of(),
+                defaultPreferences()
+        );
+        AssignmentPreviewAiResponse response = response(
+                List.of(
+                        roundResponse(1, responseCourt(1, "p1", "p2", null, null)),
+                        roundResponse(2, responseCourt(1, "p1", "p2", null, null))
+                ),
+                List.of(warning("PARTIAL_ASSIGNMENT"))
+        );
+
+        // when: 품질 평가를 수행한다.
+        AssignmentPreviewQualityReport report = evaluator.evaluate(command, response);
+
+        // then: repeated round layout 실패 사유가 기록된다.
+        then(report.repeatedRoundLayoutAcrossRounds()).isTrue();
+        then(report.pass()).isFalse();
+        then(report.failureReasons())
+                .containsExactly(AssignmentPreviewQualityReport.FailureReason.REPEATED_ROUND_LAYOUT);
+    }
+
+    @Test
     @DisplayName("파트너 pair를 만족하지 못했고 warning도 없으면 실패한다.")
     void evaluate_whenPartnerPairNotSatisfiedWithoutWarning_reportsFailure() {
         // given: 파트너 pair가 서로 다른 코트에 배정된 응답을 준비한다.

@@ -98,6 +98,21 @@ abstract class SpringAiAssignmentPreviewGatewayTestSupport {
         );
     }
 
+    protected CreateFreeGameAssignmentPreviewCommand getTwoRoundVariedCommand() {
+        return getCommand(
+                List.of(
+                        getParticipant("p1", "서승재", 1),
+                        getParticipant("p2", "김원호", 0)
+                ),
+                List.of(
+                        getRound(1, Arrays.asList("p1", null, null, null)),
+                        getRound(2, Arrays.asList(null, null, null, null))
+                ),
+                List.of(),
+                getPreferences()
+        );
+    }
+
     protected CreateFreeGameAssignmentPreviewCommand.Participant getParticipant() {
         return getParticipant("p1", "서승재", 1);
     }
