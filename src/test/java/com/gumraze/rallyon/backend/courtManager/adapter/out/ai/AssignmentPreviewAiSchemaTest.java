@@ -30,7 +30,7 @@ public class AssignmentPreviewAiSchemaTest {
         then(schema).contains("\"courtNumber\"");
         then(schema).contains("\"slots\"");
         then(schema).contains("\"required\": [\"courtNumber\", \"slots\"]");
-        then(schema).contains("\"type\": [\"string\", \"null\"]");
+        then(schema).contains("\"type\": [\"integer\", \"null\"]");
         then(schema).contains("\"code\"");
         then(schema).contains("\"message\"");
         then(schema).contains("\"required\": [\"code\", \"message\"]");

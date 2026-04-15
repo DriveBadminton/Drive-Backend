@@ -97,7 +97,7 @@ public class ProcessFreeGameAssignmentPreviewJobService {
     private void logStarted(AssignmentPreviewJob job) {
         CreateFreeGameAssignmentPreviewCommand command = job.getRequestCommand();
         log.info(
-                "[ASSIGNMENT_PREVIEW_JOB] event=STARTED jobId={} accountId={} model={} participantCount={} roundCount={} courtCount={} filledSlotCount={} partnerPairCount={} partnerPolicy={} existingAssignmentPolicy={} queueWaitMs={} retryEnabled={}",
+                "[ASSIGNMENT_PREVIEW_JOB] event=STARTED jobId={} accountId={} model={} participantCount={} roundCount={} courtCount={} filledSlotCount={} partnerPairCount={} partnerPolicy={} existingAssignmentPolicy={} queueWaitMs={} retryEnabled={} qualityRepairAttemptCount={} qualityRepairReasons={} theoreticalMaxFilledSlots={} actualFilledSlotsAfterInitial={} bestValidFilledSlots={} bestValidWarningCodes={}",
                 job.getId(),
                 job.getRequesterAccountId(),
                 job.getModel(),
@@ -109,7 +109,13 @@ public class ProcessFreeGameAssignmentPreviewJobService {
                 command.preferences().partnerPolicy(),
                 command.preferences().existingAssignmentPolicy(),
                 job.getQueueWaitMs(),
-                false
+                false,
+                0,
+                List.of(),
+                theoreticalMaxFilledSlots(command),
+                null,
+                null,
+                List.of()
         );
     }
 
@@ -148,7 +154,7 @@ public class ProcessFreeGameAssignmentPreviewJobService {
                         .toList();
 
         log.info(
-                "[ASSIGNMENT_PREVIEW_JOB] event=SUCCEEDED jobId={} accountId={} model={} repairAttempted={} queueWaitMs={} initialAiElapsedMs={} repairAiElapsedMs={} executionElapsedMs={} totalElapsedMs={} planningInputChars={} promptChars={} responseChars={} maxCompletionTokens={} warningCodes={}",
+                "[ASSIGNMENT_PREVIEW_JOB] event=SUCCEEDED jobId={} accountId={} model={} repairAttempted={} queueWaitMs={} initialAiElapsedMs={} repairAiElapsedMs={} executionElapsedMs={} totalElapsedMs={} planningInputChars={} promptChars={} responseChars={} maxCompletionTokens={} emptyResponseRetryAttempted={} emptyResponseRetryElapsedMs={} qualityRepairAttemptCount={} qualityRepairElapsedMsTotal={} qualityRepairReasons={} theoreticalMaxFilledSlots={} actualFilledSlotsAfterInitial={} bestValidFilledSlots={} bestValidWarningCodes={} warningCodes={}",
                 job.getId(),
                 job.getRequesterAccountId(),
                 job.getModel(),
@@ -162,6 +168,15 @@ public class ProcessFreeGameAssignmentPreviewJobService {
                 generation.promptChars(),
                 generation.responseChars(),
                 generation.maxCompletionTokens(),
+                generation.emptyResponseRetryAttempted(),
+                generation.emptyResponseRetryElapsedMs(),
+                generation.qualityRepairAttemptCount(),
+                generation.qualityRepairElapsedMsTotal(),
+                generation.qualityRepairReasons(),
+                generation.theoreticalMaxFilledSlots(),
+                generation.actualFilledSlotsAfterInitial(),
+                generation.bestValidFilledSlots(),
+                generation.bestValidWarningCodes(),
                 warningCodes
         );
     }
@@ -172,7 +187,7 @@ public class ProcessFreeGameAssignmentPreviewJobService {
             FailureMetadata failureMetadata
     ) {
         log.warn(
-                "[ASSIGNMENT_PREVIEW_JOB] event=FAILED jobId={} accountId={} model={} repairAttempted={} queueWaitMs={} initialAiElapsedMs={} repairAiElapsedMs={} executionElapsedMs={} totalElapsedMs={} planningInputChars={} promptChars={} responseChars={} maxCompletionTokens={} failureCode={} exceptionClass={}",
+                "[ASSIGNMENT_PREVIEW_JOB] event=FAILED jobId={} accountId={} model={} repairAttempted={} queueWaitMs={} initialAiElapsedMs={} repairAiElapsedMs={} executionElapsedMs={} totalElapsedMs={} planningInputChars={} promptChars={} responseChars={} maxCompletionTokens={} emptyResponseRetryAttempted={} emptyResponseRetryElapsedMs={} qualityRepairAttemptCount={} qualityRepairElapsedMsTotal={} qualityRepairReasons={} theoreticalMaxFilledSlots={} actualFilledSlotsAfterInitial={} bestValidFilledSlots={} bestValidWarningCodes={} failureCode={} exceptionClass={}",
                 job.getId(),
                 job.getRequesterAccountId(),
                 job.getModel(),
@@ -186,6 +201,15 @@ public class ProcessFreeGameAssignmentPreviewJobService {
                 failureMetadata.promptChars(),
                 failureMetadata.responseChars(),
                 failureMetadata.maxCompletionTokens(),
+                failureMetadata.emptyResponseRetryAttempted(),
+                failureMetadata.emptyResponseRetryElapsedMs(),
+                failureMetadata.qualityRepairAttemptCount(),
+                failureMetadata.qualityRepairElapsedMsTotal(),
+                failureMetadata.qualityRepairReasons(),
+                failureMetadata.theoreticalMaxFilledSlots(),
+                failureMetadata.actualFilledSlotsAfterInitial(),
+                failureMetadata.bestValidFilledSlots(),
+                failureMetadata.bestValidWarningCodes(),
                 failureMetadata.failureCode(),
                 ex.getClass().getSimpleName()
         );
@@ -199,6 +223,15 @@ public class ProcessFreeGameAssignmentPreviewJobService {
                     failure.isRepairAttempted(),
                     failure.getInitialAiElapsedMs(),
                     failure.getRepairAiElapsedMs(),
+                    failure.isEmptyResponseRetryAttempted(),
+                    failure.getEmptyResponseRetryElapsedMs(),
+                    failure.getQualityRepairAttemptCount(),
+                    failure.getQualityRepairElapsedMsTotal(),
+                    failure.getQualityRepairReasons(),
+                    failure.getTheoreticalMaxFilledSlots(),
+                    failure.getActualFilledSlotsAfterInitial(),
+                    failure.getBestValidFilledSlots(),
+                    failure.getBestValidWarningCodes(),
                     failure.getPlanningInputChars(),
                     failure.getPromptChars(),
                     failure.getResponseChars(),
@@ -212,7 +245,26 @@ public class ProcessFreeGameAssignmentPreviewJobService {
                             && serviceUnavailableException.getMessage().contains("시간이 초과")
                             ? AssignmentPreviewJobFailureCode.TIMEOUT
                             : AssignmentPreviewJobFailureCode.SERVICE_UNAVAILABLE;
-            return new FailureMetadata(failureCode, fallbackModel, false, null, null, null, null, null, null);
+            return new FailureMetadata(
+                    failureCode,
+                    fallbackModel,
+                    false,
+                    null,
+                    null,
+                    false,
+                    null,
+                    null,
+                    null,
+                    List.of(),
+                    null,
+                    null,
+                    null,
+                    List.of(),
+                    null,
+                    null,
+                    null,
+                    null
+            );
         }
 
         if (ex instanceof IllegalStateException) {
@@ -222,6 +274,15 @@ public class ProcessFreeGameAssignmentPreviewJobService {
                     false,
                     null,
                     null,
+                    false,
+                    null,
+                    null,
+                    null,
+                    List.of(),
+                    null,
+                    null,
+                    null,
+                    List.of(),
                     null,
                     null,
                     null,
@@ -235,6 +296,15 @@ public class ProcessFreeGameAssignmentPreviewJobService {
                 false,
                 null,
                 null,
+                false,
+                null,
+                null,
+                null,
+                List.of(),
+                null,
+                null,
+                null,
+                List.of(),
                 null,
                 null,
                 null,
@@ -269,6 +339,26 @@ public class ProcessFreeGameAssignmentPreviewJobService {
                 .count();
     }
 
+    private int theoreticalMaxFilledSlots(CreateFreeGameAssignmentPreviewCommand command) {
+        int participantCount = command.participants().size();
+        int total = 0;
+        for (CreateFreeGameAssignmentPreviewCommand.Round round : command.rounds()) {
+            int requestedFilled = 0;
+            int requestedNull = 0;
+            for (CreateFreeGameAssignmentPreviewCommand.Court court : round.courts()) {
+                for (String slot : court.slots()) {
+                    if (slot == null) {
+                        requestedNull++;
+                    } else {
+                        requestedFilled++;
+                    }
+                }
+            }
+            total += requestedFilled + Math.min(requestedNull, Math.max(participantCount - requestedFilled, 0));
+        }
+        return total;
+    }
+
     private long elapsedMillis(long startNanos) {
         return (System.nanoTime() - startNanos) / 1_000_000L;
     }
@@ -279,6 +369,15 @@ public class ProcessFreeGameAssignmentPreviewJobService {
             boolean repairAttempted,
             Long initialAiElapsedMs,
             Long repairAiElapsedMs,
+            boolean emptyResponseRetryAttempted,
+            Long emptyResponseRetryElapsedMs,
+            Integer qualityRepairAttemptCount,
+            Long qualityRepairElapsedMsTotal,
+            List<String> qualityRepairReasons,
+            Integer theoreticalMaxFilledSlots,
+            Integer actualFilledSlotsAfterInitial,
+            Integer bestValidFilledSlots,
+            List<String> bestValidWarningCodes,
             Integer planningInputChars,
             Integer promptChars,
             Integer responseChars,

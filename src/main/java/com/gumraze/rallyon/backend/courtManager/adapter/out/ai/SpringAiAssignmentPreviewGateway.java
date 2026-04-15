@@ -14,7 +14,7 @@ import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.ResponseFormat;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 
@@ -34,73 +34,140 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
     private static final String INVALID_OUTPUT_MESSAGE = "OpenAI 응답 구조가 요청과 일치하지 않습니다.";
     private static final String REPEATED_ROUND_LAYOUT_MESSAGE =
             "OpenAI 응답이 동일한 round layout을 여러 라운드에 반복했습니다.";
+    private static final String EMPTY_RESPONSE_MESSAGE = "OpenAI 응답이 비어 있습니다.";
     private static final String OPENAI_TIMEOUT_MESSAGE =
             "AI 자동 배정 응답 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.";
+    private static final Map<String, String> WARNING_MESSAGE_BY_CODE = Map.of(
+            "PARTIAL_ASSIGNMENT", "일부 슬롯은 비어 있습니다.",
+            "PARTNER_CONSTRAINT_PARTIAL", "일부 파트너 조합을 완전히 반영하지 못했습니다.",
+            "NO_ACTION_NEEDED", "추가로 조정할 배정이 없습니다."
+    );
     private static final Double PREVIEW_TEMPERATURE = 0.0d;
-    private static final Integer PREVIEW_MAX_COMPLETION_TOKENS = 1200;
     private static final String ASSIGNMENT_PREVIEW_PROMPT = """
-            자유게임 코트 배정 preview JSON을 생성하세요.
-            규칙:
-            - 입력과 동일한 rounds/courts 구조 유지
-            - 같은 라운드 중복 참가자 금지
-            - 이전 라운드 전체 복제 금지
-            - 각 라운드는 가능한 범위에서 다른 조합 사용
-            - 동일한 court-level 4인 배치 반복 금지
-            - guidance.preserveFixedSlots=true 이면 fixed=true 슬롯 유지
-            - guidance.fillEmptySlotsOnly=true 이면 기존 non-null 유지 후 null만 최대한 채우기
-            - guidance.preferProvidedPartnerPairs=true 이면 partnerPairs 우선
-            - 빈 슬롯이 남으면 PARTIAL_ASSIGNMENT 추가
-            - 파트너 선호 일부 미충족이면 PARTNER_CONSTRAINT_PARTIAL 추가
-            - 개선 불가여도 warnings 비우지 않기
-            - rounds와 warnings만 포함한 JSON만 반환
-            입력:
+            Generate a JSON preview for free-game court assignments.
+            Rules:
+            - Preserve the exact round and court structure from the input.
+            - Each court must return exactly 4 slots.
+            - Always return warnings as an array. Use [] when there are no warnings.
+            - Participant ids are numeric aliases. Return them exactly as provided.
+            - Use each participant id at most once per round.
+            - Primary objective: maximize filled slots.
+            - If a null slot can be filled without breaking constraints, fill it. Do not stop early.
+            - Do not copy an entire previous round layout.
+            - Try to vary court-level 4-player layouts across rounds.
+            - If guidance.preserveFixedSlots is true, keep fixed slots unchanged.
+            - If guidance.fillEmptySlotsOnly is true, keep existing non-null slots unchanged and fill only null slots.
+            - If guidance.preferProvidedPartnerPairs is true, try to place each partner pair on the same court.
+            - If fixed slots or fill-empty-only rules make a partner pair impossible, keep the existing assignments and add PARTNER_CONSTRAINT_PARTIAL.
+            - Example: if two preferred partners are fixed on different courts, keep them fixed and add PARTNER_CONSTRAINT_PARTIAL.
+            - If empty slots remain, include PARTIAL_ASSIGNMENT.
+            - If some preferred partner pairs cannot be satisfied, include PARTNER_CONSTRAINT_PARTIAL.
+            - Use NO_FURTHER_IMPROVEMENT only when no additional null slot can be filled without breaking constraints.
+            - If no empty slots remain, do not include PARTIAL_ASSIGNMENT or NO_FURTHER_IMPROVEMENT.
+            - Return JSON only with rounds and warnings.
+            - Keep warning messages short and in Korean.
+            Input:
+            """;
+    private static final String EMPTY_RESPONSE_RETRY_PROMPT_SUFFIX = """
+
+            The previous response was empty. Return a non-empty JSON object that matches the schema exactly.
+            """;
+    private static final String ASSIGNMENT_PREVIEW_QUALITY_REPAIR_PROMPT = """
+            The previous output was structurally valid but still needs improvement.
+            %s
+            Issues to fix:
+            %s
+            Rules:
+            - Preserve the exact round and court structure from the input.
+            - Each court must return exactly 4 slots.
+            - Preserve all fixed slots and all existing non-null assignments from the input.
+            - Primary objective: maximize filled slots.
+            - If a null slot can be filled without breaking constraints, fill it. Do not stop early.
+            - For FILL_EMPTY_SLOTS, preserving existing non-null slots does not mean leaving null slots empty.
+            - You may rearrange participants assigned only to previously null slots if it increases total filled slots.
+            - Always return warnings as an array. Use [] when there are no warnings.
+            - If empty slots remain, include PARTIAL_ASSIGNMENT or NO_FURTHER_IMPROVEMENT.
+            - If no empty slots remain, do not include PARTIAL_ASSIGNMENT or NO_FURTHER_IMPROVEMENT.
+            - Keep warnings consistent with the final fill coverage.
+            - Participant ids are numeric aliases. Return them exactly as provided.
+            - Return JSON only with rounds and warnings.
+            Planning input:
+            %s
+
+            Previous output:
+            %s
             """;
 
     private static final String ASSIGNMENT_PREVIEW_REPAIR_PROMPT = """
-            이전 응답은 요청 구조와 제약을 만족하지 못했습니다.
-            실패 사유: %s
-            다시 생성하세요.
-            규칙:
-            - 입력과 동일한 rounds/courts 구조 유지
-            - 같은 라운드 중복 참가자 금지
-            - 이전 라운드 전체 복제 금지
-            - 각 라운드는 가능한 범위에서 다른 조합 사용
-            - 동일한 court-level 4인 배치 반복 금지
-            - guidance.preserveFixedSlots=true 이면 fixed=true 슬롯 유지
-            - guidance.fillEmptySlotsOnly=true 이면 기존 non-null 유지 후 null만 최대한 채우기
-            - guidance.preferProvidedPartnerPairs=true 이면 partnerPairs 우선
-            - 빈 슬롯이 남으면 PARTIAL_ASSIGNMENT 추가
-            - 파트너 선호 일부 미충족이면 PARTNER_CONSTRAINT_PARTIAL 추가
-            - 개선 불가여도 warnings 비우지 않기
-            - rounds와 warnings만 포함한 JSON만 반환
-            입력:
+            The previous response did not satisfy the required structure or constraints.
+            Failure reason: %s
+            Generate the preview again.
+            Rules:
+            - Preserve the exact round and court structure from the input.
+            - Each court must return exactly 4 slots.
+            - Always return warnings as an array. Use [] when there are no warnings.
+            - Participant ids are numeric aliases. Return them exactly as provided.
+            - Use each participant id at most once per round.
+            - Primary objective: maximize filled slots.
+            - If a null slot can be filled without breaking constraints, fill it. Do not stop early.
+            - Do not copy an entire previous round layout.
+            - Try to vary court-level 4-player layouts across rounds.
+            - If guidance.preserveFixedSlots is true, keep fixed slots unchanged.
+            - If guidance.fillEmptySlotsOnly is true, keep existing non-null slots unchanged and fill only null slots.
+            - If guidance.preferProvidedPartnerPairs is true, try to place each partner pair on the same court.
+            - If fixed slots or fill-empty-only rules make a partner pair impossible, keep the existing assignments and add PARTNER_CONSTRAINT_PARTIAL.
+            - Example: if two preferred partners are fixed on different courts, keep them fixed and add PARTNER_CONSTRAINT_PARTIAL.
+            - If empty slots remain, include PARTIAL_ASSIGNMENT.
+            - If some preferred partner pairs cannot be satisfied, include PARTNER_CONSTRAINT_PARTIAL.
+            - Use NO_FURTHER_IMPROVEMENT only when no additional null slot can be filled without breaking constraints.
+            - If no empty slots remain, do not include PARTIAL_ASSIGNMENT or NO_FURTHER_IMPROVEMENT.
+            - Return JSON only with rounds and warnings.
+            - Keep warning messages short and in Korean.
+            Input:
             """;
 
     private final AssignmentPreviewPlanningInputMapper planningInputMapper;
     private final OpenAiChatModel chatModel;
     private final ObjectMapper objectMapper;
+    private final AssignmentPreviewAiProperties assignmentPreviewAiProperties;
 
-    @Value("${spring.ai.openai.chat.options.model:gpt-5-mini}")
-    private String configuredModel = "gpt-5-mini";
-
+    @Autowired
     public SpringAiAssignmentPreviewGateway(
             AssignmentPreviewPlanningInputMapper planningInputMapper,
             @Qualifier("assignmentPreviewChatModel") OpenAiChatModel chatModel,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            AssignmentPreviewAiProperties assignmentPreviewAiProperties
     ) {
         this.planningInputMapper = planningInputMapper;
         this.chatModel = chatModel;
         this.objectMapper = objectMapper;
+        this.assignmentPreviewAiProperties = assignmentPreviewAiProperties;
+    }
+
+    SpringAiAssignmentPreviewGateway(
+            AssignmentPreviewPlanningInputMapper planningInputMapper,
+            OpenAiChatModel chatModel,
+            ObjectMapper objectMapper
+    ) {
+        this(
+                planningInputMapper,
+                chatModel,
+                objectMapper,
+                AssignmentPreviewAiProperties.defaults()
+        );
     }
 
     @Override
     public AssignmentPreviewAiGenerationResult generateExecution(
             CreateFreeGameAssignmentPreviewCommand command
     ) {
+        AssignmentPreviewPromptPayload promptPayload = planningInputMapper.from(command);
         Map<String, Object> schema;
         String planningInputJson;
         String promptText;
-        String model = configuredModel;
+        String model = assignmentPreviewAiProperties.getModel();
+        Integer maxCompletionTokens = assignmentPreviewAiProperties.getMaxCompletionTokens();
+        Integer theoreticalMaxFilledSlots = theoreticalMaxFilledSlots(command);
         int planningInputChars;
         int promptChars;
         try {
@@ -109,7 +176,7 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
                     new TypeReference<Map<String, Object>>() {
                     }
             );
-            planningInputJson = serializePlanningInput(command);
+            planningInputJson = serializePlanningInput(promptPayload);
             planningInputChars = planningInputJson.length();
             promptText = ASSIGNMENT_PREVIEW_PROMPT + planningInputJson;
             promptChars = promptText.length();
@@ -121,10 +188,19 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
                     false,
                     null,
                     null,
+                    false,
+                    null,
+                    0,
+                    null,
+                    List.of(),
+                    theoreticalMaxFilledSlots,
+                    null,
+                    null,
+                    List.of(),
                     null,
                     null,
                     null,
-                    PREVIEW_MAX_COMPLETION_TOKENS
+                    maxCompletionTokens
             );
         }
 
@@ -143,16 +219,59 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
                                 .build())
                         .build())
                 .build();
-        options.setTemperature(PREVIEW_TEMPERATURE);
-        options.setMaxCompletionTokens(PREVIEW_MAX_COMPLETION_TOKENS);
+        options.setMaxCompletionTokens(maxCompletionTokens);
+        applySamplingOptions(options, model);
 
         Long initialAiElapsedMs = null;
         Long repairAiElapsedMs = null;
+        boolean emptyResponseRetryAttempted = false;
+        Long emptyResponseRetryElapsedMs = null;
+        Integer actualFilledSlotsAfterInitial = null;
+        Integer bestValidFilledSlots = null;
+        List<String> bestValidWarningCodes = List.of();
+        int qualityRepairAttemptCount = 0;
+        long qualityRepairElapsedMsTotal = 0L;
+        List<String> qualityRepairReasons = new ArrayList<>();
+        int effectivePromptChars = promptChars;
+        boolean repairAttempted = false;
 
         RequestedPreview aiResponse;
         long initialStartNanos = System.nanoTime();
         try {
             aiResponse = requestAssignmentPreview(promptText, options);
+            initialAiElapsedMs = elapsedMillis(initialStartNanos);
+        } catch (EmptyResponseException ex) {
+            initialAiElapsedMs = elapsedMillis(initialStartNanos);
+            emptyResponseRetryAttempted = true;
+            String emptyResponseRetryPrompt = buildEmptyResponseRetryPrompt(promptText);
+            effectivePromptChars = emptyResponseRetryPrompt.length();
+            long emptyResponseRetryStartNanos = System.nanoTime();
+            try {
+                aiResponse = requestAssignmentPreview(emptyResponseRetryPrompt, options);
+            } catch (RuntimeException retryEx) {
+                emptyResponseRetryElapsedMs = elapsedMillis(emptyResponseRetryStartNanos);
+                throw wrapFailure(
+                        retryEx,
+                        model,
+                        false,
+                        initialAiElapsedMs,
+                        null,
+                        emptyResponseRetryAttempted,
+                        emptyResponseRetryElapsedMs,
+                        0,
+                        null,
+                        List.of(),
+                        theoreticalMaxFilledSlots,
+                        null,
+                        null,
+                        List.of(),
+                        planningInputChars,
+                        effectivePromptChars,
+                        null,
+                        maxCompletionTokens
+                );
+            }
+            emptyResponseRetryElapsedMs = elapsedMillis(emptyResponseRetryStartNanos);
         } catch (RuntimeException ex) {
             initialAiElapsedMs = elapsedMillis(initialStartNanos);
             throw wrapFailure(
@@ -161,27 +280,26 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
                     false,
                     initialAiElapsedMs,
                     null,
-                    planningInputChars,
-                    promptChars,
+                    emptyResponseRetryAttempted,
+                    emptyResponseRetryElapsedMs,
+                    0,
                     null,
-                    PREVIEW_MAX_COMPLETION_TOKENS
+                    List.of(),
+                    theoreticalMaxFilledSlots,
+                    null,
+                    null,
+                    List.of(),
+                    planningInputChars,
+                    effectivePromptChars,
+                    null,
+                    maxCompletionTokens
             );
         }
-        initialAiElapsedMs = elapsedMillis(initialStartNanos);
 
+        RequestedPreview firstValidPreview = aiResponse;
+        int bestValidPromptChars = effectivePromptChars;
         try {
-            validateRoundStructure(command, aiResponse.response());
-            return new AssignmentPreviewAiGenerationResult(
-                    aiResponse.response(),
-                    model,
-                    false,
-                    initialAiElapsedMs,
-                    null,
-                    planningInputChars,
-                    promptChars,
-                    aiResponse.responseChars(),
-                    PREVIEW_MAX_COMPLETION_TOKENS
-            );
+            validateRoundStructure(command, promptPayload, aiResponse.response());
         } catch (IllegalStateException ex) {
             if (!isRepairableInvalidOutput(ex)) {
                 throw wrapFailure(
@@ -190,65 +308,151 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
                         false,
                         initialAiElapsedMs,
                         null,
+                        emptyResponseRetryAttempted,
+                        emptyResponseRetryElapsedMs,
+                        0,
+                        0L,
+                        List.of(),
+                        theoreticalMaxFilledSlots,
+                        null,
+                        null,
+                        List.of(),
                         planningInputChars,
-                        promptChars,
+                        effectivePromptChars,
                         aiResponse.responseChars(),
-                        PREVIEW_MAX_COMPLETION_TOKENS
+                        maxCompletionTokens
                 );
             }
+
+            repairAttempted = true;
             String repairPrompt = buildRepairPrompt(planningInputJson, ex.getMessage());
             int repairPromptChars = repairPrompt.length();
             RequestedPreview repairedResponse;
             long repairStartNanos = System.nanoTime();
             try {
                 repairedResponse = requestAssignmentPreview(repairPrompt, options);
-            } catch (RuntimeException retryEx) {
+            } catch (RuntimeException repairEx) {
                 repairAiElapsedMs = elapsedMillis(repairStartNanos);
                 throw wrapFailure(
-                        retryEx,
+                        repairEx,
                         model,
                         true,
                         initialAiElapsedMs,
                         repairAiElapsedMs,
+                        emptyResponseRetryAttempted,
+                        emptyResponseRetryElapsedMs,
+                        0,
+                        0L,
+                        List.of(),
+                        theoreticalMaxFilledSlots,
+                        null,
+                        null,
+                        List.of(),
                         planningInputChars,
                         repairPromptChars,
                         null,
-                        PREVIEW_MAX_COMPLETION_TOKENS
+                        maxCompletionTokens
                 );
             }
             repairAiElapsedMs = elapsedMillis(repairStartNanos);
             try {
-                validateRoundStructure(command, repairedResponse.response());
-            } catch (IllegalStateException retryValidationEx) {
+                validateRoundStructure(command, promptPayload, repairedResponse.response());
+            } catch (IllegalStateException repairValidationEx) {
                 throw wrapFailure(
-                        retryValidationEx,
+                        repairValidationEx,
                         model,
                         true,
                         initialAiElapsedMs,
                         repairAiElapsedMs,
+                        emptyResponseRetryAttempted,
+                        emptyResponseRetryElapsedMs,
+                        0,
+                        0L,
+                        List.of(),
+                        theoreticalMaxFilledSlots,
+                        null,
+                        null,
+                        List.of(),
                         planningInputChars,
                         repairPromptChars,
                         repairedResponse.responseChars(),
-                        PREVIEW_MAX_COMPLETION_TOKENS
+                        maxCompletionTokens
                 );
             }
-            return new AssignmentPreviewAiGenerationResult(
-                    repairedResponse.response(),
-                    model,
-                    true,
-                    initialAiElapsedMs,
-                    repairAiElapsedMs,
-                    planningInputChars,
-                    repairPromptChars,
-                    repairedResponse.responseChars(),
-                    PREVIEW_MAX_COMPLETION_TOKENS
-            );
+            firstValidPreview = repairedResponse;
+            bestValidPromptChars = repairPromptChars;
         }
+
+        QualityEvaluation bestQuality = evaluateQuality(command, firstValidPreview.response(), theoreticalMaxFilledSlots);
+        actualFilledSlotsAfterInitial = bestQuality.filledSlots();
+        bestValidFilledSlots = bestQuality.filledSlots();
+        bestValidWarningCodes = bestQuality.normalizedWarningCodes();
+        RequestedPreview bestValidPreview = firstValidPreview;
+
+        while (qualityRepairAttemptCount < 2 && bestQuality.hasDeficiencies()) {
+            mergeQualityRepairReasons(qualityRepairReasons, bestQuality.deficiencyNames());
+            int nextAttempt = qualityRepairAttemptCount + 1;
+            String qualityRepairPrompt = buildQualityRepairPrompt(
+                    planningInputJson,
+                    bestValidPreview.response(),
+                    bestQuality,
+                    nextAttempt
+            );
+            int qualityRepairPromptChars = qualityRepairPrompt.length();
+            long qualityRepairStartNanos = System.nanoTime();
+            try {
+                RequestedPreview repairedQualityPreview = requestAssignmentPreview(qualityRepairPrompt, options);
+                long elapsedMs = elapsedMillis(qualityRepairStartNanos);
+                qualityRepairElapsedMsTotal += elapsedMs;
+                qualityRepairAttemptCount = nextAttempt;
+
+                validateRoundStructure(command, promptPayload, repairedQualityPreview.response());
+                QualityEvaluation repairedQuality = evaluateQuality(
+                        command,
+                        repairedQualityPreview.response(),
+                        theoreticalMaxFilledSlots
+                );
+
+                if (isBetterCandidate(bestQuality, repairedQuality)) {
+                    bestValidPreview = repairedQualityPreview;
+                    bestQuality = repairedQuality;
+                    bestValidFilledSlots = repairedQuality.filledSlots();
+                    bestValidWarningCodes = repairedQuality.normalizedWarningCodes();
+                    bestValidPromptChars = qualityRepairPromptChars;
+                }
+            } catch (RuntimeException ignored) {
+                qualityRepairElapsedMsTotal += elapsedMillis(qualityRepairStartNanos);
+                qualityRepairAttemptCount = nextAttempt;
+            }
+        }
+
+        AssignmentPreviewAiResponse mappedResponse = remapResponse(bestValidPreview.response(), promptPayload);
+        return new AssignmentPreviewAiGenerationResult(
+                mappedResponse,
+                model,
+                repairAttempted,
+                initialAiElapsedMs,
+                repairAiElapsedMs,
+                emptyResponseRetryAttempted,
+                emptyResponseRetryElapsedMs,
+                qualityRepairAttemptCount,
+                qualityRepairAttemptCount == 0 ? null : qualityRepairElapsedMsTotal,
+                List.copyOf(qualityRepairReasons),
+                theoreticalMaxFilledSlots,
+                actualFilledSlotsAfterInitial,
+                bestValidFilledSlots,
+                List.copyOf(bestValidWarningCodes),
+                planningInputChars,
+                bestValidPromptChars,
+                bestValidPreview.responseChars(),
+                maxCompletionTokens
+        );
     }
 
     private void validateRoundStructure(
             CreateFreeGameAssignmentPreviewCommand command,
-            AssignmentPreviewAiResponse response
+            AssignmentPreviewPromptPayload promptPayload,
+            AssignmentPreviewAiRawResponse response
     ) {
         if (command == null) {
             return;
@@ -256,7 +460,7 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
 
         validateResponseShapeNotNull(response);
         validateWarningsShape(response);
-        validateParticipantIds(command, response);
+        validateParticipantIds(promptPayload, response);
 
         if (command.rounds().size() != response.rounds().size()) {
             throw invalidOutput();
@@ -265,14 +469,14 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
         for (int i = 0; i < command.rounds().size(); i++) {
             CreateFreeGameAssignmentPreviewCommand.Round requestedRound =
                     command.rounds().get(i);
-            AssignmentPreviewAiResponse.Round responseRound =
+            AssignmentPreviewAiRawResponse.Round responseRound =
                     response.rounds().get(i);
 
             validateRound(requestedRound, responseRound);
 
             if (command.preferences().existingAssignmentPolicy()
                     == CreateFreeGameAssignmentPreviewCommand.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS) {
-                validateFixedSlots(requestedRound, responseRound);
+                validateFixedSlots(requestedRound, responseRound, promptPayload);
             }
         }
 
@@ -281,7 +485,7 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
 
     private void validateRound(
             CreateFreeGameAssignmentPreviewCommand.Round requestedRound,
-            AssignmentPreviewAiResponse.Round responseRound
+            AssignmentPreviewAiRawResponse.Round responseRound
     ) {
         if (!requestedRound.roundNumber().equals(responseRound.roundNumber())) {
             throw invalidOutput();
@@ -297,12 +501,12 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
 
     private void validateCourtStructure(
             CreateFreeGameAssignmentPreviewCommand.Round requestedRound,
-            AssignmentPreviewAiResponse.Round responseRound
+            AssignmentPreviewAiRawResponse.Round responseRound
     ) {
         for (int j = 0; j < requestedRound.courts().size(); j++) {
             CreateFreeGameAssignmentPreviewCommand.Court requestedCourt =
                     requestedRound.courts().get(j);
-            AssignmentPreviewAiResponse.Court responseCourt =
+            AssignmentPreviewAiRawResponse.Court responseCourt =
                     responseRound.courts().get(j);
 
             if (!requestedCourt.courtNumber().equals(responseCourt.courtNumber())) {
@@ -317,22 +521,23 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
 
     private void validateFixedSlots(
             CreateFreeGameAssignmentPreviewCommand.Round requestedRound,
-            AssignmentPreviewAiResponse.Round responseRound
+            AssignmentPreviewAiRawResponse.Round responseRound,
+            AssignmentPreviewPromptPayload promptPayload
     ) {
         for (int i = 0; i < requestedRound.courts().size(); i++) {
             CreateFreeGameAssignmentPreviewCommand.Court requestedCourt =
                     requestedRound.courts().get(i);
-            AssignmentPreviewAiResponse.Court responseCourt =
+            AssignmentPreviewAiRawResponse.Court responseCourt =
                     responseRound.courts().get(i);
 
             List<String> requestedSlots = requestedCourt.slots();
-            List<String> responseSlots = responseCourt.slots();
+            List<Long> responseSlots = responseCourt.slots();
 
             for (int j = 0; j < requestedSlots.size(); j++) {
                 String requestedSlot = requestedSlots.get(j);
-                String responseSlot = responseSlots.get(j);
+                Long responseSlot = responseSlots.get(j);
 
-                if (requestedSlot != null && !requestedSlot.equals(responseSlot)) {
+                if (requestedSlot != null && !compactIdEqualsRequested(promptPayload, requestedSlot, responseSlot)) {
                     throw invalidOutput();
                 }
             }
@@ -340,16 +545,14 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
     }
 
     private void validateParticipantIds(
-            CreateFreeGameAssignmentPreviewCommand command,
-            AssignmentPreviewAiResponse response
+            AssignmentPreviewPromptPayload promptPayload,
+            AssignmentPreviewAiRawResponse response
     ) {
-        Set<String> participantIds = command.participants().stream()
-                .map(CreateFreeGameAssignmentPreviewCommand.Participant::clientId)
-                .collect(Collectors.toSet());
+        Set<Long> participantIds = promptPayload.compactParticipantIds();
 
-        for (AssignmentPreviewAiResponse.Round round : response.rounds()) {
-            for (AssignmentPreviewAiResponse.Court court : round.courts()) {
-                for (String slot : court.slots()) {
+        for (AssignmentPreviewAiRawResponse.Round round : response.rounds()) {
+            for (AssignmentPreviewAiRawResponse.Court court : round.courts()) {
+                for (Long slot : court.slots()) {
                     if (slot != null && !participantIds.contains(slot)) {
                         throw invalidOutput();
                     }
@@ -358,11 +561,11 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
         }
     }
 
-    private void validateDuplicateParticipantsInRound(AssignmentPreviewAiResponse.Round responseRound) {
-        Set<String> assignedParticipants = new HashSet<>();
+    private void validateDuplicateParticipantsInRound(AssignmentPreviewAiRawResponse.Round responseRound) {
+        Set<Long> assignedParticipants = new HashSet<>();
 
-        for (AssignmentPreviewAiResponse.Court court : responseRound.courts()) {
-            for (String slot : court.slots()) {
+        for (AssignmentPreviewAiRawResponse.Court court : responseRound.courts()) {
+            for (Long slot : court.slots()) {
                 if (slot != null && !assignedParticipants.add(slot)) {
                     throw invalidOutput();
                 }
@@ -385,17 +588,17 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
         }
 
         if (response.getResult() == null || response.getResult().getOutput() == null) {
-            throw new IllegalStateException("OpenAI 응답이 비어 있습니다.");
+            throw new EmptyResponseException();
         }
 
         String responseText = response.getResult().getOutput().getText();
         if (responseText == null || responseText.isBlank()) {
-            throw new IllegalStateException("OpenAI 응답이 비어 있습니다.");
+            throw new EmptyResponseException();
         }
 
         try {
             return new RequestedPreview(
-                    objectMapper.readValue(responseText, AssignmentPreviewAiResponse.class),
+                    objectMapper.readValue(responseText, AssignmentPreviewAiRawResponse.class),
                     responseText.length()
             );
         } catch (JacksonException ex) {
@@ -411,27 +614,65 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
                 + planningInputJson;
     }
 
-    private String serializePlanningInput(CreateFreeGameAssignmentPreviewCommand command)
+    private String buildEmptyResponseRetryPrompt(String promptText) {
+        return promptText + EMPTY_RESPONSE_RETRY_PROMPT_SUFFIX;
+    }
+
+    private String buildQualityRepairPrompt(
+            String planningInputJson,
+            AssignmentPreviewAiRawResponse previousResponse,
+            QualityEvaluation qualityEvaluation,
+            int attemptNumber
+    ) {
+        String attemptIntro = attemptNumber > 1
+                ? "A previous quality repair did not fully resolve the issues. Improve further."
+                : "";
+        String issues = qualityEvaluation.deficiencies().stream()
+                .map(deficiency -> switch (deficiency) {
+                    case UNDER_FILLED -> "The previous output is under-filled. It filled %d slots out of a theoretical maximum of %d."
+                            .formatted(
+                                    qualityEvaluation.filledSlots(),
+                                    qualityEvaluation.theoreticalMaxFilledSlots()
+                            );
+                    case INCONSISTENT_WARNINGS -> "The warnings do not match the final fill coverage. Keep fill coverage unchanged if it is already maximal and make the warnings consistent.";
+                })
+                .collect(Collectors.joining("\n"));
+        return ASSIGNMENT_PREVIEW_QUALITY_REPAIR_PROMPT.formatted(
+                attemptIntro,
+                issues,
+                planningInputJson,
+                serializeResponse(previousResponse)
+        );
+    }
+
+    private String serializePlanningInput(AssignmentPreviewPromptPayload promptPayload)
             throws JacksonException {
-        if (command == null) {
+        if (promptPayload == null) {
             return objectMapper.writeValueAsString(null);
         }
 
-        AssignmentPreviewPlanningInput planningInput = planningInputMapper.from(command);
-        return objectMapper.writeValueAsString(planningInput);
+        return objectMapper.writeValueAsString(promptPayload.planningInput());
     }
 
-    private void validateResponseShapeNotNull(AssignmentPreviewAiResponse response) {
+    private String serializeResponse(AssignmentPreviewAiRawResponse response) {
+        try {
+            return objectMapper.writeValueAsString(response);
+        } catch (JacksonException ex) {
+            throw new IllegalStateException("OpenAI로부터 응답을 읽을 수 없습니다.", ex);
+        }
+    }
+
+    private void validateResponseShapeNotNull(AssignmentPreviewAiRawResponse response) {
         if (response.rounds() == null) {
             throw invalidOutput();
         }
 
-        for (AssignmentPreviewAiResponse.Round round : response.rounds()) {
+        for (AssignmentPreviewAiRawResponse.Round round : response.rounds()) {
             if (round == null || round.roundNumber() == null || round.courts() == null) {
                 throw invalidOutput();
             }
 
-            for (AssignmentPreviewAiResponse.Court court : round.courts()) {
+            for (AssignmentPreviewAiRawResponse.Court court : round.courts()) {
                 if (court == null || court.courtNumber() == null || court.slots() == null) {
                     throw invalidOutput();
                 }
@@ -439,22 +680,22 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
         }
     }
 
-    private void validateWarningsShape(AssignmentPreviewAiResponse response) {
+    private void validateWarningsShape(AssignmentPreviewAiRawResponse response) {
         if (response.warnings() == null) {
             throw invalidOutput();
         }
 
-        for (AssignmentPreviewAiResponse.Warning warning : response.warnings()) {
+        for (AssignmentPreviewAiRawResponse.Warning warning : response.warnings()) {
             if (warning == null || warning.code() == null || warning.message() == null) {
                 throw invalidOutput();
             }
         }
     }
 
-    private void validateRoundLayoutVariation(AssignmentPreviewAiResponse response) {
+    private void validateRoundLayoutVariation(AssignmentPreviewAiRawResponse response) {
         Set<RoundLayoutSignature> seenRoundLayouts = new HashSet<>();
 
-        for (AssignmentPreviewAiResponse.Round round : response.rounds()) {
+        for (AssignmentPreviewAiRawResponse.Round round : response.rounds()) {
             if (!seenRoundLayouts.add(RoundLayoutSignature.from(round))) {
                 throw repeatedRoundLayout();
             }
@@ -470,7 +711,134 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
         if (REPEATED_ROUND_LAYOUT_MESSAGE.equals(failureReason)) {
             return "The previous output copied the same round layout across multiple rounds.";
         }
-        return "요청 구조 또는 제약 조건을 만족하지 못했습니다.";
+        return "The previous output did not satisfy the required structure or constraints.";
+    }
+
+    private AssignmentPreviewAiResponse remapResponse(
+            AssignmentPreviewAiRawResponse rawResponse,
+            AssignmentPreviewPromptPayload promptPayload
+    ) {
+        List<AssignmentPreviewAiRawResponse.Warning> normalizedWarnings = normalizeWarnings(rawResponse);
+        return new AssignmentPreviewAiResponse(
+                rawResponse.rounds().stream()
+                        .map(round -> new AssignmentPreviewAiResponse.Round(
+                                round.roundNumber(),
+                                round.courts().stream()
+                                        .map(court -> new AssignmentPreviewAiResponse.Court(
+                                                court.courtNumber(),
+                                                court.slots().stream()
+                                                        .map(slot -> slot == null ? null : promptPayload.toClientId(slot))
+                                                        .toList()
+                                        ))
+                                        .toList()
+                        ))
+                        .toList(),
+                normalizedWarnings.stream()
+                        .map(warning -> new AssignmentPreviewAiResponse.Warning(
+                                warning.code(),
+                                WARNING_MESSAGE_BY_CODE.getOrDefault(
+                                        warning.code(),
+                                        warning.message()
+                                )
+                        ))
+                        .toList()
+        );
+    }
+
+    private List<AssignmentPreviewAiRawResponse.Warning> normalizeWarnings(AssignmentPreviewAiRawResponse rawResponse) {
+        boolean hasRemainingEmptySlot = rawResponse.rounds().stream()
+                .flatMap(round -> round.courts().stream())
+                .flatMap(court -> court.slots().stream())
+                .anyMatch(slot -> slot == null);
+
+        if (hasRemainingEmptySlot) {
+            return rawResponse.warnings();
+        }
+
+        return rawResponse.warnings().stream()
+                .filter(warning -> !"PARTIAL_ASSIGNMENT".equals(warning.code()))
+                .filter(warning -> !"NO_FURTHER_IMPROVEMENT".equals(warning.code()))
+                .toList();
+    }
+
+    private QualityEvaluation evaluateQuality(
+            CreateFreeGameAssignmentPreviewCommand command,
+            AssignmentPreviewAiRawResponse response,
+            Integer theoreticalMaxFilledSlots
+    ) {
+        int filledSlots = countFilledSlots(response);
+        List<String> normalizedWarningCodes = normalizeWarnings(response).stream()
+                .map(AssignmentPreviewAiRawResponse.Warning::code)
+                .toList();
+        boolean hasRemainingEmptySlots = response.rounds().stream()
+                .flatMap(round -> round.courts().stream())
+                .flatMap(court -> court.slots().stream())
+                .anyMatch(slot -> slot == null);
+        List<QualityDeficiency> deficiencies = new ArrayList<>();
+
+        if (command != null
+                && command.preferences().existingAssignmentPolicy()
+                == CreateFreeGameAssignmentPreviewCommand.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS
+                && theoreticalMaxFilledSlots != null
+                && filledSlots < theoreticalMaxFilledSlots) {
+            deficiencies.add(QualityDeficiency.UNDER_FILLED);
+        }
+
+        if (hasInconsistentWarnings(hasRemainingEmptySlots, normalizedWarningCodes)) {
+            deficiencies.add(QualityDeficiency.INCONSISTENT_WARNINGS);
+        }
+
+        return new QualityEvaluation(
+                filledSlots,
+                theoreticalMaxFilledSlots == null ? filledSlots : theoreticalMaxFilledSlots,
+                normalizedWarningCodes,
+                List.copyOf(deficiencies)
+        );
+    }
+
+    private boolean hasInconsistentWarnings(boolean hasRemainingEmptySlots, List<String> warningCodes) {
+        boolean hasPartialCoverageWarning = warningCodes.contains("PARTIAL_ASSIGNMENT")
+                || warningCodes.contains("NO_FURTHER_IMPROVEMENT");
+        if (hasRemainingEmptySlots) {
+            return !hasPartialCoverageWarning;
+        }
+        return hasPartialCoverageWarning;
+    }
+
+    private boolean isBetterCandidate(QualityEvaluation currentBest, QualityEvaluation candidate) {
+        if (candidate.filledSlots() != currentBest.filledSlots()) {
+            return candidate.filledSlots() > currentBest.filledSlots();
+        }
+        if (candidate.hasWarningInconsistency() != currentBest.hasWarningInconsistency()) {
+            return !candidate.hasWarningInconsistency();
+        }
+        if (candidate.normalizedWarningCodes().size() != currentBest.normalizedWarningCodes().size()) {
+            return candidate.normalizedWarningCodes().size() < currentBest.normalizedWarningCodes().size();
+        }
+        return false;
+    }
+
+    private void mergeQualityRepairReasons(
+            List<String> target,
+            List<String> additions
+    ) {
+        for (String addition : additions) {
+            if (!target.contains(addition)) {
+                target.add(addition);
+            }
+        }
+    }
+
+    private boolean compactIdEqualsRequested(
+            AssignmentPreviewPromptPayload promptPayload,
+            String requestedSlot,
+            Long responseSlot
+    ) {
+        if (responseSlot == null) {
+            return false;
+        }
+        Long expectedCompactId = promptPayload.toCompactId(requestedSlot);
+        return expectedCompactId != null && expectedCompactId.equals(responseSlot);
     }
 
     private IllegalStateException invalidOutput() {
@@ -481,6 +849,38 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
         return new IllegalStateException(REPEATED_ROUND_LAYOUT_MESSAGE);
     }
 
+    private Integer theoreticalMaxFilledSlots(CreateFreeGameAssignmentPreviewCommand command) {
+        if (command == null) {
+            return null;
+        }
+
+        int participantCount = command.participants().size();
+        int total = 0;
+        for (CreateFreeGameAssignmentPreviewCommand.Round round : command.rounds()) {
+            int requestedFilled = 0;
+            int requestedNull = 0;
+            for (CreateFreeGameAssignmentPreviewCommand.Court court : round.courts()) {
+                for (String slot : court.slots()) {
+                    if (slot == null) {
+                        requestedNull++;
+                    } else {
+                        requestedFilled++;
+                    }
+                }
+            }
+            total += requestedFilled + Math.min(requestedNull, Math.max(participantCount - requestedFilled, 0));
+        }
+        return total;
+    }
+
+    private int countFilledSlots(AssignmentPreviewAiRawResponse response) {
+        return response.rounds().stream()
+                .flatMap(round -> round.courts().stream())
+                .flatMap(court -> court.slots().stream())
+                .mapToInt(slot -> slot == null ? 0 : 1)
+                .sum();
+    }
+
     private AssignmentPreviewAiInvalidResponseException invalidResponse(
             String message,
             Throwable cause,
@@ -488,6 +888,15 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
             boolean repairAttempted,
             Long initialAiElapsedMs,
             Long repairAiElapsedMs,
+            boolean emptyResponseRetryAttempted,
+            Long emptyResponseRetryElapsedMs,
+            Integer qualityRepairAttemptCount,
+            Long qualityRepairElapsedMsTotal,
+            List<String> qualityRepairReasons,
+            Integer theoreticalMaxFilledSlots,
+            Integer actualFilledSlotsAfterInitial,
+            Integer bestValidFilledSlots,
+            List<String> bestValidWarningCodes,
             Integer planningInputChars,
             Integer promptChars,
             Integer responseChars,
@@ -500,6 +909,15 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
                 repairAttempted,
                 initialAiElapsedMs,
                 repairAiElapsedMs,
+                emptyResponseRetryAttempted,
+                emptyResponseRetryElapsedMs,
+                qualityRepairAttemptCount,
+                qualityRepairElapsedMsTotal,
+                qualityRepairReasons,
+                theoreticalMaxFilledSlots,
+                actualFilledSlotsAfterInitial,
+                bestValidFilledSlots,
+                bestValidWarningCodes,
                 planningInputChars,
                 promptChars,
                 responseChars,
@@ -513,6 +931,15 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
             boolean repairAttempted,
             Long initialAiElapsedMs,
             Long repairAiElapsedMs,
+            boolean emptyResponseRetryAttempted,
+            Long emptyResponseRetryElapsedMs,
+            Integer qualityRepairAttemptCount,
+            Long qualityRepairElapsedMsTotal,
+            List<String> qualityRepairReasons,
+            Integer theoreticalMaxFilledSlots,
+            Integer actualFilledSlotsAfterInitial,
+            Integer bestValidFilledSlots,
+            List<String> bestValidWarningCodes,
             Integer planningInputChars,
             Integer promptChars,
             Integer responseChars,
@@ -530,6 +957,15 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
                     repairAttempted,
                     initialAiElapsedMs,
                     repairAiElapsedMs,
+                    emptyResponseRetryAttempted,
+                    emptyResponseRetryElapsedMs,
+                    qualityRepairAttemptCount,
+                    qualityRepairElapsedMsTotal,
+                    qualityRepairReasons,
+                    theoreticalMaxFilledSlots,
+                    actualFilledSlotsAfterInitial,
+                    bestValidFilledSlots,
+                    bestValidWarningCodes,
                     planningInputChars,
                     promptChars,
                     responseChars,
@@ -544,6 +980,15 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
                     repairAttempted,
                     initialAiElapsedMs,
                     repairAiElapsedMs,
+                    emptyResponseRetryAttempted,
+                    emptyResponseRetryElapsedMs,
+                    qualityRepairAttemptCount,
+                    qualityRepairElapsedMsTotal,
+                    qualityRepairReasons,
+                    theoreticalMaxFilledSlots,
+                    actualFilledSlotsAfterInitial,
+                    bestValidFilledSlots,
+                    bestValidWarningCodes,
                     planningInputChars,
                     promptChars,
                     responseChars,
@@ -562,6 +1007,22 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
 
     private long elapsedMillis(long startNanos) {
         return (System.nanoTime() - startNanos) / 1_000_000L;
+    }
+
+    private void applySamplingOptions(OpenAiChatOptions options, String model) {
+        if (supportsCustomTemperature(model)) {
+            options.setTemperature(PREVIEW_TEMPERATURE);
+        }
+    }
+
+    private boolean supportsCustomTemperature(String model) {
+        if (model == null || model.isBlank()) {
+            return true;
+        }
+
+        String normalizedModel = model.trim().toLowerCase();
+        return !normalizedModel.startsWith("gpt-5")
+                || normalizedModel.startsWith("gpt-5-chat");
     }
 
     private boolean isTimeoutException(Throwable throwable) {
@@ -587,9 +1048,9 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
             this.courts = List.copyOf(courts);
         }
 
-        static RoundLayoutSignature from(AssignmentPreviewAiResponse.Round round) {
+        static RoundLayoutSignature from(AssignmentPreviewAiRawResponse.Round round) {
             List<CourtLayoutSignature> courts = new ArrayList<>();
-            for (AssignmentPreviewAiResponse.Court court : round.courts()) {
+            for (AssignmentPreviewAiRawResponse.Court court : round.courts()) {
                 courts.add(new CourtLayoutSignature(court.courtNumber(), court.slots()));
             }
             return new RoundLayoutSignature(courts);
@@ -610,17 +1071,51 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
     }
 
     private record RequestedPreview(
-            AssignmentPreviewAiResponse response,
+            AssignmentPreviewAiRawResponse response,
             int responseChars
     ) {
     }
 
-    private record CourtLayoutSignature(
-            Integer courtNumber,
-            List<String> slots
+    private record QualityEvaluation(
+            int filledSlots,
+            int theoreticalMaxFilledSlots,
+            List<String> normalizedWarningCodes,
+            List<QualityDeficiency> deficiencies
     ) {
 
-        private CourtLayoutSignature(Integer courtNumber, List<String> slots) {
+        private boolean hasDeficiencies() {
+            return !deficiencies.isEmpty();
+        }
+
+        private boolean hasWarningInconsistency() {
+            return deficiencies.contains(QualityDeficiency.INCONSISTENT_WARNINGS);
+        }
+
+        private List<String> deficiencyNames() {
+            return deficiencies.stream()
+                    .map(Enum::name)
+                    .toList();
+        }
+    }
+
+    private enum QualityDeficiency {
+        UNDER_FILLED,
+        INCONSISTENT_WARNINGS
+    }
+
+    private static final class EmptyResponseException extends IllegalStateException {
+
+        private EmptyResponseException() {
+            super(EMPTY_RESPONSE_MESSAGE);
+        }
+    }
+
+    private record CourtLayoutSignature(
+            Integer courtNumber,
+            List<Long> slots
+    ) {
+
+        private CourtLayoutSignature(Integer courtNumber, List<Long> slots) {
             this.courtNumber = courtNumber;
             this.slots = new ArrayList<>(slots);
         }

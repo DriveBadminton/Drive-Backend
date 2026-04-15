@@ -1,6 +1,7 @@
 package com.gumraze.rallyon.backend.courtManager.application.service;
 
 import com.gumraze.rallyon.backend.common.exception.ConflictException;
+import com.gumraze.rallyon.backend.courtManager.adapter.out.ai.AssignmentPreviewAiProperties;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.command.CreateFreeGameAssignmentPreviewCommand;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.result.GetFreeGameAssignmentPreviewJobStatusResult;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.result.SubmitFreeGameAssignmentPreviewJobResult;
@@ -47,6 +48,9 @@ class AssignmentPreviewJobServiceTest {
     @Mock
     private AssignmentPreviewJobDispatchFailureService assignmentPreviewJobDispatchFailureService;
 
+    @Mock
+    private AssignmentPreviewAiProperties assignmentPreviewAiProperties;
+
     @InjectMocks
     private AssignmentPreviewJobService assignmentPreviewJobService;
 
@@ -57,6 +61,7 @@ class AssignmentPreviewJobServiceTest {
         CreateFreeGameAssignmentPreviewCommand command = previewCommand();
         AssignmentPreviewJob queuedJob = AssignmentPreviewJob.queue(accountId, command, "gpt-5-mini");
 
+        given(assignmentPreviewAiProperties.getModel()).willReturn("gpt-5-mini");
         given(manageAssignmentPreviewJobPort.existsByRequesterAccountIdAndStatusIn(
                 eq(accountId),
                 any(List.class)
@@ -91,6 +96,7 @@ class AssignmentPreviewJobServiceTest {
                 25L
         );
 
+        given(assignmentPreviewAiProperties.getModel()).willReturn("gpt-5-mini");
         given(manageAssignmentPreviewJobPort.existsByRequesterAccountIdAndStatusIn(
                 eq(accountId),
                 any(List.class)

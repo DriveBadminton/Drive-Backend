@@ -10,7 +10,7 @@ public record AssignmentPreviewPlanningInput(
 ) {
 
     public record Participant(
-            String clientId,
+            Long id,
             Integer gamesAssigned
     ) {
     }
@@ -28,14 +28,14 @@ public record AssignmentPreviewPlanningInput(
     }
 
     public record Slot(
-            String participantId,
+            Long participantId,
             boolean fixed
     ) {
     }
 
     public record PartnerPair(
-            String participantId1,
-            String participantId2
+            Long participantId1,
+            Long participantId2
     ) {
     }
 

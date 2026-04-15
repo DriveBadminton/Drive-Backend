@@ -23,7 +23,6 @@ public record CreateFreeGameAssignmentPreviewCommand (
      * AI가 배정 대상으로 판단할 참가자 정보다.
      *
      * @param clientId application 내부에서 슬롯 배정 식별에 사용할 참가자 ID
-     * @param name 참가자 표시 이름
      * @param gender 참가자 성별
      * @param ageGroup 참가자 연령대
      * @param grade 참가자 급수
@@ -31,12 +30,22 @@ public record CreateFreeGameAssignmentPreviewCommand (
      */
     public record Participant(
             String clientId,
-            String name,
             Gender gender,
             Integer ageGroup,
             Grade grade,
             Integer gamesAssigned
-    ) {}
+    ) {
+        public Participant(
+                String clientId,
+                String unusedName,
+                Gender gender,
+                Integer ageGroup,
+                Grade grade,
+                Integer gamesAssigned
+        ) {
+            this(clientId, gender, ageGroup, grade, gamesAssigned);
+        }
+    }
 
     /**
      * 한 라운드의 현재 배정 상태다.

@@ -1,6 +1,5 @@
 package com.gumraze.rallyon.backend.courtManager.adapter.out.ai;
 
-import tools.jackson.databind.ObjectMapper;
 import com.gumraze.rallyon.backend.courtManager.adapter.out.ai.support.AssignmentPreviewEvalCase;
 import com.gumraze.rallyon.backend.courtManager.adapter.out.ai.support.AssignmentPreviewQualityEvaluator;
 import com.gumraze.rallyon.backend.courtManager.adapter.out.ai.support.AssignmentPreviewQualityReport;
@@ -24,11 +23,12 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @Tag("live-ai")
+@Tag("live-ai-benchmark")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@EnabledIfEnvironmentVariable(named = "OPENAI_LIVE_TEST", matches = "true")
-class AssignmentPreviewLiveSmokeTest {
+@EnabledIfEnvironmentVariable(named = "OPENAI_LIVE_BENCHMARK_TEST", matches = "true")
+class AssignmentPreviewLiveBenchmarkTest {
 
-    private static final Logger log = LoggerFactory.getLogger(AssignmentPreviewLiveSmokeTest.class);
+    private static final Logger log = LoggerFactory.getLogger(AssignmentPreviewLiveBenchmarkTest.class);
 
     private final AssignmentPreviewQualityEvaluator evaluator = new AssignmentPreviewQualityEvaluator();
 
@@ -42,27 +42,25 @@ class AssignmentPreviewLiveSmokeTest {
     }
 
     @ParameterizedTest(name = "{0}")
-    @MethodSource("smokeCases")
-    @Timeout(120)
-    @DisplayName("실모델 smoke test는 최소 품질 기준을 만족해야 한다.")
-    void generate_liveModelResponse_meetsQualityThreshold(AssignmentPreviewEvalCase evalCase) {
-        // given: live smoke용 curated fixture 케이스를 준비한다.
-        // when: 실모델로 preview를 생성하고 품질 평가를 수행한다.
+    @MethodSource("benchmarkCases")
+    @Timeout(300)
+    @DisplayName("실모델 60슬롯 benchmark는 대형 입력에서도 기본 품질 기준을 만족해야 한다.")
+    void generate_largeLiveModelResponse_meetsQualityThreshold(AssignmentPreviewEvalCase evalCase) {
         Instant startedAt = Instant.now();
         AssignmentPreviewAiResponse response = gateway.generate(evalCase.toCommand());
         long elapsedMs = Duration.between(startedAt, Instant.now()).toMillis();
         AssignmentPreviewQualityReport report = evaluator.evaluate(evalCase.toCommand(), response);
 
         log.info(
-                "live-ai case={}, model={}, elapsedMs={}, warningCodes={}, report={}",
+                "live-ai-benchmark case={}, model={}, elapsedMs={}, filledSlotDelta={}, warningCodes={}, report={}",
                 evalCase.scenario(),
                 modelName,
                 elapsedMs,
+                report.filledSlotDelta(),
                 report.warningCodes(),
                 report
         );
 
-        // then: exact JSON이 아니라 최소 품질 기준을 만족해야 한다.
         then(report.pass()).isTrue();
         then(report.filledSlotDelta()).isGreaterThanOrEqualTo(evalCase.expected().minFilledSlotDelta());
         then(report.satisfiedPartnerPairCount())
@@ -73,17 +71,11 @@ class AssignmentPreviewLiveSmokeTest {
         }
     }
 
-    private static Stream<Named<AssignmentPreviewEvalCase>> smokeCases() {
+    private static Stream<Named<AssignmentPreviewEvalCase>> benchmarkCases() {
         return List.of(
-                        "pass-fill-empty-basic.json",
-                        "pass-all-slots-already-filled-no-op.json",
-                        "pass-fixed-slots-preserved-with-partial-warning.json",
-                        "pass-fixed-anchors-multi-round-varied-layout.json",
-                        "pass-partner-pair-satisfied.json",
-                        "pass-partner-pair-unavoidable-partial-warning.json",
-                        "pass-reassign-all-basic.json",
-                        "pass-multi-round-varied-layout.json",
-                        "pass-imbalanced-participant-count.json"
+                        "benchmark-60-slots-fill-all.json",
+                        "benchmark-60-slots-preserve-fixed.json",
+                        "benchmark-60-slots-partial-shortage.json"
                 ).stream()
                 .map(AssignmentPreviewEvalCase::load)
                 .map(evalCase -> Named.of(evalCase.scenario(), evalCase));

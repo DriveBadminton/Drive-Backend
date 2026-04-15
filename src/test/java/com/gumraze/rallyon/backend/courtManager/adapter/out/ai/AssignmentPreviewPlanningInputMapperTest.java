@@ -19,21 +19,23 @@ class AssignmentPreviewPlanningInputMapperTest {
     @Test
     @DisplayName("planning input에는 participant의 clientId와 gamesAssigned만 포함한다.")
     void from_mapsSlimParticipantPayload() {
-        AssignmentPreviewPlanningInput result = mapper.from(fillEmptySlotsCommand());
+        AssignmentPreviewPromptPayload result = mapper.from(fillEmptySlotsCommand());
 
-        then(result.participants()).containsExactly(
-                new AssignmentPreviewPlanningInput.Participant("p1", 1)
+        then(result.compactIdByClientId()).containsEntry("p1", 1L);
+        then(result.clientIdByCompactId()).containsEntry(1L, "p1");
+        then(result.planningInput().participants()).containsExactly(
+                new AssignmentPreviewPlanningInput.Participant(1L, 1)
         );
     }
 
     @Test
     @DisplayName("빈 슬롯만 채우기 정책이면 기존 슬롯은 fixed true로 변환한다.")
     void from_whenFillEmptySlots_mapsFixedFlags() {
-        AssignmentPreviewPlanningInput result = mapper.from(fillEmptySlotsCommand());
+        AssignmentPreviewPromptPayload result = mapper.from(fillEmptySlotsCommand());
 
-        then(result.rounds().getFirst().courts().getFirst().slots())
+        then(result.planningInput().rounds().getFirst().courts().getFirst().slots())
                 .containsExactly(
-                        new AssignmentPreviewPlanningInput.Slot("p1", true),
+                        new AssignmentPreviewPlanningInput.Slot(1L, true),
                         new AssignmentPreviewPlanningInput.Slot(null, false),
                         new AssignmentPreviewPlanningInput.Slot(null, false),
                         new AssignmentPreviewPlanningInput.Slot(null, false)
@@ -43,11 +45,11 @@ class AssignmentPreviewPlanningInputMapperTest {
     @Test
     @DisplayName("전체 다시 배정 정책이면 모든 슬롯은 fixed false로 변환한다.")
     void from_whenReassignAll_mapsAllSlotsAsMutable() {
-        AssignmentPreviewPlanningInput result = mapper.from(reassignAllCommand());
+        AssignmentPreviewPromptPayload result = mapper.from(reassignAllCommand());
 
-        then(result.rounds().getFirst().courts().getFirst().slots())
+        then(result.planningInput().rounds().getFirst().courts().getFirst().slots())
                 .containsExactly(
-                        new AssignmentPreviewPlanningInput.Slot("p1", false),
+                        new AssignmentPreviewPlanningInput.Slot(1L, false),
                         new AssignmentPreviewPlanningInput.Slot(null, false),
                         new AssignmentPreviewPlanningInput.Slot(null, false),
                         new AssignmentPreviewPlanningInput.Slot(null, false)
@@ -57,9 +59,13 @@ class AssignmentPreviewPlanningInputMapperTest {
     @Test
     @DisplayName("정책과 파트너 정보는 guidance 하나로 압축한다.")
     void from_mapsUnifiedGuidance() {
-        AssignmentPreviewPlanningInput result = mapper.from(fillEmptySlotsWithPartnerCommand());
+        AssignmentPreviewPromptPayload result = mapper.from(fillEmptySlotsWithPartnerCommand());
 
-        then(result.guidance()).isEqualTo(
+        then(result.compactIdByClientId()).containsEntry("p1", 1L).containsEntry("p2", 2L);
+        then(result.planningInput().partnerPairs()).containsExactly(
+                new AssignmentPreviewPlanningInput.PartnerPair(1L, 2L)
+        );
+        then(result.planningInput().guidance()).isEqualTo(
                 new AssignmentPreviewPlanningInput.Guidance(true, true, true, 1)
         );
     }
@@ -67,9 +73,9 @@ class AssignmentPreviewPlanningInputMapperTest {
     @Test
     @DisplayName("파트너 무시와 전체 재배정 정책이면 negative guidance로 변환한다.")
     void from_whenIgnoringPartnersAndReassignAll_mapsNegativeGuidance() {
-        AssignmentPreviewPlanningInput result = mapper.from(ignorePartnersAndReassignAllCommand());
+        AssignmentPreviewPromptPayload result = mapper.from(ignorePartnersAndReassignAllCommand());
 
-        then(result.guidance()).isEqualTo(
+        then(result.planningInput().guidance()).isEqualTo(
                 new AssignmentPreviewPlanningInput.Guidance(false, false, false, 0)
         );
     }

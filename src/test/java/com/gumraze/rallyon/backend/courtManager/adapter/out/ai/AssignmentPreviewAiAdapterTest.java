@@ -40,6 +40,15 @@ public class AssignmentPreviewAiAdapterTest {
                         false,
                         1200L,
                         null,
+                        false,
+                        null,
+                        0,
+                        null,
+                        List.of(),
+                        4,
+                        2,
+                        2,
+                        List.of("PARTIAL_ASSIGNMENT"),
                         320,
                         640,
                         180,
@@ -93,6 +102,15 @@ public class AssignmentPreviewAiAdapterTest {
                         true,
                         900L,
                         800L,
+                        true,
+                        250L,
+                        2,
+                        140L,
+                        List.of("UNDER_FILLED", "INCONSISTENT_WARNINGS"),
+                        4,
+                        2,
+                        4,
+                        List.of(),
                         300,
                         580,
                         170,
@@ -107,6 +125,15 @@ public class AssignmentPreviewAiAdapterTest {
         then(result.repairAttempted()).isTrue();
         then(result.initialAiElapsedMs()).isEqualTo(900L);
         then(result.repairAiElapsedMs()).isEqualTo(800L);
+        then(result.emptyResponseRetryAttempted()).isTrue();
+        then(result.emptyResponseRetryElapsedMs()).isEqualTo(250L);
+        then(result.qualityRepairAttemptCount()).isEqualTo(2);
+        then(result.qualityRepairElapsedMsTotal()).isEqualTo(140L);
+        then(result.qualityRepairReasons()).containsExactly("UNDER_FILLED", "INCONSISTENT_WARNINGS");
+        then(result.theoreticalMaxFilledSlots()).isEqualTo(4);
+        then(result.actualFilledSlotsAfterInitial()).isEqualTo(2);
+        then(result.bestValidFilledSlots()).isEqualTo(4);
+        then(result.bestValidWarningCodes()).isEmpty();
         then(result.planningInputChars()).isEqualTo(300);
         then(result.promptChars()).isEqualTo(580);
         then(result.responseChars()).isEqualTo(170);

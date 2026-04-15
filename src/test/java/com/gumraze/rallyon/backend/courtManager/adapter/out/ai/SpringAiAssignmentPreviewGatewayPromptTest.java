@@ -3,6 +3,7 @@ package com.gumraze.rallyon.backend.courtManager.adapter.out.ai;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
+import com.gumraze.rallyon.backend.common.exception.ServiceUnavailableException;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.command.CreateFreeGameAssignmentPreviewCommand;
 import com.gumraze.rallyon.backend.user.constants.Gender;
 import com.gumraze.rallyon.backend.user.constants.Grade;
@@ -13,7 +14,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.ResponseFormat;
+import org.springframework.web.client.ResourceAccessException;
 
+import java.net.SocketTimeoutException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -45,7 +49,9 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                               ]
                             }
                           ],
-                          "warnings": []
+                          "warnings": [
+                            {"code": "PARTIAL_ASSIGNMENT", "message": "partial"}
+                          ]
                         }
                         """));
 
@@ -60,11 +66,10 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
         then(options.getResponseFormat().getType()).isEqualTo(ResponseFormat.Type.JSON_SCHEMA);
         then(options.getResponseFormat().getJsonSchema().getName()).isEqualTo("assignment_preview");
         then(options.getResponseFormat().getJsonSchema().getStrict()).isTrue();
-        then(options.getTemperature()).isEqualTo(0.0d);
         then(options.getMaxCompletionTokens()).isEqualTo(1200);
         Map<String, Object> schema = options.getResponseFormat().getJsonSchema().getSchema();
         then(schema.get("type")).isEqualTo("object");
-        then(prompt.getContents()).contains("p1");
+        then(prompt.getContents()).contains("\"id\":1");
     }
 
     @Test
@@ -81,7 +86,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
 
         // when & then: 직렬화 실패 시 예외 반환 검증
         assertThatThrownBy(() -> getGateway(objectMapper).generate(null))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(AssignmentPreviewAiInvalidResponseException.class)
                 .hasMessageContaining("OpenAI로부터 응답을 읽을 수 없습니다.")
                 .hasCauseInstanceOf(JacksonException.class);
     }
@@ -95,7 +100,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
 
         // when & then: 응답 파싱 실패 시 예외와 원인 보존 검증
         assertThatThrownBy(() -> getGateway().generate(null))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(AssignmentPreviewAiInvalidResponseException.class)
                 .hasMessageContaining("OpenAI로부터 응답을 읽을 수 없습니다.")
                 .hasCauseInstanceOf(JacksonException.class);
     }
@@ -111,7 +116,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
         getGateway().generate(null);
 
         // then: prompt instruction 포함 검증
-        then(getSingleCapturedPrompt().getContents()).contains("코트 배정 preview");
+        then(getSingleCapturedPrompt().getContents()).contains("free-game court assignments");
     }
 
     @Test
@@ -128,7 +133,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
         Prompt prompt = getSingleCapturedPrompt();
         then(prompt.getContents()).contains("rounds");
         then(prompt.getContents()).contains("warnings");
-        then(prompt.getContents()).contains("JSON만 반환");
+        then(prompt.getContents()).contains("Return JSON only");
     }
 
     @Test
@@ -144,7 +149,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                           "courts": [
                             {
                               "courtNumber": 1,
-                              "slots": ["p1", null, null, null]
+                              "slots": ["p1", "p2", null, null]
                             }
                           ]
                         }
@@ -154,45 +159,104 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                     """));
 
         // when: AI 프리뷰 생성을 수행한다.
-        getGateway().generate(getSingleRoundCommand());
+        getGateway().generate(getCommand(
+                List.of(
+                        getParticipant(),
+                        getParticipant("p2", "김원호", 0)
+                ),
+                List.of(getRound(1, Arrays.asList("p1", null, null, null))),
+                List.of(),
+                getPreferences(
+                        CreateFreeGameAssignmentPreviewCommand.PartnerPolicy.IGNORE_PARTNERS,
+                        CreateFreeGameAssignmentPreviewCommand.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS
+                )
+        ));
 
         // then: prompt에 핵심 배정 규칙과 warning 정책이 포함된다.
         String prompt = getSingleCapturedPrompt().getContents();
-        then(prompt).contains("규칙:");
-        then(prompt).contains("같은 라운드 중복 참가자 금지");
-        then(prompt).contains("이전 라운드 전체 복제 금지");
-        then(prompt).contains("동일한 court-level 4인 배치 반복 금지");
-        then(prompt).contains("null만 최대한 채우기");
-        then(prompt).contains("partnerPairs 우선");
+        then(prompt).contains("Rules:");
+        then(prompt).contains("Use each participant id at most once per round.");
+        then(prompt).contains("Do not copy an entire previous round layout.");
+        then(prompt).contains("Try to vary court-level 4-player layouts across rounds.");
+        then(prompt).contains("fill only null slots");
+        then(prompt).contains("try to place each partner pair on the same court");
+        then(prompt).contains("Primary objective: maximize filled slots.");
+        then(prompt).contains("If a null slot can be filled without breaking constraints, fill it. Do not stop early.");
+        then(prompt).contains("Always return warnings as an array. Use [] when there are no warnings.");
         then(prompt).contains("PARTIAL_ASSIGNMENT");
         then(prompt).contains("PARTNER_CONSTRAINT_PARTIAL");
-        then(prompt).contains("warnings 비우지 않기");
+        then(prompt).contains("Use NO_FURTHER_IMPROVEMENT only when no additional null slot can be filled");
     }
 
     @Test
-    @DisplayName("OpenAI 응답이 비어 있으면 IllegalStateException을 던진다")
-    void generate_whenResponseIsEmpty_throwsIllegalStateException() {
-        // given: 비어 있는 응답을 반환하는 Spring AI와 gateway를 준비한다.
+    @DisplayName("OpenAI 응답이 비어 있으면 1회 follow-up 후 유효 응답을 반환한다")
+    void generate_whenResponseIsEmpty_retriesOnceWithFollowUpPrompt() {
+        // given: 첫 번째 응답은 비어 있고, 두 번째 응답은 유효하다.
         given(chatModel.call(any(Prompt.class)))
-                .willReturn(new org.springframework.ai.chat.model.ChatResponse(List.of()));
+                .willReturn(
+                        new org.springframework.ai.chat.model.ChatResponse(List.of()),
+                        getChatResponse("""
+                                {
+                                  "rounds": [
+                                {
+                                  "roundNumber": 1,
+                                  "courts": [
+                                    {
+                                      "courtNumber": 1,
+                                      "slots": ["p1", null, null, null]
+                                    }
+                                  ]
+                                }
+                              ],
+                                  "warnings": [
+                                    {"code": "PARTIAL_ASSIGNMENT", "message": "partial"}
+                                  ]
+                                }
+                                """)
+                );
 
-        // when & then: 비어 있는 응답일 때 예외 반환 검증
-        assertThatThrownBy(() -> getGateway().generate(null))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("OpenAI 응답이 비어 있습니다.");
+        // when: 빈 응답 이후 follow-up을 수행한다.
+        AssignmentPreviewAiResponse result = getGateway().generate(getSingleRoundCommand());
+
+        // then: 두 번째 응답을 반환하고 follow-up prompt를 사용한다.
+        then(result).isEqualTo(getSingleRoundAiResponse());
+        then(getCapturedPrompts(2).get(1).getContents())
+                .contains("The previous response was empty. Return a non-empty JSON object");
     }
 
     @Test
-    @DisplayName("OpenAI 응답 텍스트가 비어 있으면 IllegalStateException을 던진다")
-    void generate_whenResponseTextIsBlank_throwsIllegalStateException() {
-        // given: 빈 텍스트 응답을 반환하는 Spring AI와 gateway를 준비한다.
+    @DisplayName("OpenAI 응답 텍스트가 비어 있으면 1회 follow-up 후 유효 응답을 반환한다")
+    void generate_whenResponseTextIsBlank_retriesOnceWithFollowUpPrompt() {
+        // given: 첫 번째 응답 텍스트는 blank이고, 두 번째 응답은 유효하다.
         given(chatModel.call(any(Prompt.class)))
-                .willReturn(getChatResponse("   "));
+                .willReturn(
+                        getChatResponse("   "),
+                        getChatResponse("""
+                                {
+                                  "rounds": [
+                                {
+                                  "roundNumber": 1,
+                                  "courts": [
+                                    {
+                                      "courtNumber": 1,
+                                      "slots": ["p1", null, null, null]
+                                    }
+                                  ]
+                                }
+                              ],
+                                  "warnings": [
+                                    {"code": "PARTIAL_ASSIGNMENT", "message": "partial"}
+                                  ]
+                                }
+                                """)
+                );
 
-        // when & then: 빈 텍스트 응답일 때 예외 반환 검증
-        assertThatThrownBy(() -> getGateway().generate(null))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("OpenAI 응답이 비어 있습니다.");
+        // when: blank 응답 이후 follow-up을 수행한다.
+        AssignmentPreviewAiResponse result = getGateway().generate(getSingleRoundCommand());
+
+        // then: 두 번째 응답을 반환한다.
+        then(result).isEqualTo(getSingleRoundAiResponse());
+        verify(chatModel, times(2)).call(any(Prompt.class));
     }
 
     @Test
@@ -210,7 +274,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
 
         // when & then: schema 파싱 실패 시 예외 반환 검증
         assertThatThrownBy(() -> getGateway(objectMapper).generate(null))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(AssignmentPreviewAiInvalidResponseException.class)
                 .hasMessageContaining("OpenAI로부터 응답을 읽을 수 없습니다.")
                 .hasCauseInstanceOf(JacksonException.class);
     }
@@ -243,23 +307,25 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                                 {
                                   "roundNumber": 1,
                                   "courts": [
-                                    {
-                                      "courtNumber": 1,
-                                      "slots": ["p1", null, null, null]
-                                    }
-                                  ]
-                                },
                                 {
-                                  "roundNumber": 2,
-                                  "courts": [
-                                    {
-                                      "courtNumber": 1,
-                                      "slots": ["p2", null, null, null]
-                                    }
-                                  ]
+                                  "courtNumber": 1,
+                                  "slots": ["p1", "p2", null, null]
                                 }
+                              ]
+                            },
+                            {
+                              "roundNumber": 2,
+                              "courts": [
+                                {
+                                  "courtNumber": 1,
+                                  "slots": ["p2", "p1", null, null]
+                                }
+                              ]
+                            }
                               ],
-                              "warnings": []
+                              "warnings": [
+                                {"code": "PARTIAL_ASSIGNMENT", "message": "partial"}
+                              ]
                             }
                             """)
                 );
@@ -271,7 +337,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
         then(result.rounds()).hasSize(2);
         then(result.rounds().get(0).roundNumber()).isEqualTo(1);
         then(result.rounds().get(1).roundNumber()).isEqualTo(2);
-        then(result.rounds().get(1).courts().getFirst().slots()).containsExactly("p2", null, null, null);
+        then(result.rounds().get(1).courts().getFirst().slots()).containsExactly("p2", "p1", null, null);
         verify(chatModel, times(2)).call(any(Prompt.class));
     }
 
@@ -288,7 +354,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                           "courts": [
                             {
                               "courtNumber": 1,
-                              "slots": ["p1", null, null, null]
+                              "slots": ["p1", "p2", null, null]
                             }
                           ]
                         },
@@ -297,12 +363,14 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                           "courts": [
                             {
                               "courtNumber": 1,
-                              "slots": ["p2", null, null, null]
+                              "slots": ["p2", "p1", null, null]
                             }
                           ]
                         }
                       ],
-                      "warnings": []
+                      "warnings": [
+                        {"code": "PARTIAL_ASSIGNMENT", "message": "partial"}
+                      ]
                     }
                     """));
 
@@ -311,7 +379,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
 
         // then: 첫 번째 응답을 그대로 반환하고 재시도하지 않는다.
         then(result.rounds()).hasSize(2);
-        then(result.rounds().get(1).courts().getFirst().slots()).containsExactly("p2", null, null, null);
+        then(result.rounds().get(1).courts().getFirst().slots()).containsExactly("p2", "p1", null, null);
         verify(chatModel, times(1)).call(any(Prompt.class));
     }
 
@@ -328,7 +396,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                           "courts": [
                             {
                               "courtNumber": 1,
-                              "slots": ["p1", null, null, null]
+                              "slots": ["p1", "p2", null, null]
                             }
                           ]
                         }
@@ -338,11 +406,22 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                     """));
 
         // when: AI 프리뷰 생성을 수행한다.
-        getGateway().generate(getSingleRoundCommand());
+        getGateway().generate(getCommand(
+                List.of(
+                        getParticipant(),
+                        getParticipant("p2", "김원호", 0)
+                ),
+                List.of(getRound(1, Arrays.asList("p1", null, null, null))),
+                List.of(),
+                getPreferences(
+                        CreateFreeGameAssignmentPreviewCommand.PartnerPolicy.IGNORE_PARTNERS,
+                        CreateFreeGameAssignmentPreviewCommand.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS
+                )
+        ));
 
         // then: prompt에는 participantId와 fixed 정보가 포함된다.
         String prompt = getSingleCapturedPrompt().getContents();
-        then(prompt).contains("\"participantId\":\"p1\"");
+        then(prompt).contains("\"participantId\":1");
         then(prompt).contains("\"fixed\":true");
         then(prompt).contains("\"fixed\":false");
     }
@@ -377,7 +456,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                                   "courts": [
                                     {
                                       "courtNumber": 1,
-                                      "slots": ["p1", null, null, null]
+                                      "slots": ["p1", "p2", null, null]
                                     } 
                                   ]
                                 },
@@ -386,12 +465,14 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                                   "courts": [
                                     {
                                       "courtNumber": 1,
-                                      "slots": ["p2", null, null, null]
+                                      "slots": ["p2", "p1", null, null]
                                     }
                                   ]
                                 }
                               ],
-                              "warnings": []
+                              "warnings": [
+                                {"code": "PARTIAL_ASSIGNMENT", "message": "partial"}
+                              ]
                             }
                             """)
                 );
@@ -401,7 +482,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
 
         // then: 두 번째 prompt도 planning input 구조를 포함한다.
         Prompt repairPrompt = getCapturedPrompts(2).get(1);
-        then(repairPrompt.getContents()).contains("이전 응답은 요청 구조와 제약을 만족하지 못했습니다.");
+        then(repairPrompt.getContents()).contains("The previous response did not satisfy the required structure or constraints.");
         then(repairPrompt.getContents()).contains("\"fixed\":true");
         then(repairPrompt.getContents()).contains("\"preserveFixedSlots\":true");
         then(repairPrompt.getContents()).contains("\"fillEmptySlotsOnly\":true");
@@ -439,7 +520,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                                   "courts": [
                                     {
                                       "courtNumber": 1,
-                                      "slots": ["p1", null, null, null]
+                                      "slots": ["p1", "p2", null, null]
                                     }
                                   ]
                                 },
@@ -448,12 +529,14 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                                   "courts": [
                                     {
                                       "courtNumber": 1,
-                                      "slots": ["p2", null, null, null]
+                                      "slots": ["p2", "p1", null, null]
                                     }
                                   ]
                                 }
                               ],
-                              "warnings": []
+                              "warnings": [
+                                {"code": "PARTIAL_ASSIGNMENT", "message": "partial"}
+                              ]
                             }
                             """)
                 );
@@ -463,13 +546,15 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
 
         // then: 재시도 prompt에 구조/경고 규칙이 포함된다.
         String repairPrompt = getCapturedPrompts(2).get(1).getContents();
-        then(repairPrompt).contains("다시 생성하세요.");
-        then(repairPrompt).contains("같은 라운드 중복 참가자 금지");
-        then(repairPrompt).contains("이전 라운드 전체 복제 금지");
-        then(repairPrompt).contains("동일한 court-level 4인 배치 반복 금지");
+        then(repairPrompt).contains("Generate the preview again.");
+        then(repairPrompt).contains("Use each participant id at most once per round.");
+        then(repairPrompt).contains("Do not copy an entire previous round layout.");
+        then(repairPrompt).contains("Try to vary court-level 4-player layouts across rounds.");
+        then(repairPrompt).contains("Primary objective: maximize filled slots.");
+        then(repairPrompt).contains("Always return warnings as an array. Use [] when there are no warnings.");
         then(repairPrompt).contains("PARTIAL_ASSIGNMENT");
         then(repairPrompt).contains("PARTNER_CONSTRAINT_PARTIAL");
-        then(repairPrompt).contains("warnings 비우지 않기");
+        then(repairPrompt).contains("Use NO_FURTHER_IMPROVEMENT only when no additional null slot can be filled");
     }
 
     @Test
@@ -511,7 +596,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                                   "courts": [
                                     {
                                       "courtNumber": 1,
-                                      "slots": ["p1", null, null, null]
+                                      "slots": ["p1", "p2", null, null]
                                     }
                                   ]
                                 },
@@ -520,12 +605,14 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                                   "courts": [
                                     {
                                       "courtNumber": 1,
-                                      "slots": ["p2", null, null, null]
+                                      "slots": ["p2", "p1", null, null]
                                     }
                                   ]
                                 }
                               ],
-                              "warnings": []
+                              "warnings": [
+                                {"code": "PARTIAL_ASSIGNMENT", "message": "partial"}
+                              ]
                             }
                             """)
                 );
@@ -535,7 +622,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
 
         // then: repair prompt에 round 복제 실패 사유가 포함된다.
         String repairPrompt = getCapturedPrompts(2).get(1).getContents();
-        then(repairPrompt).contains("실패 사유:");
+        then(repairPrompt).contains("Failure reason:");
         then(repairPrompt).contains("The previous output copied the same round layout across multiple rounds.");
     }
 
@@ -552,7 +639,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                           "courts": [
                             {
                               "courtNumber": 1,
-                              "slots": ["p1", null, null, null]
+                              "slots": ["p1", "p2", null, null]
                             }
                           ]
                         }
@@ -562,13 +649,24 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                     """));
 
         // when: AI 프리뷰 생성을 수행한다.
-        getGateway().generate(getSingleRoundCommand());
+        getGateway().generate(getCommand(
+                List.of(
+                        getParticipant(),
+                        getParticipant("p2", "김원호", 0)
+                ),
+                List.of(getRound(1, Arrays.asList("p1", null, null, null))),
+                List.of(),
+                getPreferences(
+                        CreateFreeGameAssignmentPreviewCommand.PartnerPolicy.IGNORE_PARTNERS,
+                        CreateFreeGameAssignmentPreviewCommand.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS
+                )
+        ));
 
         // then: prompt에는 clientId / gamesAssigned만 포함되고 name 등은 제외된다.
         String prompt = getSingleCapturedPrompt().getContents();
-        then(prompt).contains("\"clientId\":\"p1\"");
+        then(prompt).contains("\"id\":1");
         then(prompt).contains("\"gamesAssigned\":1");
-        then(prompt).contains("\"participantId\":\"p1\"");
+        then(prompt).contains("\"participantId\":1");
         then(prompt).doesNotContain("\"name\":");
         then(prompt).doesNotContain("\"gender\":");
         then(prompt).doesNotContain("\"ageGroup\":");
@@ -584,36 +682,59 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
 
         // when & then: 파싱 실패는 재시도 없이 바로 실패한다.
         assertThatThrownBy(() -> getGateway().generate(getSingleRoundCommand()))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(AssignmentPreviewAiInvalidResponseException.class)
                 .hasMessageContaining("OpenAI로부터 응답을 읽을 수 없습니다.");
         verify(chatModel, times(1)).call(any(Prompt.class));
     }
 
     @Test
-    @DisplayName("OpenAI 응답이 비어 있으면 재시도하지 않고 바로 실패한다.")
-    void generate_whenResponseIsEmpty_doesNotRetry() {
-        // given: 첫 번째 AI 응답 자체가 비어 있다.
+    @DisplayName("OpenAI 응답이 두 번 연속 비어 있으면 follow-up 후에도 실패한다.")
+    void generate_whenResponseIsEmptyTwice_failsAfterSingleFollowUp() {
+        // given: 첫 번째와 두 번째 응답 모두 비어 있다.
         given(chatModel.call(any(Prompt.class)))
-                .willReturn(new org.springframework.ai.chat.model.ChatResponse(List.of()));
+                .willReturn(
+                        new org.springframework.ai.chat.model.ChatResponse(List.of()),
+                        new org.springframework.ai.chat.model.ChatResponse(List.of())
+                );
 
-        // when & then: 비어 있는 응답은 재시도 없이 바로 실패한다.
+        // when & then: 비어 있는 응답은 1회 follow-up 후 최종 실패한다.
         assertThatThrownBy(() -> getGateway().generate(getSingleRoundCommand()))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(AssignmentPreviewAiInvalidResponseException.class)
                 .hasMessageContaining("OpenAI 응답이 비어 있습니다.");
-        verify(chatModel, times(1)).call(any(Prompt.class));
+        verify(chatModel, times(2)).call(any(Prompt.class));
     }
 
     @Test
-    @DisplayName("OpenAI 응답 텍스트가 비어 있으면 재시도하지 않고 바로 실패한다.")
-    void generate_whenResponseTextIsBlank_doesNotRetry() {
-        // given: 첫 번째 AI 응답 텍스트가 blank다.
+    @DisplayName("OpenAI 응답 텍스트가 두 번 연속 blank면 follow-up 후에도 실패한다.")
+    void generate_whenResponseTextIsBlankTwice_failsAfterSingleFollowUp() {
+        // given: 첫 번째와 두 번째 응답 텍스트가 모두 blank다.
         given(chatModel.call(any(Prompt.class)))
-                .willReturn(getChatResponse("   "));
+                .willReturn(
+                        getChatResponse("   "),
+                        getChatResponse("   ")
+                );
 
-        // when & then: blank 응답은 재시도 없이 바로 실패한다.
+        // when & then: blank 응답은 1회 follow-up 후 최종 실패한다.
         assertThatThrownBy(() -> getGateway().generate(getSingleRoundCommand()))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(AssignmentPreviewAiInvalidResponseException.class)
                 .hasMessageContaining("OpenAI 응답이 비어 있습니다.");
+        verify(chatModel, times(2)).call(any(Prompt.class));
+    }
+
+    @Test
+    @DisplayName("timeout 예외는 empty-response follow-up 없이 바로 실패한다.")
+    void generate_whenTimeoutOccurs_doesNotRetryEmptyResponse() {
+        // given: OpenAI 호출이 timeout으로 실패한다.
+        given(chatModel.call(any(Prompt.class)))
+                .willThrow(new ResourceAccessException(
+                        "read timed out",
+                        new SocketTimeoutException("read timed out")
+                ));
+
+        // when & then: timeout은 바로 실패하고 follow-up을 수행하지 않는다.
+        assertThatThrownBy(() -> getGateway().generate(getSingleRoundCommand()))
+                .isInstanceOf(ServiceUnavailableException.class)
+                .hasMessageContaining("응답 시간이 초과");
         verify(chatModel, times(1)).call(any(Prompt.class));
     }
 
@@ -630,7 +751,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                           "courts": [
                             {
                               "courtNumber": 1,
-                              "slots": ["p1", null, null, null]
+                              "slots": ["p1", "p2", null, null]
                             }
                           ]
                         }
@@ -640,7 +761,18 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                     """));
 
         // when: AI 프리뷰 생성을 수행한다.
-        getGateway().generate(getSingleRoundCommand());
+        getGateway().generate(getCommand(
+                List.of(
+                        getParticipant(),
+                        getParticipant("p2", "김원호", 0)
+                ),
+                List.of(getRound(1, Arrays.asList("p1", null, null, null))),
+                List.of(),
+                getPreferences(
+                        CreateFreeGameAssignmentPreviewCommand.PartnerPolicy.IGNORE_PARTNERS,
+                        CreateFreeGameAssignmentPreviewCommand.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS
+                )
+        ));
 
         // then: prompt에 unified guidance가 포함된다.
         String prompt = getSingleCapturedPrompt().getContents();
@@ -662,7 +794,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                           "courts": [
                             {
                               "courtNumber": 1,
-                              "slots": ["p1", null, null, null]
+                              "slots": ["p1", "p2", null, null]
                             }
                           ]
                         }
@@ -741,5 +873,216 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
         then(prompt).contains("\"fillEmptySlotsOnly\":false");
         then(prompt).contains("\"preferProvidedPartnerPairs\":false");
         then(prompt).contains("\"preferredPairCount\":0");
+    }
+
+    @Test
+    @DisplayName("under-filled quality repair prompt에 개선 지시와 이전 응답을 포함한다")
+    void generateExecution_includesQualityRepairPromptWhenInitialResponseIsUnderFilled() {
+        given(chatModel.call(any(Prompt.class)))
+                .willReturn(
+                        getChatResponse("""
+                                {
+                                  "rounds": [
+                                    {
+                                      "roundNumber": 1,
+                              "courts": [
+                            {
+                              "courtNumber": 1,
+                              "slots": ["p1", "p2", null, null]
+                            }
+                          ]
+                        }
+                      ],
+                                  "warnings": [
+                                    {"code": "PARTIAL_ASSIGNMENT", "message": "partial"}
+                                  ]
+                                }
+                                """),
+                        getChatResponse("""
+                                {
+                                  "rounds": [
+                                    {
+                                      "roundNumber": 1,
+                                      "courts": [
+                                        {
+                                          "courtNumber": 1,
+                                          "slots": ["p1", "p2", "p3", "p4"]
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "warnings": []
+                                }
+                                """)
+                );
+
+        CreateFreeGameAssignmentPreviewCommand command = getCommand(
+                List.of(
+                        getParticipant("p1", "p1", 0),
+                        getParticipant("p2", "p2", 0),
+                        getParticipant("p3", "p3", 0),
+                        getParticipant("p4", "p4", 0)
+                ),
+                List.of(getRound(1, java.util.Arrays.asList("p1", null, null, null))),
+                List.of(),
+                getPreferences(
+                        CreateFreeGameAssignmentPreviewCommand.PartnerPolicy.IGNORE_PARTNERS,
+                        CreateFreeGameAssignmentPreviewCommand.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS
+                )
+        );
+
+        getGateway().generateExecution(command);
+
+        String repairPrompt = getCapturedPrompts(2).get(1).getContents();
+        then(repairPrompt).contains("The previous output was structurally valid but still needs improvement.");
+        then(repairPrompt).contains("Issues to fix:");
+        then(repairPrompt).contains("The previous output is under-filled. It filled 2 slots out of a theoretical maximum of 4.");
+        then(repairPrompt).contains("Primary objective: maximize filled slots.");
+        then(repairPrompt).contains("Preserve all fixed slots and all existing non-null assignments from the input.");
+        then(repairPrompt).contains("If no empty slots remain, do not include PARTIAL_ASSIGNMENT or NO_FURTHER_IMPROVEMENT.");
+        then(repairPrompt).contains("Previous output:");
+        then(repairPrompt).contains("\"slots\":[1,2,null,null]");
+    }
+
+    @Test
+    @DisplayName("second quality repair prompt에는 추가 개선 지시가 포함된다")
+    void generateExecution_includesSecondQualityRepairPromptWhenFirstRepairIsStillUnderFilled() {
+        given(chatModel.call(any(Prompt.class)))
+                .willReturn(
+                        getChatResponse("""
+                                {
+                                  "rounds": [
+                                    {
+                                      "roundNumber": 1,
+                                      "courts": [
+                                        {
+                                          "courtNumber": 1,
+                                          "slots": ["p1", "p2", null, null]
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "warnings": [
+                                    {"code": "PARTIAL_ASSIGNMENT", "message": "partial"}
+                                  ]
+                                }
+                                """),
+                        getChatResponse("""
+                                {
+                                  "rounds": [
+                                    {
+                                      "roundNumber": 1,
+                                      "courts": [
+                                        {
+                                          "courtNumber": 1,
+                                          "slots": ["p1", "p2", "p3", null]
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "warnings": [
+                                    {"code": "PARTIAL_ASSIGNMENT", "message": "partial"}
+                                  ]
+                                }
+                                """),
+                        getChatResponse("""
+                                {
+                                  "rounds": [
+                                    {
+                                      "roundNumber": 1,
+                                      "courts": [
+                                        {
+                                          "courtNumber": 1,
+                                          "slots": ["p1", "p2", "p3", "p4"]
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "warnings": []
+                                }
+                                """)
+                );
+
+        CreateFreeGameAssignmentPreviewCommand command = getCommand(
+                List.of(
+                        getParticipant("p1", "p1", 0),
+                        getParticipant("p2", "p2", 0),
+                        getParticipant("p3", "p3", 0),
+                        getParticipant("p4", "p4", 0)
+                ),
+                List.of(getRound(1, Arrays.asList("p1", null, null, null))),
+                List.of(),
+                getPreferences(
+                        CreateFreeGameAssignmentPreviewCommand.PartnerPolicy.IGNORE_PARTNERS,
+                        CreateFreeGameAssignmentPreviewCommand.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS
+                )
+        );
+
+        getGateway().generateExecution(command);
+
+        String secondRepairPrompt = getCapturedPrompts(3).get(2).getContents();
+        then(secondRepairPrompt).contains("A previous quality repair did not fully resolve the issues. Improve further.");
+        then(secondRepairPrompt).contains("The previous output is under-filled. It filled 3 slots out of a theoretical maximum of 4.");
+    }
+
+    @Test
+    @DisplayName("warning inconsistency quality repair prompt에는 warning 정합성 지시가 포함된다")
+    void generateExecution_includesWarningConsistencyGuidanceInQualityRepairPrompt() {
+        given(chatModel.call(any(Prompt.class)))
+                .willReturn(
+                        getChatResponse("""
+                                {
+                                  "rounds": [
+                                    {
+                                      "roundNumber": 1,
+                                      "courts": [
+                                        {
+                                          "courtNumber": 1,
+                                          "slots": ["p1", "p2", null, null]
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "warnings": []
+                                }
+                                """),
+                        getChatResponse("""
+                                {
+                                  "rounds": [
+                                    {
+                                      "roundNumber": 1,
+                                      "courts": [
+                                        {
+                                          "courtNumber": 1,
+                                          "slots": ["p1", "p2", null, null]
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "warnings": [
+                                    {"code": "PARTIAL_ASSIGNMENT", "message": "partial"}
+                                  ]
+                                }
+                                """)
+                );
+
+        CreateFreeGameAssignmentPreviewCommand command = getCommand(
+                List.of(
+                        getParticipant("p1", "p1", 0),
+                        getParticipant("p2", "p2", 0)
+                ),
+                List.of(getRound(1, Arrays.asList("p1", null, null, null))),
+                List.of(),
+                getPreferences(
+                        CreateFreeGameAssignmentPreviewCommand.PartnerPolicy.IGNORE_PARTNERS,
+                        CreateFreeGameAssignmentPreviewCommand.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS
+                )
+        );
+
+        getGateway().generateExecution(command);
+
+        String repairPrompt = getCapturedPrompts(2).get(1).getContents();
+        then(repairPrompt).contains("The warnings do not match the final fill coverage.");
+        then(repairPrompt).contains("Keep fill coverage unchanged if it is already maximal and make the warnings consistent.");
     }
 }

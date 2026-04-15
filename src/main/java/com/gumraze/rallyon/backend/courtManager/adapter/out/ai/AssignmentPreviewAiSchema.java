@@ -39,7 +39,7 @@ public final class AssignmentPreviewAiSchema {
                           "minItems": 4,
                           "maxItems": 4,
                           "items": {
-                            "type": ["string", "null"]
+                            "type": ["integer", "null"]
                           }
                         }
                       }

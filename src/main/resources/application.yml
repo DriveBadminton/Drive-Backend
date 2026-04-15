@@ -5,10 +5,6 @@ spring:
     default: local
   ai:
     openai:
-      chat:
-        options:
-          model: ${OPENAI_CHAT_MODEL:gpt-5-mini}
-
   jpa:
     open-in-view: false
     hibernate:
@@ -108,9 +104,11 @@ app:
   court-manager:
     assignment-preview:
       ai:
+        model: ${OPENAI_CHAT_MODEL:gpt-5.4-mini}
         connect-timeout: ${ASSIGNMENT_PREVIEW_AI_CONNECT_TIMEOUT:5s}
         connection-request-timeout: ${ASSIGNMENT_PREVIEW_AI_CONNECTION_REQUEST_TIMEOUT:5s}
         read-timeout: ${ASSIGNMENT_PREVIEW_AI_READ_TIMEOUT:90s}
+        max-completion-tokens: ${ASSIGNMENT_PREVIEW_AI_MAX_COMPLETION_TOKENS:1200}
 
 naver:
   search:

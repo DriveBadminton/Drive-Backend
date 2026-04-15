@@ -61,14 +61,12 @@ class CreateFreeGameAssignmentPreviewCommandMapperTest {
         then(command.participants()).hasSize(2);
 
         then(command.participants().get(0).clientId()).isEqualTo("p1");
-        then(command.participants().get(0).name()).isEqualTo("서승재");
         then(command.participants().get(0).gender()).isEqualTo(Gender.MALE);
         then(command.participants().get(0).ageGroup()).isEqualTo(20);
         then(command.participants().get(0).grade()).isEqualTo(Grade.S);
         then(command.participants().get(0).gamesAssigned()).isEqualTo(1);
 
         then(command.participants().get(1).clientId()).isEqualTo("p2");
-        then(command.participants().get(1).name()).isEqualTo("김원호");
         then(command.participants().get(1).gender()).isEqualTo(Gender.FEMALE);
         then(command.participants().get(1).ageGroup()).isEqualTo(30);
         then(command.participants().get(1).grade()).isEqualTo(Grade.A);

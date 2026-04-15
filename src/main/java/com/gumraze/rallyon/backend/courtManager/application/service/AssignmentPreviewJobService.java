@@ -2,6 +2,7 @@ package com.gumraze.rallyon.backend.courtManager.application.service;
 
 import com.gumraze.rallyon.backend.common.exception.ConflictException;
 import com.gumraze.rallyon.backend.common.exception.NotFoundException;
+import com.gumraze.rallyon.backend.courtManager.adapter.out.ai.AssignmentPreviewAiProperties;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameAssignmentPreviewStatusUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.SubmitFreeGameAssignmentPreviewUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.command.CreateFreeGameAssignmentPreviewCommand;
@@ -13,7 +14,6 @@ import com.gumraze.rallyon.backend.courtManager.constants.AssignmentPreviewJobSt
 import com.gumraze.rallyon.backend.courtManager.entity.AssignmentPreviewJob;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,9 +41,7 @@ public class AssignmentPreviewJobService implements
     private final ManageAssignmentPreviewJobPort manageAssignmentPreviewJobPort;
     private final ProcessFreeGameAssignmentPreviewJobService processFreeGameAssignmentPreviewJobService;
     private final AssignmentPreviewJobDispatchFailureService assignmentPreviewJobDispatchFailureService;
-
-    @Value("${spring.ai.openai.chat.options.model:gpt-5-mini}")
-    private String assignmentPreviewModel = "gpt-5-mini";
+    private final AssignmentPreviewAiProperties assignmentPreviewAiProperties;
 
     @Override
     @Transactional
@@ -61,7 +59,7 @@ public class AssignmentPreviewJobService implements
         AssignmentPreviewJob job;
         try {
             job = manageAssignmentPreviewJobPort.save(
-                    AssignmentPreviewJob.queue(accountId, command, assignmentPreviewModel)
+                    AssignmentPreviewJob.queue(accountId, command, assignmentPreviewAiProperties.getModel())
             );
         } catch (DataIntegrityViolationException ex) {
             throw new ConflictException("이미 자동 배정이 진행 중이에요. 잠시만 기다려주세요.");

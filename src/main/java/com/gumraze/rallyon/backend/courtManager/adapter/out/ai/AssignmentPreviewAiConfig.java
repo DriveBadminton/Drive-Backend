@@ -34,7 +34,7 @@ public class AssignmentPreviewAiConfig {
     OpenAiApi assignmentPreviewOpenAiApi(
             OpenAiConnectionProperties commonProperties,
             OpenAiChatProperties chatProperties,
-            AssignmentPreviewAiTimeoutProperties timeoutProperties,
+            AssignmentPreviewAiProperties assignmentPreviewAiProperties,
             ObjectProvider<ResponseErrorHandler> responseErrorHandler
     ) {
         OpenAIAutoConfigurationUtil.ResolvedConnectionProperties resolved =
@@ -51,7 +51,7 @@ public class AssignmentPreviewAiConfig {
                 .completionsPath(chatProperties.getCompletionsPath())
                 .embeddingsPath(OpenAiEmbeddingProperties.DEFAULT_EMBEDDINGS_PATH)
                 .restClientBuilder(
-                        RestClient.builder().requestFactory(createRequestFactory(timeoutProperties))
+                        RestClient.builder().requestFactory(createRequestFactory(assignmentPreviewAiProperties))
                 )
                 .webClientBuilder(WebClient.builder())
                 .responseErrorHandler(responseErrorHandler.getIfAvailable(
@@ -63,7 +63,7 @@ public class AssignmentPreviewAiConfig {
     @Bean("assignmentPreviewChatModel")
     OpenAiChatModel assignmentPreviewChatModel(
             @Qualifier("assignmentPreviewOpenAiApi") OpenAiApi openAiApi,
-            OpenAiChatProperties chatProperties,
+            AssignmentPreviewAiProperties assignmentPreviewAiProperties,
             ObjectProvider<ToolCallingManager> toolCallingManager,
             ObjectProvider<ObservationRegistry> observationRegistry,
             ObjectProvider<ChatModelObservationConvention> observationConvention,
@@ -71,7 +71,7 @@ public class AssignmentPreviewAiConfig {
     ) {
         OpenAiChatModel.Builder builder = OpenAiChatModel.builder()
                 .openAiApi(openAiApi)
-                .defaultOptions(resolveChatOptions(chatProperties))
+                .defaultOptions(createDefaultOptions(assignmentPreviewAiProperties))
                 .retryTemplate(createPreviewRetryTemplate())
                 .observationRegistry(observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP));
 
@@ -91,33 +91,40 @@ public class AssignmentPreviewAiConfig {
         return false;
     }
 
-    private static OpenAiChatOptions resolveChatOptions(OpenAiChatProperties chatProperties) {
-        return chatProperties.getOptions() != null
-                ? chatProperties.getOptions()
-                : OpenAiChatOptions.builder().build();
+    static OpenAiChatOptions createDefaultOptions(
+            AssignmentPreviewAiProperties assignmentPreviewAiProperties
+    ) {
+        return OpenAiChatOptions.builder()
+                .model(assignmentPreviewAiProperties.getModel())
+                .maxCompletionTokens(assignmentPreviewAiProperties.getMaxCompletionTokens())
+                .build();
     }
 
     static HttpComponentsClientHttpRequestFactory createRequestFactory(
-            AssignmentPreviewAiTimeoutProperties timeoutProperties
+            AssignmentPreviewAiProperties assignmentPreviewAiProperties
     ) {
         HttpComponentsClientHttpRequestFactory requestFactory =
                 new HttpComponentsClientHttpRequestFactory(
                         HttpClients.custom()
-                                .setDefaultRequestConfig(createRequestConfig(timeoutProperties))
+                                .setDefaultRequestConfig(createRequestConfig(assignmentPreviewAiProperties))
                                 .build()
                 );
-        requestFactory.setConnectionRequestTimeout(timeoutProperties.getConnectionRequestTimeout());
-        requestFactory.setReadTimeout(timeoutProperties.getReadTimeout());
+        requestFactory.setConnectionRequestTimeout(
+                assignmentPreviewAiProperties.getConnectionRequestTimeout()
+        );
+        requestFactory.setReadTimeout(assignmentPreviewAiProperties.getReadTimeout());
         return requestFactory;
     }
 
     static RequestConfig createRequestConfig(
-            AssignmentPreviewAiTimeoutProperties timeoutProperties
+            AssignmentPreviewAiProperties assignmentPreviewAiProperties
     ) {
         return RequestConfig.custom()
-                .setConnectTimeout(Timeout.of(timeoutProperties.getConnectTimeout()))
-                .setConnectionRequestTimeout(Timeout.of(timeoutProperties.getConnectionRequestTimeout()))
-                .setResponseTimeout(Timeout.of(timeoutProperties.getReadTimeout()))
+                .setConnectTimeout(Timeout.of(assignmentPreviewAiProperties.getConnectTimeout()))
+                .setConnectionRequestTimeout(
+                        Timeout.of(assignmentPreviewAiProperties.getConnectionRequestTimeout())
+                )
+                .setResponseTimeout(Timeout.of(assignmentPreviewAiProperties.getReadTimeout()))
                 .build();
     }
 }

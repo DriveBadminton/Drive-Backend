@@ -17,9 +17,17 @@ class AssignmentPreviewFixtureRegressionTest {
 
     private static final List<String> FIXTURE_FILE_NAMES = List.of(
             "pass-fill-empty-basic.json",
+            "pass-all-slots-already-filled-no-op.json",
             "pass-fixed-slots-preserved-with-partial-warning.json",
+            "pass-fixed-anchors-multi-round-varied-layout.json",
+            "pass-full-fill-warning-normalized.json",
             "pass-partner-pair-satisfied.json",
             "pass-partner-pair-partial-with-warning.json",
+            "pass-partner-pair-unavoidable-partial-warning.json",
+            "pass-reassign-all-basic.json",
+            "pass-multi-round-varied-layout.json",
+            "pass-imbalanced-participant-count.json",
+            "pass-large-partial-shortage.json",
             "fail-duplicate-participant-in-round.json",
             "fail-repeated-round-layout.json",
             "fail-unknown-participant-id.json",

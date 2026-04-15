@@ -6,7 +6,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.retry.RetryUtils;
 import org.springframework.ai.chat.observation.ChatModelObservationConvention;
-import org.springframework.ai.model.openai.autoconfigure.OpenAiChatProperties;
 import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.ai.model.tool.ToolExecutionEligibilityPredicate;
 import org.springframework.ai.openai.OpenAiChatModel;
@@ -27,7 +26,7 @@ class AssignmentPreviewAiConfigTest {
     @Test
     @DisplayName("AI timeout 설정값을 OpenAI 요청 config에 반영한다")
     void createRequestConfig_appliesConfiguredTimeouts() {
-        AssignmentPreviewAiTimeoutProperties properties = new AssignmentPreviewAiTimeoutProperties();
+        AssignmentPreviewAiProperties properties = new AssignmentPreviewAiProperties();
         properties.setConnectTimeout(Duration.ofSeconds(3));
         properties.setConnectionRequestTimeout(Duration.ofSeconds(4));
         properties.setReadTimeout(Duration.ofSeconds(25));
@@ -58,12 +57,12 @@ class AssignmentPreviewAiConfigTest {
     @DisplayName("preview chat model은 no-retry template을 사용한다")
     void assignmentPreviewChatModel_usesNoRetryTemplate() throws Exception {
         AssignmentPreviewAiConfig config = new AssignmentPreviewAiConfig();
-        OpenAiChatProperties chatProperties = new OpenAiChatProperties();
+        AssignmentPreviewAiProperties properties = new AssignmentPreviewAiProperties();
 
         StaticListableBeanFactory beanFactory = new StaticListableBeanFactory();
         OpenAiChatModel chatModel = config.assignmentPreviewChatModel(
                 mock(OpenAiApi.class),
-                chatProperties,
+                properties,
                 beanFactory.getBeanProvider(ToolCallingManager.class),
                 beanFactory.getBeanProvider(ObservationRegistry.class),
                 beanFactory.getBeanProvider(ChatModelObservationConvention.class),
@@ -82,5 +81,18 @@ class AssignmentPreviewAiConfigTest {
                 .hasMessage("boom");
 
         then(attempts.get()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("preview 기본 옵션은 properties의 model과 maxCompletionTokens를 사용한다")
+    void createDefaultOptions_appliesConfiguredModelAndMaxCompletionTokens() {
+        AssignmentPreviewAiProperties properties = new AssignmentPreviewAiProperties();
+        properties.setModel("gpt-5-mini");
+        properties.setMaxCompletionTokens(900);
+
+        var options = AssignmentPreviewAiConfig.createDefaultOptions(properties);
+
+        then(options.getModel()).isEqualTo("gpt-5-mini");
+        then(options.getMaxCompletionTokens()).isEqualTo(900);
     }
 }

@@ -14,6 +14,24 @@ public interface AssignmentPreviewAiExecutionFailure {
 
     Long getRepairAiElapsedMs();
 
+    boolean isEmptyResponseRetryAttempted();
+
+    Long getEmptyResponseRetryElapsedMs();
+
+    Integer getQualityRepairAttemptCount();
+
+    Long getQualityRepairElapsedMsTotal();
+
+    java.util.List<String> getQualityRepairReasons();
+
+    Integer getTheoreticalMaxFilledSlots();
+
+    Integer getActualFilledSlotsAfterInitial();
+
+    Integer getBestValidFilledSlots();
+
+    java.util.List<String> getBestValidWarningCodes();
+
     Integer getPlanningInputChars();
 
     Integer getPromptChars();

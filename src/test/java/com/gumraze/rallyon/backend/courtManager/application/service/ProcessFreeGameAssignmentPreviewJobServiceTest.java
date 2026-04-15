@@ -54,6 +54,15 @@ class ProcessFreeGameAssignmentPreviewJobServiceTest {
                         true,
                         1100L,
                         600L,
+                        true,
+                        180L,
+                        2,
+                        220L,
+                        List.of("UNDER_FILLED"),
+                        4,
+                        2,
+                        4,
+                        List.of(),
                         300,
                         580,
                         170,
@@ -92,6 +101,15 @@ class ProcessFreeGameAssignmentPreviewJobServiceTest {
                         true,
                         900L,
                         400L,
+                        true,
+                        120L,
+                        1,
+                        80L,
+                        List.of("UNDER_FILLED"),
+                        4,
+                        2,
+                        2,
+                        List.of("PARTIAL_ASSIGNMENT"),
                         300,
                         580,
                         170,
@@ -119,6 +137,15 @@ class ProcessFreeGameAssignmentPreviewJobServiceTest {
                         true,
                         1000L,
                         500L,
+                        true,
+                        150L,
+                        2,
+                        90L,
+                        List.of("UNDER_FILLED", "INCONSISTENT_WARNINGS"),
+                        4,
+                        2,
+                        4,
+                        List.of(),
                         300,
                         580,
                         170,
@@ -139,6 +166,15 @@ class ProcessFreeGameAssignmentPreviewJobServiceTest {
         then(output.getOut()).contains("promptChars=580");
         then(output.getOut()).contains("responseChars=170");
         then(output.getOut()).contains("maxCompletionTokens=1200");
+        then(output.getOut()).contains("emptyResponseRetryAttempted=true");
+        then(output.getOut()).contains("emptyResponseRetryElapsedMs=150");
+        then(output.getOut()).contains("qualityRepairAttemptCount=2");
+        then(output.getOut()).contains("qualityRepairElapsedMsTotal=90");
+        then(output.getOut()).contains("qualityRepairReasons=[UNDER_FILLED, INCONSISTENT_WARNINGS]");
+        then(output.getOut()).contains("theoreticalMaxFilledSlots=4");
+        then(output.getOut()).contains("actualFilledSlotsAfterInitial=2");
+        then(output.getOut()).contains("bestValidFilledSlots=4");
+        then(output.getOut()).contains("bestValidWarningCodes=[]");
     }
 
     private CreateFreeGameAssignmentPreviewCommand previewCommand() {

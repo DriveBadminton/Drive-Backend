@@ -15,6 +15,7 @@ import org.springframework.ai.openai.OpenAiChatModel;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -31,7 +32,8 @@ abstract class SpringAiAssignmentPreviewGatewayTestSupport {
         return new SpringAiAssignmentPreviewGateway(
                 new AssignmentPreviewPlanningInputMapper(),
                 chatModel,
-                objectMapper
+                objectMapper,
+                AssignmentPreviewAiProperties.defaults()
         );
     }
 
@@ -45,15 +47,16 @@ abstract class SpringAiAssignmentPreviewGatewayTestSupport {
     }
 
     protected ChatResponse getChatResponse(String content) {
+        String normalizedContent = content.replaceAll("\"p(\\d+)\"", "$1");
         return new ChatResponse(List.of(
-                new Generation(new AssistantMessage(content))
+                new Generation(new AssistantMessage(normalizedContent))
         ));
     }
 
     protected Prompt getSingleCapturedPrompt() {
         ArgumentCaptor<Prompt> promptCaptor = ArgumentCaptor.forClass(Prompt.class);
-        verify(chatModel, times(1)).call(promptCaptor.capture());
-        return promptCaptor.getValue();
+        verify(chatModel, atLeastOnce()).call(promptCaptor.capture());
+        return promptCaptor.getAllValues().getFirst();
     }
 
     protected List<Prompt> getCapturedPrompts(int expectedInvocations) {
@@ -82,7 +85,12 @@ abstract class SpringAiAssignmentPreviewGatewayTestSupport {
                                 ))
                         )
                 ),
-                List.of()
+                List.of(
+                        new AssignmentPreviewAiResponse.Warning(
+                                "PARTIAL_ASSIGNMENT",
+                                "일부 슬롯은 비어 있습니다."
+                        )
+                )
         );
     }
 

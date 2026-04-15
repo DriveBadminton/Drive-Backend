@@ -47,7 +47,6 @@ public record CreateFreeGameAssignmentPreviewRequest(
      * {@code gamesAssigned}는 현재 프론트 화면에서 이미 배정된 경기 수를 뜻한다.
      *
      * @param clientId 프론트 화면에서 참가자를 식별하는 임시 ID
-     * @param name 참가자 표시 이름
      * @param gender 참가자 성별
      * @param ageGroup 참가자 연령대
      * @param grade 참가자 급수
@@ -56,9 +55,6 @@ public record CreateFreeGameAssignmentPreviewRequest(
     public record ParticipantRequest(
             @NotBlank
             String clientId,
-
-            @NotBlank
-            String name,
 
             @NotNull
             Gender gender,
@@ -75,6 +71,16 @@ public record CreateFreeGameAssignmentPreviewRequest(
             @Min(0)
             Integer gamesAssigned
     ) {
+        public ParticipantRequest(
+                String clientId,
+                String unusedName,
+                Gender gender,
+                Integer ageGroup,
+                Grade grade,
+                Integer gamesAssigned
+        ) {
+            this(clientId, gender, ageGroup, grade, gamesAssigned);
+        }
     }
 
     /**
