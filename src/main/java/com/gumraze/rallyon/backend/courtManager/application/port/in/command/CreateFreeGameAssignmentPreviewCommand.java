@@ -22,28 +22,28 @@ public record CreateFreeGameAssignmentPreviewCommand (
     /**
      * AI가 배정 대상으로 판단할 참가자 정보다.
      *
-     * @param clientId application 내부에서 슬롯 배정 식별에 사용할 참가자 ID
+     * @param participantId application 내부에서 슬롯 배정 식별에 사용할 참가자 ID
      * @param gender 참가자 성별
      * @param ageGroup 참가자 연령대
      * @param grade 참가자 급수
      * @param gamesAssigned 현재 기준으로 이미 배정된 경기 수
      */
     public record Participant(
-            String clientId,
+            Long participantId,
             Gender gender,
             Integer ageGroup,
             Grade grade,
             Integer gamesAssigned
     ) {
         public Participant(
-                String clientId,
+                Long participantId,
                 String unusedName,
                 Gender gender,
                 Integer ageGroup,
                 Grade grade,
                 Integer gamesAssigned
         ) {
-            this(clientId, gender, ageGroup, grade, gamesAssigned);
+            this(participantId, gender, ageGroup, grade, gamesAssigned);
         }
     }
 
@@ -62,11 +62,11 @@ public record CreateFreeGameAssignmentPreviewCommand (
      * 한 코트의 현재 슬롯 상태다.
      *
      * @param courtNumber 코트 순번
-     * @param slots 각 슬롯에 배정된 participant clientId 목록
+     * @param slots 각 슬롯에 배정된 participant participantId 목록
      */
     public record Court(
             Integer courtNumber,
-            List<String> slots
+            List<Long> slots
     ) {}
 
     /**
@@ -76,8 +76,8 @@ public record CreateFreeGameAssignmentPreviewCommand (
      * @param participantId2 파트너 pair의 두 번째 참가자 ID
      */
     public record PartnerPairs(
-            String participantId1,
-            String participantId2
+            Long participantId1,
+            Long participantId2
     ) {}
 
     /**

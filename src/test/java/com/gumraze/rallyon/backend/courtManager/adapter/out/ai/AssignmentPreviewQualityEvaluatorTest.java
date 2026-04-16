@@ -230,10 +230,10 @@ class AssignmentPreviewQualityEvaluatorTest {
         return new CreateFreeGameAssignmentPreviewCommand(participants, rounds, partnerPairs, preferences);
     }
 
-    private CreateFreeGameAssignmentPreviewCommand.Participant participant(String clientId) {
+    private CreateFreeGameAssignmentPreviewCommand.Participant participant(String participantId) {
         return new CreateFreeGameAssignmentPreviewCommand.Participant(
-                clientId,
-                clientId,
+                participantId(participantId),
+                participantId,
                 Gender.MALE,
                 20,
                 Grade.S,
@@ -257,7 +257,7 @@ class AssignmentPreviewQualityEvaluatorTest {
     ) {
         return new CreateFreeGameAssignmentPreviewCommand.Court(
                 courtNumber,
-                Arrays.asList(slot1, slot2, slot3, slot4)
+                Arrays.asList(participantId(slot1), participantId(slot2), participantId(slot3), participantId(slot4))
         );
     }
 
@@ -265,7 +265,10 @@ class AssignmentPreviewQualityEvaluatorTest {
             String participantId1,
             String participantId2
     ) {
-        return new CreateFreeGameAssignmentPreviewCommand.PartnerPairs(participantId1, participantId2);
+        return new CreateFreeGameAssignmentPreviewCommand.PartnerPairs(
+                participantId(participantId1),
+                participantId(participantId2)
+        );
     }
 
     private CreateFreeGameAssignmentPreviewCommand.Preferences defaultPreferences() {
@@ -305,11 +308,18 @@ class AssignmentPreviewQualityEvaluatorTest {
     ) {
         return new AssignmentPreviewAiResponse.Court(
                 courtNumber,
-                Arrays.asList(slot1, slot2, slot3, slot4)
+                Arrays.asList(participantId(slot1), participantId(slot2), participantId(slot3), participantId(slot4))
         );
     }
 
     private AssignmentPreviewAiResponse.Warning warning(String code) {
         return new AssignmentPreviewAiResponse.Warning(code, code);
+    }
+
+    private Long participantId(String value) {
+        if (value == null) {
+            return null;
+        }
+        return Long.parseLong(value.substring(1));
     }
 }

@@ -157,7 +157,7 @@ class CourtManagerControllerValidationTest {
                                 List.of(
                                         new CreateFreeGameAssignmentPreviewRequest.CourtRequest(
                                                 1,
-                                                Arrays.asList("p1", null, null)
+                                                Arrays.asList(1L, null, null)
                                         )
                                 )
                         )
@@ -226,7 +226,7 @@ class CourtManagerControllerValidationTest {
 
     private CreateFreeGameAssignmentPreviewRequest.ParticipantRequest validParticipantRequest() {
         return new CreateFreeGameAssignmentPreviewRequest.ParticipantRequest(
-                "p1",
+                1L,
                 "서승재",
                 Gender.MALE,
                 20,
@@ -241,7 +241,7 @@ class CourtManagerControllerValidationTest {
                 List.of(
                         new CreateFreeGameAssignmentPreviewRequest.CourtRequest(
                                 1,
-                                Arrays.asList("p1", null, null, null)
+                                Arrays.asList(1L, null, null, null)
                         )
                 )
         );

@@ -85,7 +85,7 @@ class CourtManagerControllerAuthTest {
                 null,
                 null,
                 null,
-                List.of(new CreateFreeGameRequest.ParticipantRequest("p1", null, "참가자", Gender.MALE, Grade.ROOKIE, 20)),
+                List.of(new CreateFreeGameRequest.ParticipantRequest(1L, null, "참가자", Gender.MALE, Grade.ROOKIE, 20)),
                 List.of()
         );
 
@@ -177,7 +177,7 @@ class CourtManagerControllerAuthTest {
         CreateFreeGameAssignmentPreviewRequest request = new CreateFreeGameAssignmentPreviewRequest(
                 List.of(
                         new CreateFreeGameAssignmentPreviewRequest.ParticipantRequest(
-                                "p1",
+                                1L,
                                 "서승재",
                                 Gender.MALE,
                                 20,
@@ -185,7 +185,7 @@ class CourtManagerControllerAuthTest {
                                 1
                         ),
                         new CreateFreeGameAssignmentPreviewRequest.ParticipantRequest(
-                                "p2",
+                                2L,
                                 "김원호",
                                 Gender.MALE,
                                 20,
@@ -199,7 +199,7 @@ class CourtManagerControllerAuthTest {
                                 List.of(
                                         new CreateFreeGameAssignmentPreviewRequest.CourtRequest(
                                                 1,
-                                                Arrays.asList("p1", null, null, null)
+                                                Arrays.asList(1L, null, null, null)
                                         )
                                 )
                         )

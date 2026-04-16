@@ -81,7 +81,7 @@ abstract class SpringAiAssignmentPreviewGatewayTestSupport {
                                 1,
                                 List.of(new AssignmentPreviewAiResponse.Court(
                                         1,
-                                        Arrays.asList("p1", null, null, null)
+                                        Arrays.asList(1L, null, null, null)
                                 ))
                         )
                 ),
@@ -126,12 +126,12 @@ abstract class SpringAiAssignmentPreviewGatewayTestSupport {
     }
 
     protected CreateFreeGameAssignmentPreviewCommand.Participant getParticipant(
-            String clientId,
+            String participantId,
             String name,
             int gamesAssigned
     ) {
         return new CreateFreeGameAssignmentPreviewCommand.Participant(
-                clientId,
+                participantId(participantId),
                 name,
                 Gender.MALE,
                 20,
@@ -143,7 +143,7 @@ abstract class SpringAiAssignmentPreviewGatewayTestSupport {
     protected CreateFreeGameAssignmentPreviewCommand.Round getRound(int roundNumber, List<String> slots) {
         return new CreateFreeGameAssignmentPreviewCommand.Round(
                 roundNumber,
-                List.of(new CreateFreeGameAssignmentPreviewCommand.Court(1, slots))
+                List.of(new CreateFreeGameAssignmentPreviewCommand.Court(1, parseSlots(slots)))
         );
     }
 
@@ -182,7 +182,7 @@ abstract class SpringAiAssignmentPreviewGatewayTestSupport {
             int courtNumber,
             List<String> slots
     ) {
-        return new CreateFreeGameAssignmentPreviewCommand.Court(courtNumber, slots);
+        return new CreateFreeGameAssignmentPreviewCommand.Court(courtNumber, parseSlots(slots));
     }
 
     protected CreateFreeGameAssignmentPreviewCommand getCommand(
@@ -204,8 +204,18 @@ abstract class SpringAiAssignmentPreviewGatewayTestSupport {
             String participantId2
     ) {
         return new CreateFreeGameAssignmentPreviewCommand.PartnerPairs(
-                participantId1,
-                participantId2
+                participantId(participantId1),
+                participantId(participantId2)
         );
+    }
+
+    protected long participantId(String value) {
+        return Long.parseLong(value.substring(1));
+    }
+
+    protected List<Long> parseSlots(List<String> slots) {
+        return slots.stream()
+                .map(slot -> slot == null ? null : participantId(slot))
+                .toList();
     }
 }

@@ -17,12 +17,11 @@ class AssignmentPreviewPlanningInputMapperTest {
             new AssignmentPreviewPlanningInputMapper();
 
     @Test
-    @DisplayName("planning input에는 participant의 clientId와 gamesAssigned만 포함한다.")
+    @DisplayName("planning input에는 participant의 participantId와 gamesAssigned만 포함한다.")
     void from_mapsSlimParticipantPayload() {
         AssignmentPreviewPromptPayload result = mapper.from(fillEmptySlotsCommand());
 
-        then(result.compactIdByClientId()).containsEntry("p1", 1L);
-        then(result.clientIdByCompactId()).containsEntry(1L, "p1");
+        then(result.participantIds()).containsExactly(1L);
         then(result.planningInput().participants()).containsExactly(
                 new AssignmentPreviewPlanningInput.Participant(1L, 1)
         );
@@ -61,7 +60,7 @@ class AssignmentPreviewPlanningInputMapperTest {
     void from_mapsUnifiedGuidance() {
         AssignmentPreviewPromptPayload result = mapper.from(fillEmptySlotsWithPartnerCommand());
 
-        then(result.compactIdByClientId()).containsEntry("p1", 1L).containsEntry("p2", 2L);
+        then(result.participantIds()).containsExactlyInAnyOrder(1L, 2L);
         then(result.planningInput().partnerPairs()).containsExactly(
                 new AssignmentPreviewPlanningInput.PartnerPair(1L, 2L)
         );
@@ -99,7 +98,7 @@ class AssignmentPreviewPlanningInputMapperTest {
                         participant("p2", "김원호", 0)
                 ),
                 List.of(roundWithSingleCourt("p1")),
-                List.of(new CreateFreeGameAssignmentPreviewCommand.PartnerPairs("p1", "p2")),
+                List.of(new CreateFreeGameAssignmentPreviewCommand.PartnerPairs(1L, 2L)),
                 new CreateFreeGameAssignmentPreviewCommand.Preferences(
                         CreateFreeGameAssignmentPreviewCommand.PartnerPolicy.PREFER_PARTNERS,
                         CreateFreeGameAssignmentPreviewCommand.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS
@@ -126,7 +125,7 @@ class AssignmentPreviewPlanningInputMapperTest {
                         participant("p2", "김원호", 0)
                 ),
                 List.of(roundWithSingleCourt("p1")),
-                List.of(new CreateFreeGameAssignmentPreviewCommand.PartnerPairs("p1", "p2")),
+                List.of(new CreateFreeGameAssignmentPreviewCommand.PartnerPairs(1L, 2L)),
                 new CreateFreeGameAssignmentPreviewCommand.Preferences(
                         CreateFreeGameAssignmentPreviewCommand.PartnerPolicy.IGNORE_PARTNERS,
                         CreateFreeGameAssignmentPreviewCommand.ExistingAssignmentPolicy.REASSIGN_ALL
@@ -135,12 +134,12 @@ class AssignmentPreviewPlanningInputMapperTest {
     }
 
     private CreateFreeGameAssignmentPreviewCommand.Participant participant(
-            String clientId,
+            String participantId,
             String name,
             int gamesAssigned
     ) {
         return new CreateFreeGameAssignmentPreviewCommand.Participant(
-                clientId,
+                participantId(participantId),
                 name,
                 Gender.MALE,
                 20,
@@ -155,9 +154,13 @@ class AssignmentPreviewPlanningInputMapperTest {
                 List.of(
                         new CreateFreeGameAssignmentPreviewCommand.Court(
                                 1,
-                                Arrays.asList(firstSlotParticipantId, null, null, null)
+                                Arrays.asList(participantId(firstSlotParticipantId), null, null, null)
                         )
                 )
         );
+    }
+
+    private long participantId(String value) {
+        return Long.parseLong(value.substring(1));
     }
 }

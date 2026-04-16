@@ -20,7 +20,7 @@ public record CreateFreeGameCommand (
     List<Round> rounds
 ) {
     public record Participant (
-        String clientId,
+        Long participantId,
         UUID accountId,
         String originalName,
         Gender gender,
@@ -35,6 +35,6 @@ public record CreateFreeGameCommand (
 
     public record Court (
         Integer courtNumber,
-        List<String> slots
+        List<Long> slots
     ) { }
 }

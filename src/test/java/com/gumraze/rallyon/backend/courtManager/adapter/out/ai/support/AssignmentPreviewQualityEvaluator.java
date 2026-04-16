@@ -18,8 +18,8 @@ public class AssignmentPreviewQualityEvaluator {
             CreateFreeGameAssignmentPreviewCommand command,
             AssignmentPreviewAiResponse response
     ) {
-        Set<String> participantIds = safeList(command.participants()).stream()
-                .map(CreateFreeGameAssignmentPreviewCommand.Participant::clientId)
+        Set<Long> participantIds = safeList(command.participants()).stream()
+                .map(CreateFreeGameAssignmentPreviewCommand.Participant::participantId)
                 .collect(Collectors.toSet());
 
         int filledSlotsBefore = countFilledSlotsInCommand(command);
@@ -103,9 +103,9 @@ public class AssignmentPreviewQualityEvaluator {
 
     private boolean hasDuplicateParticipantsInAnyRound(AssignmentPreviewAiResponse response) {
         for (AssignmentPreviewAiResponse.Round round : safeList(response.rounds())) {
-            Set<String> assignedParticipants = new HashSet<>();
+            Set<Long> assignedParticipants = new HashSet<>();
             for (AssignmentPreviewAiResponse.Court court : safeList(round.courts())) {
-                for (String slot : safeList(court.slots())) {
+                for (Long slot : safeList(court.slots())) {
                     if (slot != null && !assignedParticipants.add(slot)) {
                         return true;
                     }
@@ -118,7 +118,7 @@ public class AssignmentPreviewQualityEvaluator {
 
     private int countUnknownParticipants(
             AssignmentPreviewAiResponse response,
-            Set<String> participantIds
+            Set<Long> participantIds
     ) {
         return safeList(response.rounds()).stream()
                 .flatMap(round -> safeList(round.courts()).stream())
@@ -141,12 +141,12 @@ public class AssignmentPreviewQualityEvaluator {
                 CreateFreeGameAssignmentPreviewCommand.Court requestedCourt = requestedRound.courts().get(courtIndex);
 
                 for (int slotIndex = 0; slotIndex < safeList(requestedCourt.slots()).size(); slotIndex++) {
-                    String requestedParticipantId = requestedCourt.slots().get(slotIndex);
+                    Long requestedParticipantId = requestedCourt.slots().get(slotIndex);
                     if (requestedParticipantId == null) {
                         continue;
                     }
 
-                    String responseParticipantId = getResponseSlot(response, roundIndex, courtIndex, slotIndex);
+                    Long responseParticipantId = getResponseSlot(response, roundIndex, courtIndex, slotIndex);
                     if (!requestedParticipantId.equals(responseParticipantId)) {
                         changedAssignments++;
                     }
@@ -173,7 +173,7 @@ public class AssignmentPreviewQualityEvaluator {
         return safeList(response.rounds()).stream()
                 .flatMap(round -> safeList(round.courts()).stream())
                 .anyMatch(court -> {
-                    List<String> slots = safeList(court.slots());
+                    List<Long> slots = safeList(court.slots());
                     return slots.contains(pair.participantId1()) && slots.contains(pair.participantId2());
                 });
     }
@@ -218,7 +218,7 @@ public class AssignmentPreviewQualityEvaluator {
                 == CreateFreeGameAssignmentPreviewCommand.PartnerPolicy.PREFER_PARTNERS;
     }
 
-    private String getResponseSlot(
+    private Long getResponseSlot(
             AssignmentPreviewAiResponse response,
             int roundIndex,
             int courtIndex,
@@ -234,7 +234,7 @@ public class AssignmentPreviewQualityEvaluator {
             return null;
         }
 
-        List<String> slots = safeList(courts.get(courtIndex).slots());
+        List<Long> slots = safeList(courts.get(courtIndex).slots());
         if (slotIndex >= slots.size()) {
             return null;
         }
@@ -257,6 +257,6 @@ public class AssignmentPreviewQualityEvaluator {
         }
     }
 
-    private record CourtLayoutSignature(Integer courtNumber, List<String> slots) {
+    private record CourtLayoutSignature(Integer courtNumber, List<Long> slots) {
     }
 }

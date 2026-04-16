@@ -82,7 +82,7 @@ class CreateFreeGameServiceTest {
         CreateFreeGameCommand command = createCommand(
                 MatchRecordMode.RESULT,
                 null,
-                List.of("p1", "p2", "p3", "p4"),
+                List.of(1L, 2L, 3L, 4L),
                 null
         );
 
@@ -102,10 +102,10 @@ class CreateFreeGameServiceTest {
         given(freeGameScheduleValidator.parseRequiredFuture(command.scheduledAt())).willReturn(scheduledAt);
         given(saveFreeGamePort.save(any())).willReturn(savedGame);
         given(saveGameParticipantPort.saveAll(any(), any())).willReturn(Map.of(
-                "p1", p1,
-                "p2", p2,
-                "p3", p3,
-                "p4", p4
+                1L, p1,
+                2L, p2,
+                3L, p3,
+                4L, p4
         ));
 
         UUID createdGameId = createFreeGameService.create(organizerAccountId, command);
@@ -146,7 +146,7 @@ class CreateFreeGameServiceTest {
         CreateFreeGameCommand command = createCommand(
                 MatchRecordMode.STATUS_ONLY,
                 List.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()),
-                List.of("p1", "p2", "p3", "p4"),
+                List.of(1L, 2L, 3L, 4L),
                 null
         );
 
@@ -169,7 +169,7 @@ class CreateFreeGameServiceTest {
         CreateFreeGameCommand command = createCommand(
                 MatchRecordMode.STATUS_ONLY,
                 null,
-                Arrays.asList("p1", null, null, null),
+                Arrays.asList(1L, null, null, null),
                 null
         );
 
@@ -188,7 +188,7 @@ class CreateFreeGameServiceTest {
         given(issueShareCodePort.issue()).willReturn(shareCode);
         given(freeGameScheduleValidator.parseRequiredFuture(command.scheduledAt())).willReturn(scheduledAt);
         given(saveFreeGamePort.save(any())).willReturn(savedGame);
-        given(saveGameParticipantPort.saveAll(any(), any())).willReturn(Map.of("p1", p1));
+        given(saveGameParticipantPort.saveAll(any(), any())).willReturn(Map.of(1L, p1));
 
         createFreeGameService.create(organizerAccountId, command);
 
@@ -206,7 +206,7 @@ class CreateFreeGameServiceTest {
     private CreateFreeGameCommand createCommand(
             MatchRecordMode matchRecordMode,
             List<UUID> managerIds,
-            List<String> slots,
+            List<Long> slots,
             UUID participantAccountId
     ) {
         return new CreateFreeGameCommand(
@@ -219,10 +219,10 @@ class CreateFreeGameServiceTest {
                 "잠실 배드민턴장",
                 managerIds,
                 List.of(
-                        new CreateFreeGameCommand.Participant("p1", participantAccountId, "서승재", Gender.MALE, Grade.A, 20),
-                        new CreateFreeGameCommand.Participant("p2", null, "김원호", Gender.MALE, Grade.A, 20),
-                        new CreateFreeGameCommand.Participant("p3", null, "안세영", Gender.FEMALE, Grade.A, 20),
-                        new CreateFreeGameCommand.Participant("p4", null, "정나은", Gender.FEMALE, Grade.A, 20)
+                        new CreateFreeGameCommand.Participant(1L, participantAccountId, "서승재", Gender.MALE, Grade.A, 20),
+                        new CreateFreeGameCommand.Participant(2L, null, "김원호", Gender.MALE, Grade.A, 20),
+                        new CreateFreeGameCommand.Participant(3L, null, "안세영", Gender.FEMALE, Grade.A, 20),
+                        new CreateFreeGameCommand.Participant(4L, null, "정나은", Gender.FEMALE, Grade.A, 20)
                 ),
                 List.of(new CreateFreeGameCommand.Round(
                         1,

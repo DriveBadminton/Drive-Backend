@@ -33,14 +33,14 @@ public record CreateFreeGameAssignmentPreviewResponse(
      * 한 코트의 슬롯 배정 결과다.
      *
      * <p>slots는 항상 4칸을 가지며,
-     * 각 값은 request에 들어온 participant의 clientId를 그대로 사용한다.
+     * 각 값은 request에 들어온 participantId를 그대로 사용한다.
      *
      * <p>즉 이 응답은 참가자 전체 정보를 다시 반환하지 않고,
      * "어떤 참가자가 어느 슬롯에 들어가야 하는지"만 알려준다.
      */
     public record CourtResponse(
             Integer courtNumber,
-            List<String> slots
+            List<Long> slots
     ) {
     }
 

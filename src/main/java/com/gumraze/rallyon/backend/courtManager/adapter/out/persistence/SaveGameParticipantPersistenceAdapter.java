@@ -22,7 +22,7 @@ public class SaveGameParticipantPersistenceAdapter implements SaveGameParticipan
     private final AccountRepository accountRepository;
 
     @Override
-    public Map<String, GameParticipant> saveAll(
+    public Map<Long, GameParticipant> saveAll(
             FreeGame freeGame,
             List<CreateFreeGameCommand.Participant> participants
     ) {
@@ -30,7 +30,7 @@ public class SaveGameParticipantPersistenceAdapter implements SaveGameParticipan
             return Map.of();
         }
 
-        Map<String, GameParticipant> participantsByClientId = new LinkedHashMap<>();
+        Map<Long, GameParticipant> participantsByParticipantId = new LinkedHashMap<>();
 
         for (CreateFreeGameCommand.Participant participant : participants) {
             if (participant.accountId() != null) {
@@ -48,7 +48,7 @@ public class SaveGameParticipantPersistenceAdapter implements SaveGameParticipan
                             participant.gender(),
                             participant.grade(),
                             participant.ageGroup(),
-                            participantsByClientId.values()
+                            participantsByParticipantId.values()
                     ),
                     participant.gender(),
                     participant.grade(),
@@ -56,8 +56,8 @@ public class SaveGameParticipantPersistenceAdapter implements SaveGameParticipan
             );
 
             GameParticipant savedParticipant = gameParticipantRepository.save(toSave);
-            participantsByClientId.put(participant.clientId(), savedParticipant);
+            participantsByParticipantId.put(participant.participantId(), savedParticipant);
         }
-        return participantsByClientId;
+        return participantsByParticipantId;
     }
 }

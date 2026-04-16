@@ -2,54 +2,300 @@
   "scenario": "benchmark - 60슬롯 인원 부족 부분 배정",
   "command": {
     "participants": [
-      { "clientId": "p1", "name": "p1", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p2", "name": "p2", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p3", "name": "p3", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p4", "name": "p4", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p5", "name": "p5", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p6", "name": "p6", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p7", "name": "p7", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p8", "name": "p8", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p9", "name": "p9", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p10", "name": "p10", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p11", "name": "p11", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p12", "name": "p12", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p13", "name": "p13", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p14", "name": "p14", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p15", "name": "p15", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p16", "name": "p16", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p17", "name": "p17", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p18", "name": "p18", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 }
+      {
+        "participantId": 1,
+        "name": "p1",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 2,
+        "name": "p2",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 3,
+        "name": "p3",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 4,
+        "name": "p4",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 5,
+        "name": "p5",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 6,
+        "name": "p6",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 7,
+        "name": "p7",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 8,
+        "name": "p8",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 9,
+        "name": "p9",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 10,
+        "name": "p10",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 11,
+        "name": "p11",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 12,
+        "name": "p12",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 13,
+        "name": "p13",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 14,
+        "name": "p14",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 15,
+        "name": "p15",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 16,
+        "name": "p16",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 17,
+        "name": "p17",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 18,
+        "name": "p18",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      }
     ],
     "rounds": [
       {
         "roundNumber": 1,
         "courts": [
-          { "courtNumber": 1, "slots": [null, null, null, null] },
-          { "courtNumber": 2, "slots": [null, null, null, null] },
-          { "courtNumber": 3, "slots": [null, null, null, null] },
-          { "courtNumber": 4, "slots": [null, null, null, null] },
-          { "courtNumber": 5, "slots": [null, null, null, null] }
+          {
+            "courtNumber": 1,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "courtNumber": 2,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "courtNumber": 3,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "courtNumber": 4,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "courtNumber": 5,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          }
         ]
       },
       {
         "roundNumber": 2,
         "courts": [
-          { "courtNumber": 1, "slots": [null, null, null, null] },
-          { "courtNumber": 2, "slots": [null, null, null, null] },
-          { "courtNumber": 3, "slots": [null, null, null, null] },
-          { "courtNumber": 4, "slots": [null, null, null, null] },
-          { "courtNumber": 5, "slots": [null, null, null, null] }
+          {
+            "courtNumber": 1,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "courtNumber": 2,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "courtNumber": 3,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "courtNumber": 4,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "courtNumber": 5,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          }
         ]
       },
       {
         "roundNumber": 3,
         "courts": [
-          { "courtNumber": 1, "slots": [null, null, null, null] },
-          { "courtNumber": 2, "slots": [null, null, null, null] },
-          { "courtNumber": 3, "slots": [null, null, null, null] },
-          { "courtNumber": 4, "slots": [null, null, null, null] },
-          { "courtNumber": 5, "slots": [null, null, null, null] }
+          {
+            "courtNumber": 1,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "courtNumber": 2,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "courtNumber": 3,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "courtNumber": 4,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "courtNumber": 5,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          }
         ]
       }
     ],
@@ -64,43 +310,170 @@
       {
         "roundNumber": 1,
         "courts": [
-          { "courtNumber": 1, "slots": ["p1", "p2", "p3", "p4"] },
-          { "courtNumber": 2, "slots": ["p5", "p6", "p7", "p8"] },
-          { "courtNumber": 3, "slots": ["p9", "p10", "p11", "p12"] },
-          { "courtNumber": 4, "slots": ["p13", "p14", "p15", "p16"] },
-          { "courtNumber": 5, "slots": ["p17", "p18", null, null] }
+          {
+            "courtNumber": 1,
+            "slots": [
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          {
+            "courtNumber": 2,
+            "slots": [
+              5,
+              6,
+              7,
+              8
+            ]
+          },
+          {
+            "courtNumber": 3,
+            "slots": [
+              9,
+              10,
+              11,
+              12
+            ]
+          },
+          {
+            "courtNumber": 4,
+            "slots": [
+              13,
+              14,
+              15,
+              16
+            ]
+          },
+          {
+            "courtNumber": 5,
+            "slots": [
+              17,
+              18,
+              null,
+              null
+            ]
+          }
         ]
       },
       {
         "roundNumber": 2,
         "courts": [
-          { "courtNumber": 1, "slots": ["p3", "p4", "p5", "p6"] },
-          { "courtNumber": 2, "slots": ["p7", "p8", "p9", "p10"] },
-          { "courtNumber": 3, "slots": ["p11", "p12", "p13", "p14"] },
-          { "courtNumber": 4, "slots": ["p15", "p16", "p17", "p18"] },
-          { "courtNumber": 5, "slots": ["p1", "p2", null, null] }
+          {
+            "courtNumber": 1,
+            "slots": [
+              3,
+              4,
+              5,
+              6
+            ]
+          },
+          {
+            "courtNumber": 2,
+            "slots": [
+              7,
+              8,
+              9,
+              10
+            ]
+          },
+          {
+            "courtNumber": 3,
+            "slots": [
+              11,
+              12,
+              13,
+              14
+            ]
+          },
+          {
+            "courtNumber": 4,
+            "slots": [
+              15,
+              16,
+              17,
+              18
+            ]
+          },
+          {
+            "courtNumber": 5,
+            "slots": [
+              1,
+              2,
+              null,
+              null
+            ]
+          }
         ]
       },
       {
         "roundNumber": 3,
         "courts": [
-          { "courtNumber": 1, "slots": ["p5", "p6", "p7", "p8"] },
-          { "courtNumber": 2, "slots": ["p9", "p10", "p11", "p12"] },
-          { "courtNumber": 3, "slots": ["p13", "p14", "p15", "p16"] },
-          { "courtNumber": 4, "slots": ["p17", "p18", "p1", "p2"] },
-          { "courtNumber": 5, "slots": ["p3", "p4", null, null] }
+          {
+            "courtNumber": 1,
+            "slots": [
+              5,
+              6,
+              7,
+              8
+            ]
+          },
+          {
+            "courtNumber": 2,
+            "slots": [
+              9,
+              10,
+              11,
+              12
+            ]
+          },
+          {
+            "courtNumber": 3,
+            "slots": [
+              13,
+              14,
+              15,
+              16
+            ]
+          },
+          {
+            "courtNumber": 4,
+            "slots": [
+              17,
+              18,
+              1,
+              2
+            ]
+          },
+          {
+            "courtNumber": 5,
+            "slots": [
+              3,
+              4,
+              null,
+              null
+            ]
+          }
         ]
       }
     ],
     "warnings": [
-      { "code": "PARTIAL_ASSIGNMENT", "message": "일부 슬롯은 비어 있습니다." }
+      {
+        "code": "PARTIAL_ASSIGNMENT",
+        "message": "일부 슬롯은 비어 있습니다."
+      }
     ]
   },
   "expected": {
     "pass": true,
     "minFilledSlotDelta": 54,
-    "expectedWarningCodes": ["PARTIAL_ASSIGNMENT"],
-    "forbiddenWarningCodes": ["PARTNER_CONSTRAINT_PARTIAL"],
+    "expectedWarningCodes": [
+      "PARTIAL_ASSIGNMENT"
+    ],
+    "forbiddenWarningCodes": [
+      "PARTNER_CONSTRAINT_PARTIAL"
+    ],
     "expectedSatisfiedPartnerPairCount": 0,
     "expectedFailureReasons": []
   }

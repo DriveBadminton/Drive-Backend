@@ -267,7 +267,7 @@ class SpringAiAssignmentPreviewGatewayValidationTest extends SpringAiAssignmentP
 
         // then: 기존 슬롯이 바뀐 응답도 정상 재배정 결과로 허용한다.
         then(result.rounds().getFirst().courts().getFirst().slots())
-                .containsExactly("p2", "p1", null, null);
+                .containsExactly(2L, 1L, null, null);
     }
 
     @Test
@@ -444,9 +444,9 @@ class SpringAiAssignmentPreviewGatewayValidationTest extends SpringAiAssignmentP
         // then: 서로 다른 라운드의 동일 참가자 배정은 정상 응답으로 허용한다.
         then(result.rounds()).hasSize(2);
         then(result.rounds().get(0).courts().get(0).slots())
-                .containsExactly("p1", null, null, null);
+                .containsExactly(1L, null, null, null);
         then(result.rounds().get(1).courts().get(0).slots())
-                .containsExactly("p1", "p2", null, null);
+                .containsExactly(1L, 2L, null, null);
     }
 
     @Test

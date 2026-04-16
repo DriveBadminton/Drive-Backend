@@ -337,7 +337,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
         then(result.rounds()).hasSize(2);
         then(result.rounds().get(0).roundNumber()).isEqualTo(1);
         then(result.rounds().get(1).roundNumber()).isEqualTo(2);
-        then(result.rounds().get(1).courts().getFirst().slots()).containsExactly("p2", "p1", null, null);
+        then(result.rounds().get(1).courts().getFirst().slots()).containsExactly(2L, 1L, null, null);
         verify(chatModel, times(2)).call(any(Prompt.class));
     }
 
@@ -379,7 +379,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
 
         // then: 첫 번째 응답을 그대로 반환하고 재시도하지 않는다.
         then(result.rounds()).hasSize(2);
-        then(result.rounds().get(1).courts().getFirst().slots()).containsExactly("p2", "p1", null, null);
+        then(result.rounds().get(1).courts().getFirst().slots()).containsExactly(2L, 1L, null, null);
         verify(chatModel, times(1)).call(any(Prompt.class));
     }
 
@@ -662,7 +662,7 @@ class SpringAiAssignmentPreviewGatewayPromptTest extends SpringAiAssignmentPrevi
                 )
         ));
 
-        // then: prompt에는 clientId / gamesAssigned만 포함되고 name 등은 제외된다.
+        // then: prompt에는 participantId / gamesAssigned만 포함되고 name 등은 제외된다.
         String prompt = getSingleCapturedPrompt().getContents();
         then(prompt).contains("\"id\":1");
         then(prompt).contains("\"gamesAssigned\":1");

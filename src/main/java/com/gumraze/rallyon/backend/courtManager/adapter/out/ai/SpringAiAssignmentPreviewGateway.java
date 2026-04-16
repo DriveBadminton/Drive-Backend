@@ -476,7 +476,7 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
 
             if (command.preferences().existingAssignmentPolicy()
                     == CreateFreeGameAssignmentPreviewCommand.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS) {
-                validateFixedSlots(requestedRound, responseRound, promptPayload);
+                validateFixedSlots(requestedRound, responseRound);
             }
         }
 
@@ -521,8 +521,7 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
 
     private void validateFixedSlots(
             CreateFreeGameAssignmentPreviewCommand.Round requestedRound,
-            AssignmentPreviewAiRawResponse.Round responseRound,
-            AssignmentPreviewPromptPayload promptPayload
+            AssignmentPreviewAiRawResponse.Round responseRound
     ) {
         for (int i = 0; i < requestedRound.courts().size(); i++) {
             CreateFreeGameAssignmentPreviewCommand.Court requestedCourt =
@@ -530,14 +529,14 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
             AssignmentPreviewAiRawResponse.Court responseCourt =
                     responseRound.courts().get(i);
 
-            List<String> requestedSlots = requestedCourt.slots();
+            List<Long> requestedSlots = requestedCourt.slots();
             List<Long> responseSlots = responseCourt.slots();
 
             for (int j = 0; j < requestedSlots.size(); j++) {
-                String requestedSlot = requestedSlots.get(j);
+                Long requestedSlot = requestedSlots.get(j);
                 Long responseSlot = responseSlots.get(j);
 
-                if (requestedSlot != null && !compactIdEqualsRequested(promptPayload, requestedSlot, responseSlot)) {
+                if (requestedSlot != null && !requestedSlot.equals(responseSlot)) {
                     throw invalidOutput();
                 }
             }
@@ -548,7 +547,7 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
             AssignmentPreviewPromptPayload promptPayload,
             AssignmentPreviewAiRawResponse response
     ) {
-        Set<Long> participantIds = promptPayload.compactParticipantIds();
+        Set<Long> participantIds = promptPayload.participantIds();
 
         for (AssignmentPreviewAiRawResponse.Round round : response.rounds()) {
             for (AssignmentPreviewAiRawResponse.Court court : round.courts()) {
@@ -726,9 +725,7 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
                                 round.courts().stream()
                                         .map(court -> new AssignmentPreviewAiResponse.Court(
                                                 court.courtNumber(),
-                                                court.slots().stream()
-                                                        .map(slot -> slot == null ? null : promptPayload.toClientId(slot))
-                                                        .toList()
+                                                court.slots()
                                         ))
                                         .toList()
                         ))
@@ -829,18 +826,6 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
         }
     }
 
-    private boolean compactIdEqualsRequested(
-            AssignmentPreviewPromptPayload promptPayload,
-            String requestedSlot,
-            Long responseSlot
-    ) {
-        if (responseSlot == null) {
-            return false;
-        }
-        Long expectedCompactId = promptPayload.toCompactId(requestedSlot);
-        return expectedCompactId != null && expectedCompactId.equals(responseSlot);
-    }
-
     private IllegalStateException invalidOutput() {
         return new IllegalStateException(INVALID_OUTPUT_MESSAGE);
     }
@@ -860,7 +845,7 @@ public class SpringAiAssignmentPreviewGateway implements AssignmentPreviewAiGate
             int requestedFilled = 0;
             int requestedNull = 0;
             for (CreateFreeGameAssignmentPreviewCommand.Court court : round.courts()) {
-                for (String slot : court.slots()) {
+                for (Long slot : court.slots()) {
                     if (slot == null) {
                         requestedNull++;
                     } else {

@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface SaveGameParticipantPort {
 
-    Map<String, GameParticipant> saveAll(
+    Map<Long, GameParticipant> saveAll(
             FreeGame freeGame,
             List<CreateFreeGameCommand.Participant> participants
     );

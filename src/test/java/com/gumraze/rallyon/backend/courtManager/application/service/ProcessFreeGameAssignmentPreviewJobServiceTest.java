@@ -181,7 +181,7 @@ class ProcessFreeGameAssignmentPreviewJobServiceTest {
         return new CreateFreeGameAssignmentPreviewCommand(
                 List.of(
                         new CreateFreeGameAssignmentPreviewCommand.Participant(
-                                "p1",
+                                1L,
                                 "서승재",
                                 Gender.MALE,
                                 20,
@@ -189,7 +189,7 @@ class ProcessFreeGameAssignmentPreviewJobServiceTest {
                                 1
                         ),
                         new CreateFreeGameAssignmentPreviewCommand.Participant(
-                                "p2",
+                                2L,
                                 "김원호",
                                 Gender.MALE,
                                 20,
@@ -203,13 +203,13 @@ class ProcessFreeGameAssignmentPreviewJobServiceTest {
                                 List.of(
                                         new CreateFreeGameAssignmentPreviewCommand.Court(
                                                 1,
-                                                Arrays.asList("p1", null, null, null)
+                                                Arrays.asList(1L, null, null, null)
                                         )
                                 )
                         )
                 ),
                 List.of(
-                        new CreateFreeGameAssignmentPreviewCommand.PartnerPairs("p1", "p2")
+                        new CreateFreeGameAssignmentPreviewCommand.PartnerPairs(1L, 2L)
                 ),
                 new CreateFreeGameAssignmentPreviewCommand.Preferences(
                         CreateFreeGameAssignmentPreviewCommand.PartnerPolicy.PREFER_PARTNERS,
@@ -226,7 +226,7 @@ class ProcessFreeGameAssignmentPreviewJobServiceTest {
                                 List.of(
                                         new CreateFreeGameAssignmentPreviewResult.Court(
                                                 1,
-                                                Arrays.asList("p1", "p2", null, null)
+                                                Arrays.asList(1L, 2L, null, null)
                                         )
                                 )
                         )

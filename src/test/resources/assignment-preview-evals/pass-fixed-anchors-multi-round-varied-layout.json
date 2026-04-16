@@ -2,30 +2,96 @@
   "scenario": "pass - 고정 anchor가 있는 다중 라운드 비복제 배치",
   "command": {
     "participants": [
-      { "clientId": "p1", "name": "p1", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 1 },
-      { "clientId": "p2", "name": "p2", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 1 },
-      { "clientId": "p3", "name": "p3", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 1 },
-      { "clientId": "p4", "name": "p4", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p5", "name": "p5", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p6", "name": "p6", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 }
+      {
+        "participantId": 1,
+        "name": "p1",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 1
+      },
+      {
+        "participantId": 2,
+        "name": "p2",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 1
+      },
+      {
+        "participantId": 3,
+        "name": "p3",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 1
+      },
+      {
+        "participantId": 4,
+        "name": "p4",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 5,
+        "name": "p5",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 6,
+        "name": "p6",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      }
     ],
     "rounds": [
       {
         "roundNumber": 1,
         "courts": [
-          { "courtNumber": 1, "slots": ["p1", null, null, null] }
+          {
+            "courtNumber": 1,
+            "slots": [
+              1,
+              null,
+              null,
+              null
+            ]
+          }
         ]
       },
       {
         "roundNumber": 2,
         "courts": [
-          { "courtNumber": 1, "slots": ["p2", null, null, null] }
+          {
+            "courtNumber": 1,
+            "slots": [
+              2,
+              null,
+              null,
+              null
+            ]
+          }
         ]
       },
       {
         "roundNumber": 3,
         "courts": [
-          { "courtNumber": 1, "slots": ["p3", null, null, null] }
+          {
+            "courtNumber": 1,
+            "slots": [
+              3,
+              null,
+              null,
+              null
+            ]
+          }
         ]
       }
     ],
@@ -40,19 +106,43 @@
       {
         "roundNumber": 1,
         "courts": [
-          { "courtNumber": 1, "slots": ["p1", "p2", "p4", "p5"] }
+          {
+            "courtNumber": 1,
+            "slots": [
+              1,
+              2,
+              4,
+              5
+            ]
+          }
         ]
       },
       {
         "roundNumber": 2,
         "courts": [
-          { "courtNumber": 1, "slots": ["p2", "p3", "p5", "p6"] }
+          {
+            "courtNumber": 1,
+            "slots": [
+              2,
+              3,
+              5,
+              6
+            ]
+          }
         ]
       },
       {
         "roundNumber": 3,
         "courts": [
-          { "courtNumber": 1, "slots": ["p3", "p1", "p4", "p6"] }
+          {
+            "courtNumber": 1,
+            "slots": [
+              3,
+              1,
+              4,
+              6
+            ]
+          }
         ]
       }
     ],
@@ -62,7 +152,10 @@
     "pass": true,
     "minFilledSlotDelta": 9,
     "expectedWarningCodes": [],
-    "forbiddenWarningCodes": ["PARTIAL_ASSIGNMENT", "PARTNER_CONSTRAINT_PARTIAL"],
+    "forbiddenWarningCodes": [
+      "PARTIAL_ASSIGNMENT",
+      "PARTNER_CONSTRAINT_PARTIAL"
+    ],
     "expectedSatisfiedPartnerPairCount": 0,
     "expectedFailureReasons": []
   }

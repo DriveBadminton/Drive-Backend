@@ -75,7 +75,7 @@ public record AssignmentPreviewEvalCase(
     }
 
     public record FixtureParticipant(
-            String clientId,
+            Long participantId,
             String name,
             String gender,
             Integer ageGroup,
@@ -85,7 +85,7 @@ public record AssignmentPreviewEvalCase(
 
         private CreateFreeGameAssignmentPreviewCommand.Participant toCommandParticipant() {
             return new CreateFreeGameAssignmentPreviewCommand.Participant(
-                    clientId,
+                    participantId,
                     name,
                     Gender.valueOf(gender),
                     ageGroup,
@@ -121,7 +121,7 @@ public record AssignmentPreviewEvalCase(
 
     public record FixtureCourt(
             Integer courtNumber,
-            List<String> slots
+            List<Long> slots
     ) {
 
         private CreateFreeGameAssignmentPreviewCommand.Court toCommandCourt() {
@@ -134,8 +134,8 @@ public record AssignmentPreviewEvalCase(
     }
 
     public record FixturePartnerPair(
-            String participantId1,
-            String participantId2
+            Long participantId1,
+            Long participantId2
     ) {
 
         private CreateFreeGameAssignmentPreviewCommand.PartnerPairs toCommandPartnerPair() {

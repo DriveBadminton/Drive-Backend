@@ -34,7 +34,7 @@ public class CreateFreeGameAssignmentPreviewServiceTest {
         CreateFreeGameAssignmentPreviewCommand command =
                 new CreateFreeGameAssignmentPreviewCommand(
                         List.of(
-                                participant("p1", "서승재", 1)
+                                participant(1L, "서승재", 1)
                         ),
                         List.of(
                                 new CreateFreeGameAssignmentPreviewCommand.Round(
@@ -42,7 +42,7 @@ public class CreateFreeGameAssignmentPreviewServiceTest {
                                         List.of(
                                                 new CreateFreeGameAssignmentPreviewCommand.Court(
                                                         1,
-                                                        Arrays.asList("p1", null, null, null)
+                                                        Arrays.asList(1L, null, null, null)
                                                 )
                                         )
                                 )
@@ -75,12 +75,12 @@ public class CreateFreeGameAssignmentPreviewServiceTest {
 
     // helper method
     private CreateFreeGameAssignmentPreviewCommand.Participant participant(
-            String clientId,
+            Long participantId,
             String name,
             Integer gamesAssigned
     ) {
         return new CreateFreeGameAssignmentPreviewCommand.Participant(
-                clientId,
+                participantId,
                 name,
                 Gender.MALE,
                 20,

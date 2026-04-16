@@ -24,8 +24,8 @@ class CreateFreeGameAssignmentPreviewCommandMapperTest {
         CreateFreeGameAssignmentPreviewRequest request =
                 new CreateFreeGameAssignmentPreviewRequest(
                         List.of(
-                                participantRequest("p1", "서승재", Gender.MALE, 20, Grade.S, 1),
-                                participantRequest("p2", "김원호", Gender.FEMALE, 30, Grade.A, 0)
+                                participantRequest(1L, "서승재", Gender.MALE, 20, Grade.S, 1),
+                                participantRequest(2L, "김원호", Gender.FEMALE, 30, Grade.A, 0)
                         ),
                         List.of(
                                 new CreateFreeGameAssignmentPreviewRequest.RoundRequest(
@@ -33,7 +33,7 @@ class CreateFreeGameAssignmentPreviewCommandMapperTest {
                                         List.of(
                                                 new CreateFreeGameAssignmentPreviewRequest.CourtRequest(
                                                         1,
-                                                        Arrays.asList("p1", null, null, null)
+                                                        Arrays.asList(1L, null, null, null)
                                                 ),
                                                 new CreateFreeGameAssignmentPreviewRequest.CourtRequest(
                                                         2,
@@ -44,8 +44,8 @@ class CreateFreeGameAssignmentPreviewCommandMapperTest {
                         ),
                         List.of(
                                 new CreateFreeGameAssignmentPreviewRequest.PartnerPairRequest(
-                                        "p1",
-                                        "p2"
+                                        1L,
+                                        2L
                                 )
                         ),
                         new CreateFreeGameAssignmentPreviewRequest.PreferencesRequest(
@@ -60,13 +60,13 @@ class CreateFreeGameAssignmentPreviewCommandMapperTest {
         // then
         then(command.participants()).hasSize(2);
 
-        then(command.participants().get(0).clientId()).isEqualTo("p1");
+        then(command.participants().get(0).participantId()).isEqualTo(1L);
         then(command.participants().get(0).gender()).isEqualTo(Gender.MALE);
         then(command.participants().get(0).ageGroup()).isEqualTo(20);
         then(command.participants().get(0).grade()).isEqualTo(Grade.S);
         then(command.participants().get(0).gamesAssigned()).isEqualTo(1);
 
-        then(command.participants().get(1).clientId()).isEqualTo("p2");
+        then(command.participants().get(1).participantId()).isEqualTo(2L);
         then(command.participants().get(1).gender()).isEqualTo(Gender.FEMALE);
         then(command.participants().get(1).ageGroup()).isEqualTo(30);
         then(command.participants().get(1).grade()).isEqualTo(Grade.A);
@@ -77,11 +77,11 @@ class CreateFreeGameAssignmentPreviewCommandMapperTest {
         then(command.rounds().get(0).courts()).hasSize(2);
         then(command.rounds().get(0).courts().get(0).courtNumber()).isEqualTo(1);
         then(command.rounds().get(0).courts().get(0).slots())
-                .containsExactly("p1", null, null, null);
+                .containsExactly(1L, null, null, null);
 
         then(command.partnerPairs()).hasSize(1);
-        then(command.partnerPairs().get(0).participantId1()).isEqualTo("p1");
-        then(command.partnerPairs().get(0).participantId2()).isEqualTo("p2");
+        then(command.partnerPairs().get(0).participantId1()).isEqualTo(1L);
+        then(command.partnerPairs().get(0).participantId2()).isEqualTo(2L);
 
         then(command.preferences().partnerPolicy())
                 .isEqualTo(CreateFreeGameAssignmentPreviewCommand.PartnerPolicy.PREFER_PARTNERS);
@@ -95,7 +95,7 @@ class CreateFreeGameAssignmentPreviewCommandMapperTest {
         // given
         CreateFreeGameAssignmentPreviewRequest request =
                 new CreateFreeGameAssignmentPreviewRequest(
-                        List.of(participantRequest("p1", "서승재", Gender.MALE, 20, Grade.S, 1)),
+                        List.of(participantRequest(1L, "서승재", Gender.MALE, 20, Grade.S, 1)),
                         List.of(
                                 new CreateFreeGameAssignmentPreviewRequest.RoundRequest(
                                         1,
@@ -129,7 +129,7 @@ class CreateFreeGameAssignmentPreviewCommandMapperTest {
 
     // helper method
     private CreateFreeGameAssignmentPreviewRequest.ParticipantRequest participantRequest(
-            String clientId,
+            Long participantId,
             String name,
             Gender gender,
             Integer ageGroup,
@@ -137,7 +137,7 @@ class CreateFreeGameAssignmentPreviewCommandMapperTest {
             Integer gamesAssigned
     ) {
         return new CreateFreeGameAssignmentPreviewRequest.ParticipantRequest(
-                clientId,
+                participantId,
                 name,
                 gender,
                 ageGroup,

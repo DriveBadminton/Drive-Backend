@@ -85,7 +85,7 @@ class SpringAiAssignmentPreviewGatewayFillCoverageTest extends SpringAiAssignmen
         then(result.bestValidFilledSlots()).isEqualTo(4);
         then(result.bestValidWarningCodes()).isEmpty();
         then(result.response().rounds().getFirst().courts().getFirst().slots())
-                .containsExactly("p1", "p2", "p3", "p4");
+                .containsExactly(1L, 2L, 3L, 4L);
         verify(chatModel, times(2)).call(any(Prompt.class));
     }
 
@@ -200,7 +200,7 @@ class SpringAiAssignmentPreviewGatewayFillCoverageTest extends SpringAiAssignmen
         then(result.bestValidFilledSlots()).isEqualTo(2);
         then(result.bestValidWarningCodes()).containsExactly("PARTIAL_ASSIGNMENT");
         then(result.response().rounds().getFirst().courts().getFirst().slots())
-                .containsExactly("p1", "p2", null, null);
+                .containsExactly(1L, 2L, null, null);
     }
 
     @Test
@@ -283,7 +283,7 @@ class SpringAiAssignmentPreviewGatewayFillCoverageTest extends SpringAiAssignmen
         then(result.qualityRepairReasons()).containsExactly("UNDER_FILLED");
         then(result.bestValidFilledSlots()).isEqualTo(4);
         then(result.response().rounds().getFirst().courts().getFirst().slots())
-                .containsExactly("p1", "p2", "p3", "p4");
+                .containsExactly(1L, 2L, 3L, 4L);
         verify(chatModel, times(3)).call(any(Prompt.class));
     }
 

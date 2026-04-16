@@ -42,8 +42,8 @@ public record CreateFreeGameRequest(
         List<RoundRequest> rounds
 ) {
     public record ParticipantRequest(
-            @NotBlank
-            String clientId,
+            @NotNull
+            Long participantId,
 
             UUID accountId,
 
@@ -85,7 +85,7 @@ public record CreateFreeGameRequest(
 
             @NotNull
             @Size(min = 4, max = 4)
-            List<String> slots
+            List<Long> slots
     ) {
     }
 }

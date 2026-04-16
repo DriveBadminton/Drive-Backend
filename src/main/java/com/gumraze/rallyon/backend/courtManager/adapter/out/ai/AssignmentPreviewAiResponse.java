@@ -32,11 +32,11 @@ public record AssignmentPreviewAiResponse(
      * AI가 반환한 한 코트의 슬롯 결과다.
      *
      * @param courtNumber 코트 순번
-     * @param slots 각 슬롯에 배정된 participant clientId 목록
+     * @param slots 각 슬롯에 배정된 participantId 목록
      */
     public record Court(
             Integer courtNumber,
-            List<String> slots
+            List<Long> slots
     ) {
     }
 

@@ -67,7 +67,7 @@ public class AssignmentPreviewAiAdapterTest {
         then(result.rounds().getFirst().courts().getFirst().courtNumber()).isEqualTo(1);
         then(result.rounds().getFirst().courts().getFirst().slots()).hasSize(4);
         then(result.rounds().getFirst().courts().getFirst().slots())
-                .containsExactly("p1", "p2", null, null);
+                .containsExactly(1L, 2L, null, null);
         then(result.warnings()).hasSize(1);
         then(result.warnings().getFirst().code()).isEqualTo("PARTIAL_ASSIGNMENT");
         then(result.warnings().getFirst().message()).isEqualTo("일부 슬롯은 비어 있습니다.");
@@ -139,7 +139,7 @@ public class AssignmentPreviewAiAdapterTest {
         then(result.responseChars()).isEqualTo(170);
         then(result.maxCompletionTokens()).isEqualTo(1200);
         then(result.preview().rounds().getFirst().courts().getFirst().slots())
-                .containsExactly("p1", "p2", null, null);
+                .containsExactly(1L, 2L, null, null);
         verify(aiGateway).generateExecution(command);
     }
 
@@ -147,7 +147,7 @@ public class AssignmentPreviewAiAdapterTest {
         return new CreateFreeGameAssignmentPreviewCommand(
                 List.of(
                         new CreateFreeGameAssignmentPreviewCommand.Participant(
-                                "p1",
+                                1L,
                                 "서승재",
                                 Gender.MALE,
                                 20,
@@ -155,7 +155,7 @@ public class AssignmentPreviewAiAdapterTest {
                                 1
                         ),
                         new CreateFreeGameAssignmentPreviewCommand.Participant(
-                                "p2",
+                                2L,
                                 "김원호",
                                 Gender.MALE,
                                 20,
@@ -169,14 +169,14 @@ public class AssignmentPreviewAiAdapterTest {
                                 List.of(
                                         new CreateFreeGameAssignmentPreviewCommand.Court(
                                                 1,
-                                                Arrays.asList("p1", null, null, null)
+                                                Arrays.asList(1L, null, null, null)
                                         )
                                 )
                         )
                 ),
                 List.of(
                         new CreateFreeGameAssignmentPreviewCommand.PartnerPairs(
-                                "p1", "p2"
+                                1L, 2L
                         )
                 ),
                 new CreateFreeGameAssignmentPreviewCommand.Preferences(
@@ -194,7 +194,7 @@ public class AssignmentPreviewAiAdapterTest {
                                 List.of(
                                         new AssignmentPreviewAiResponse.Court(
                                                 1,
-                                                Arrays.asList("p1", "p2", null, null)
+                                                Arrays.asList(1L, 2L, null, null)
                                         )
                                 )
                         )

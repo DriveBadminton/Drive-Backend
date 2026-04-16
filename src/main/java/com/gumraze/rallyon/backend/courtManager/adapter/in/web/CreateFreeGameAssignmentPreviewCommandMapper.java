@@ -13,7 +13,7 @@ public class CreateFreeGameAssignmentPreviewCommandMapper {
         return new CreateFreeGameAssignmentPreviewCommand(
                 request.participants().stream()
                         .map(participant -> new CreateFreeGameAssignmentPreviewCommand.Participant(
-                                participant.clientId(),
+                                participant.participantId(),
                                 participant.gender(),
                                 participant.ageGroup(),
                                 participant.grade(),

@@ -34,7 +34,7 @@ class CreateFreeGameAssignmentPreviewResponseMapperTest {
         then(response.rounds().get(0).courts()).hasSize(1);
         then(response.rounds().get(0).courts().get(0).courtNumber()).isEqualTo(1);
         then(response.rounds().get(0).courts().get(0).slots())
-                .containsExactly("p1", "p2", null, null);
+                .containsExactly(1L, 2L, null, null);
 
         then(response.warnings()).hasSize(1);
         then(response.warnings().get(0).code()).isEqualTo("PARTNER_CONSTRAINT_PARTIAL");
@@ -104,9 +104,9 @@ class CreateFreeGameAssignmentPreviewResponseMapperTest {
         // then
         then(response.rounds().get(0).courts()).hasSize(2);
         then(response.rounds().get(0).courts().get(0).slots())
-                .containsExactly("p1", "p2", "p3", "p4");
+                .containsExactly(1L, 2L, 3L, 4L);
         then(response.rounds().get(0).courts().get(1).slots())
-                .containsExactly("p5", "p6", "p7", "p8");
+                .containsExactly(5L, 6L, 7L, 8L);
     }
 
     @Test
@@ -124,7 +124,7 @@ class CreateFreeGameAssignmentPreviewResponseMapperTest {
 
         // then
         then(response.rounds().get(0).courts().get(0).slots())
-                .containsExactly("p1", null, "p3", null);
+                .containsExactly(1L, null, 3L, null);
     }
 
     @Test
@@ -167,11 +167,18 @@ class CreateFreeGameAssignmentPreviewResponseMapperTest {
     ) {
         return new CreateFreeGameAssignmentPreviewResult.Court(
                 courtNumber,
-                Arrays.asList(slot1, slot2, slot3, slot4)
+                Arrays.asList(participantId(slot1), participantId(slot2), participantId(slot3), participantId(slot4))
         );
     }
 
     private CreateFreeGameAssignmentPreviewResult.Warning warning(String code, String message) {
         return new CreateFreeGameAssignmentPreviewResult.Warning(code, message);
+    }
+
+    private Long participantId(String value) {
+        if (value == null) {
+            return null;
+        }
+        return Long.parseLong(value.substring(1));
     }
 }

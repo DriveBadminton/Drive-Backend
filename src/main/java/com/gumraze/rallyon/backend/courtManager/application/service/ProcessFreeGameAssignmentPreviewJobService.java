@@ -346,7 +346,7 @@ public class ProcessFreeGameAssignmentPreviewJobService {
             int requestedFilled = 0;
             int requestedNull = 0;
             for (CreateFreeGameAssignmentPreviewCommand.Court court : round.courts()) {
-                for (String slot : court.slots()) {
+                for (Long slot : court.slots()) {
                     if (slot == null) {
                         requestedNull++;
                     } else {

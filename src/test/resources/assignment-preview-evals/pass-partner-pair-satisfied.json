@@ -2,21 +2,60 @@
   "scenario": "pass - 파트너 pair 만족",
   "command": {
     "participants": [
-      { "clientId": "p1", "name": "p1", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p2", "name": "p2", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p3", "name": "p3", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 },
-      { "clientId": "p4", "name": "p4", "gender": "MALE", "ageGroup": 20, "grade": "S", "gamesAssigned": 0 }
+      {
+        "participantId": 1,
+        "name": "p1",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 2,
+        "name": "p2",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 3,
+        "name": "p3",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 4,
+        "name": "p4",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      }
     ],
     "rounds": [
       {
         "roundNumber": 1,
         "courts": [
-          { "courtNumber": 1, "slots": [null, null, null, null] }
+          {
+            "courtNumber": 1,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          }
         ]
       }
     ],
     "partnerPairs": [
-      { "participantId1": "p1", "participantId2": "p2" }
+      {
+        "participantId1": 1,
+        "participantId2": 2
+      }
     ],
     "preferences": {
       "partnerPolicy": "PREFER_PARTNERS",
@@ -28,7 +67,15 @@
       {
         "roundNumber": 1,
         "courts": [
-          { "courtNumber": 1, "slots": ["p1", "p2", "p3", "p4"] }
+          {
+            "courtNumber": 1,
+            "slots": [
+              1,
+              2,
+              3,
+              4
+            ]
+          }
         ]
       }
     ],
@@ -38,7 +85,9 @@
     "pass": true,
     "minFilledSlotDelta": 4,
     "expectedWarningCodes": [],
-    "forbiddenWarningCodes": ["PARTNER_CONSTRAINT_PARTIAL"],
+    "forbiddenWarningCodes": [
+      "PARTNER_CONSTRAINT_PARTIAL"
+    ],
     "expectedSatisfiedPartnerPairCount": 1,
     "expectedFailureReasons": []
   }

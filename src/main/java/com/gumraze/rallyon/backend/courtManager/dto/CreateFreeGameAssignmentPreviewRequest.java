@@ -46,15 +46,15 @@ public record CreateFreeGameAssignmentPreviewRequest(
      * 현재 화면에서 배정 가능한 참가자 정보다.
      * {@code gamesAssigned}는 현재 프론트 화면에서 이미 배정된 경기 수를 뜻한다.
      *
-     * @param clientId 프론트 화면에서 참가자를 식별하는 임시 ID
+     * @param participantId 프론트 화면에서 참가자를 식별하는 임시 ID
      * @param gender 참가자 성별
      * @param ageGroup 참가자 연령대
      * @param grade 참가자 급수
      * @param gamesAssigned 현재 화면 기준으로 이미 배정된 경기 수
      */
     public record ParticipantRequest(
-            @NotBlank
-            String clientId,
+            @NotNull
+            Long participantId,
 
             @NotNull
             Gender gender,
@@ -72,14 +72,14 @@ public record CreateFreeGameAssignmentPreviewRequest(
             Integer gamesAssigned
     ) {
         public ParticipantRequest(
-                String clientId,
+                Long participantId,
                 String unusedName,
                 Gender gender,
                 Integer ageGroup,
                 Grade grade,
                 Integer gamesAssigned
         ) {
-            this(clientId, gender, ageGroup, grade, gamesAssigned);
+            this(participantId, gender, ageGroup, grade, gamesAssigned);
         }
     }
 
@@ -107,12 +107,12 @@ public record CreateFreeGameAssignmentPreviewRequest(
      * 한 코트의 슬롯 상태다.
      *
      * <p>slots는 항상 4칸이며,
-     * 각 값은 participants에 포함된 clientId를 참조한다.
+     * 각 값은 participants에 포함된 participantId를 참조한다.
      *
      * <p>null은 아직 비어 있는 슬롯을 뜻한다.
      *
      * @param courtNumber 라운드 안에서의 코트 순번
-     * @param slots 코트의 4개 슬롯 상태, 각 값은 participant의 clientId 또는 null
+     * @param slots 코트의 4개 슬롯 상태, 각 값은 participant의 participantId 또는 null
      */
     public record CourtRequest(
             @NotNull
@@ -121,7 +121,7 @@ public record CreateFreeGameAssignmentPreviewRequest(
 
             @NotNull
             @Size(min = 4, max = 4)
-            List<String> slots
+            List<Long> slots
     ) {
     }
 
@@ -135,11 +135,11 @@ public record CreateFreeGameAssignmentPreviewRequest(
      * @param participantId2 파트너 pair의 두 번째 참가자 ID
      */
     public record PartnerPairRequest(
-            @NotBlank
-            String participantId1,
+            @NotNull
+            Long participantId1,
 
-            @NotBlank
-            String participantId2
+            @NotNull
+            Long participantId2
     ) {
     }
 

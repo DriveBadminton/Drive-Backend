@@ -37,7 +37,7 @@ class CreateFreeGameCommandMapperTest {
                 List.of(managerId1, managerId2),
                 List.of(
                         new CreateFreeGameRequest.ParticipantRequest(
-                                "p1",
+                                1L,
                                 participantAccountId,
                                 "김대환",
                                 Gender.MALE,
@@ -51,7 +51,7 @@ class CreateFreeGameCommandMapperTest {
                                 List.of(
                                         new CreateFreeGameRequest.CourtRequest(
                                                 1,
-                                                Arrays.asList("p1", null, null, null)
+                                                Arrays.asList(1L, null, null, null)
                                         )
                                 )
                         )
@@ -72,7 +72,7 @@ class CreateFreeGameCommandMapperTest {
         assertThat(command.managerIds()).containsExactly(managerId1, managerId2);
 
         assertThat(command.participants()).hasSize(1);
-        assertThat(command.participants().getFirst().clientId()).isEqualTo("p1");
+        assertThat(command.participants().getFirst().participantId()).isEqualTo(1L);
         assertThat(command.participants().getFirst().accountId()).isEqualTo(participantAccountId);
         assertThat(command.participants().getFirst().originalName()).isEqualTo("김대환");
 
@@ -81,6 +81,6 @@ class CreateFreeGameCommandMapperTest {
         assertThat(command.rounds().getFirst().courts()).hasSize(1);
         assertThat(command.rounds().getFirst().courts().getFirst().courtNumber()).isEqualTo(1);
         assertThat(command.rounds().getFirst().courts().getFirst().slots())
-                .containsExactly("p1", null, null, null);
+                .containsExactly(1L, null, null, null);
     }
 }
