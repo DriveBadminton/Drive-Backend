@@ -95,7 +95,7 @@ public final class CourtManagerControllerFixtures {
             UUID gameId,
             List<FreeGameParticipantResponse> participants
     ) {
-        return new FreeGameParticipantsResponse(gameId, MatchRecordMode.RESULT, participants);
+        return new FreeGameParticipantsResponse(gameId, MatchRecordMode.WINNER_ONLY, participants);
     }
 
     public static FreeGameParticipantDetailResponse participantDetailResponse(

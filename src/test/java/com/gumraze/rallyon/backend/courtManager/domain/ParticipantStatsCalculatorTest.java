@@ -24,10 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ParticipantStatsCalculatorTest {
 
     @Test
-    @DisplayName("RESULT 모드에서는 assigned, completed, win, loss를 계산한다")
+    @DisplayName("WINNER_ONLY 모드에서는 assigned, completed, win, loss를 계산한다")
     void calculate_counts_all_stats_in_result_mode() {
         UUID organizerAccountId = UUID.randomUUID();
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(UUID.randomUUID(), organizerAccountId, MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(UUID.randomUUID(), organizerAccountId, MatchRecordMode.WINNER_ONLY);
         FreeGameRound round = CourtManagerTestFixtures.round(freeGame, UUID.randomUUID(), 1, RoundStatus.NOT_STARTED);
 
         GameParticipant participant1 = participant(freeGame, "서승재");
@@ -61,7 +61,7 @@ class ParticipantStatsCalculatorTest {
         );
 
         Map<UUID, ParticipantStatsCalculator.ParticipantStats> result = ParticipantStatsCalculator.calculate(
-                MatchRecordMode.RESULT,
+                MatchRecordMode.WINNER_ONLY,
                 List.of(participant1, participant2, participant3, participant4),
                 List.of(completedMatch, plannedMatch)
         );
@@ -118,7 +118,7 @@ class ParticipantStatsCalculatorTest {
     @DisplayName("null 슬롯은 통계 계산에서 무시한다")
     void calculate_ignores_null_slots() {
         UUID organizerAccountId = UUID.randomUUID();
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(UUID.randomUUID(), organizerAccountId, MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(UUID.randomUUID(), organizerAccountId, MatchRecordMode.WINNER_ONLY);
         FreeGameRound round = CourtManagerTestFixtures.round(freeGame, UUID.randomUUID(), 1, RoundStatus.NOT_STARTED);
 
         GameParticipant participant1 = participant(freeGame, "서승재");
@@ -137,7 +137,7 @@ class ParticipantStatsCalculatorTest {
         );
 
         Map<UUID, ParticipantStatsCalculator.ParticipantStats> result = ParticipantStatsCalculator.calculate(
-                MatchRecordMode.RESULT,
+                MatchRecordMode.WINNER_ONLY,
                 List.of(participant1),
                 List.of(sparseMatch)
         );

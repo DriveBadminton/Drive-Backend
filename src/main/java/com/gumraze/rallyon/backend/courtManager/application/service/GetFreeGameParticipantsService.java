@@ -96,8 +96,8 @@ public class GetFreeGameParticipantsService implements GetFreeGameParticipantsUs
             MatchRecordMode matchRecordMode,
             ParticipantStatsCalculator.ParticipantStats stats
     ) {
-        Integer winCount = matchRecordMode == MatchRecordMode.RESULT ? stats.winCount() : null;
-        Integer lossCount = matchRecordMode == MatchRecordMode.RESULT ? stats.lossCount() : null;
+        Integer winCount = hasWinLossRecord(matchRecordMode) ? stats.winCount() : null;
+        Integer lossCount = hasWinLossRecord(matchRecordMode) ? stats.lossCount() : null;
 
         return new FreeGameParticipantResponse(
                 participant.getId(),
@@ -111,5 +111,10 @@ public class GetFreeGameParticipantsService implements GetFreeGameParticipantsUs
                 winCount,
                 lossCount
         );
+    }
+
+    private boolean hasWinLossRecord(MatchRecordMode matchRecordMode) {
+        return matchRecordMode == MatchRecordMode.WINNER_ONLY
+                || matchRecordMode == MatchRecordMode.SCORE;
     }
 }

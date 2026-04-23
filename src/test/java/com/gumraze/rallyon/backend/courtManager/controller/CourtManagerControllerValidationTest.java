@@ -8,9 +8,12 @@ import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameP
 import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameParticipantsUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameRoundsAndMatchesUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.GetPublicFreeGameDetailUseCase;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.StartFreeGameMatchUseCase;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.StartFreeGameUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.SubmitFreeGameAssignmentPreviewUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.UpdateFreeGameInfoUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.UpdateFreeGameRoundsAndMatchesUseCase;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.CompleteFreeGameMatchUseCase;
 import com.gumraze.rallyon.backend.courtManager.dto.AddFreeGameParticipantRequest;
 import com.gumraze.rallyon.backend.courtManager.dto.CreateFreeGameAssignmentPreviewRequest;
 import com.gumraze.rallyon.backend.courtManager.dto.CreateFreeGameRequest;
@@ -52,6 +55,9 @@ class CourtManagerControllerValidationTest {
     @MockitoBean private GetFreeGameAssignmentPreviewStatusUseCase getFreeGameAssignmentPreviewStatusUseCase;
     @MockitoBean private GetFreeGameDetailUseCase getFreeGameDetailUseCase;
     @MockitoBean private UpdateFreeGameInfoUseCase updateFreeGameInfoUseCase;
+    @MockitoBean private StartFreeGameUseCase startFreeGameUseCase;
+    @MockitoBean private StartFreeGameMatchUseCase startFreeGameMatchUseCase;
+    @MockitoBean private CompleteFreeGameMatchUseCase completeFreeGameMatchUseCase;
     @MockitoBean private GetFreeGameRoundsAndMatchesUseCase getFreeGameRoundsAndMatchesUseCase;
     @MockitoBean private UpdateFreeGameRoundsAndMatchesUseCase updateFreeGameRoundsAndMatchesUseCase;
     @MockitoBean private AddFreeGameParticipantUseCase addFreeGameParticipantUseCase;

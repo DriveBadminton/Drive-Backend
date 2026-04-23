@@ -80,7 +80,7 @@ class CreateFreeGameServiceTest {
         LocalDateTime scheduledAt = LocalDateTime.of(2026, 4, 1, 15, 10);
 
         CreateFreeGameCommand command = createCommand(
-                MatchRecordMode.RESULT,
+                MatchRecordMode.WINNER_ONLY,
                 null,
                 List.of(1L, 2L, 3L, 4L),
                 null
@@ -90,7 +90,7 @@ class CreateFreeGameServiceTest {
                 "수요 자유게임",
                 organizerAccountId,
                 GradeType.NATIONAL,
-                MatchRecordMode.RESULT,
+                MatchRecordMode.WINNER_ONLY,
                 shareCode,
                 scheduledAt,
                 "잠실 배드민턴장"
@@ -120,7 +120,7 @@ class CreateFreeGameServiceTest {
         assertThat(freeGame.getShareCode()).isEqualTo(shareCode);
         assertThat(freeGame.getGameType()).isEqualTo(GameType.FREE);
         assertThat(freeGame.getGameStatus()).isEqualTo(GameStatus.NOT_STARTED);
-        assertThat(freeGame.getMatchRecordMode()).isEqualTo(MatchRecordMode.RESULT);
+        assertThat(freeGame.getMatchRecordMode()).isEqualTo(MatchRecordMode.WINNER_ONLY);
         assertThat(freeGame.getScheduledAt()).isEqualTo(scheduledAt);
         assertThat(freeGame.getLocation()).isEqualTo("잠실 배드민턴장");
 

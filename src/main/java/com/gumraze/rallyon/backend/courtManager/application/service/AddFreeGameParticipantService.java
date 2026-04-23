@@ -6,6 +6,7 @@ import com.gumraze.rallyon.backend.courtManager.application.port.in.AddFreeGameP
 import com.gumraze.rallyon.backend.courtManager.application.port.in.command.AddFreeGameParticipantCommand;
 import com.gumraze.rallyon.backend.courtManager.application.port.out.AddGameParticipantPort;
 import com.gumraze.rallyon.backend.courtManager.application.port.out.LoadFreeGamePort;
+import com.gumraze.rallyon.backend.courtManager.constants.GameStatus;
 import com.gumraze.rallyon.backend.courtManager.entity.FreeGame;
 import com.gumraze.rallyon.backend.courtManager.entity.GameParticipant;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,10 @@ public class AddFreeGameParticipantService implements AddFreeGameParticipantUseC
 
         if (!freeGame.getOrganizerAccountId().equals(organizerId)) {
             throw new ForbiddenException("게임의 organizer가 아닙니다. gameId: " + gameId);
+        }
+
+        if (freeGame.getGameStatus() == GameStatus.COMPLETED) {
+            throw new IllegalArgumentException("완료된 자유게임에는 참가자를 추가할 수 없습니다.");
         }
 
         GameParticipant savedParticipant = addGameParticipantPort.add(freeGame, command);

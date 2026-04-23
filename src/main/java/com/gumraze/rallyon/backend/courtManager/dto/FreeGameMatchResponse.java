@@ -12,5 +12,7 @@ public record FreeGameMatchResponse(
         List<UUID> teamBIds,
         MatchStatus matchStatus,
         MatchResult matchResult,
+        Integer teamAScore,
+        Integer teamBScore,
         Boolean isActive
 ) {}

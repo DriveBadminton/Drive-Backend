@@ -38,7 +38,7 @@ class ManageFreeGameRoundMatchPersistenceAdapterTest {
     @Test
     @DisplayName("기존 라운드의 매치를 교체할 때는 기존 매치를 삭제한 뒤 저장한다")
     void replace_matches_deletes_existing_matches_then_saves() {
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(UUID.randomUUID(), UUID.randomUUID(), MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(UUID.randomUUID(), UUID.randomUUID(), MatchRecordMode.WINNER_ONLY);
         UUID roundId = UUID.randomUUID();
         FreeGameRound round = CourtManagerTestFixtures.round(freeGame, roundId, 1, RoundStatus.NOT_STARTED);
         FreeGameMatch match = mock(FreeGameMatch.class);
@@ -52,7 +52,7 @@ class ManageFreeGameRoundMatchPersistenceAdapterTest {
     @Test
     @DisplayName("아직 저장되지 않은 라운드는 delete 없이 매치만 저장한다")
     void replace_matches_skips_delete_when_round_id_is_missing() {
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(UUID.randomUUID(), UUID.randomUUID(), MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(UUID.randomUUID(), UUID.randomUUID(), MatchRecordMode.WINNER_ONLY);
         FreeGameRound round = FreeGameRound.create(freeGame, 1, RoundStatus.NOT_STARTED);
         ReflectionTestUtils.setField(round, "id", null);
         FreeGameMatch match = mock(FreeGameMatch.class);
@@ -66,7 +66,7 @@ class ManageFreeGameRoundMatchPersistenceAdapterTest {
     @Test
     @DisplayName("라운드를 저장하면 repository 결과를 반환한다")
     void save_round_returns_saved_round() {
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(UUID.randomUUID(), UUID.randomUUID(), MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(UUID.randomUUID(), UUID.randomUUID(), MatchRecordMode.WINNER_ONLY);
         FreeGameRound round = FreeGameRound.create(freeGame, 1, RoundStatus.NOT_STARTED);
         FreeGameRound savedRound = CourtManagerTestFixtures.round(freeGame, UUID.randomUUID(), 1, RoundStatus.NOT_STARTED);
         given(freeGameRoundRepository.save(same(round))).willReturn(savedRound);

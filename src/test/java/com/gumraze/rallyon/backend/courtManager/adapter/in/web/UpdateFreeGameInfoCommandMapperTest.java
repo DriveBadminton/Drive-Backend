@@ -24,7 +24,7 @@ class UpdateFreeGameInfoCommandMapperTest {
         UUID managerId = UUID.randomUUID();
         UpdateFreeGameRequest request = new UpdateFreeGameRequest(
                 "수정된 자유게임",
-                MatchRecordMode.RESULT,
+                MatchRecordMode.WINNER_ONLY,
                 GradeType.NATIONAL,
                 "2026-04-01T15:10",
                 "올림픽공원",
@@ -36,7 +36,7 @@ class UpdateFreeGameInfoCommandMapperTest {
         assertThat(command.organizerId()).isEqualTo(organizerAccountId);
         assertThat(command.gameId()).isEqualTo(gameId);
         assertThat(command.title()).isEqualTo("수정된 자유게임");
-        assertThat(command.matchRecordMode()).isEqualTo(MatchRecordMode.RESULT);
+        assertThat(command.matchRecordMode()).isEqualTo(MatchRecordMode.WINNER_ONLY);
         assertThat(command.gradeType()).isEqualTo(GradeType.NATIONAL);
         assertThat(command.scheduledAt()).isEqualTo("2026-04-01T15:10");
         assertThat(command.location()).isEqualTo("올림픽공원");

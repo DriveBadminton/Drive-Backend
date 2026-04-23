@@ -10,6 +10,7 @@ import com.gumraze.rallyon.backend.courtManager.constants.AssignmentPreviewJobSt
 import com.gumraze.rallyon.backend.courtManager.constants.MatchRecordMode;
 import com.gumraze.rallyon.backend.courtManager.constants.MatchResult;
 import com.gumraze.rallyon.backend.courtManager.constants.MatchStatus;
+import com.gumraze.rallyon.backend.courtManager.constants.MatchWinnerTeam;
 import com.gumraze.rallyon.backend.courtManager.constants.RoundStatus;
 import com.gumraze.rallyon.backend.courtManager.dto.*;
 import com.gumraze.rallyon.backend.security.config.SecurityConfig;
@@ -56,6 +57,9 @@ class CourtManagerControllerTest {
     @MockitoBean private GetFreeGameAssignmentPreviewStatusUseCase getFreeGameAssignmentPreviewStatusUseCase;
     @MockitoBean private GetFreeGameDetailUseCase getFreeGameDetailUseCase;
     @MockitoBean private UpdateFreeGameInfoUseCase updateFreeGameInfoUseCase;
+    @MockitoBean private StartFreeGameUseCase startFreeGameUseCase;
+    @MockitoBean private StartFreeGameMatchUseCase startFreeGameMatchUseCase;
+    @MockitoBean private CompleteFreeGameMatchUseCase completeFreeGameMatchUseCase;
     @MockitoBean private GetFreeGameRoundsAndMatchesUseCase getFreeGameRoundsAndMatchesUseCase;
     @MockitoBean private UpdateFreeGameRoundsAndMatchesUseCase updateFreeGameRoundsAndMatchesUseCase;
     @MockitoBean private AddFreeGameParticipantUseCase addFreeGameParticipantUseCase;
@@ -252,7 +256,7 @@ class CourtManagerControllerTest {
         UUID gameId = UUID.randomUUID();
         UpdateFreeGameRequest request = new UpdateFreeGameRequest(
                 "수정된 자유게임",
-                MatchRecordMode.RESULT,
+                MatchRecordMode.WINNER_ONLY,
                 GradeType.REGIONAL,
                 "2026-04-02T18:20",
                 null,
@@ -284,6 +288,65 @@ class CourtManagerControllerTest {
     }
 
     @Test
+    @DisplayName("자유게임 시작 요청 성공")
+    void startFreeGame_returnsOk() throws Exception {
+        UUID accountId = UUID.randomUUID();
+        UUID gameId = UUID.randomUUID();
+        StartFreeGameCommand command = new StartFreeGameCommand(accountId, gameId);
+        given(startFreeGameUseCase.start(command)).willReturn(new UpdateFreeGameResponse(gameId));
+
+        mockMvc.perform(post("/free-games/{gameId}/start", gameId)
+                        .with(authenticatedUser(accountId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.gameId").value(gameId.toString()));
+
+        verify(startFreeGameUseCase).start(command);
+    }
+
+    @Test
+    @DisplayName("자유게임 매치 시작 요청 성공")
+    void startFreeGameMatch_returnsNoContent() throws Exception {
+        UUID accountId = UUID.randomUUID();
+        UUID gameId = UUID.randomUUID();
+
+        mockMvc.perform(post("/free-games/{gameId}/rounds/{roundNumber}/matches/{courtNumber}/start", gameId, 1, 2)
+                        .with(authenticatedUser(accountId)))
+                .andExpect(status().isNoContent());
+
+        verify(startFreeGameMatchUseCase).start(new StartFreeGameMatchCommand(accountId, gameId, 1, 2));
+    }
+
+    @Test
+    @DisplayName("자유게임 매치 종료 요청 성공")
+    void completeFreeGameMatch_returnsNoContent() throws Exception {
+        UUID accountId = UUID.randomUUID();
+        UUID gameId = UUID.randomUUID();
+        CompleteFreeGameMatchRequest request = new CompleteFreeGameMatchRequest(
+                MatchWinnerTeam.TEAM_A,
+                null,
+                null
+        );
+
+        mockMvc.perform(post("/free-games/{gameId}/rounds/{roundNumber}/matches/{courtNumber}/complete", gameId, 1, 2)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(authenticatedUser(accountId))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNoContent());
+
+        verify(completeFreeGameMatchUseCase).complete(
+                new CompleteFreeGameMatchCommand(
+                        accountId,
+                        gameId,
+                        1,
+                        2,
+                        MatchWinnerTeam.TEAM_A,
+                        null,
+                        null
+                )
+        );
+    }
+
+    @Test
     @DisplayName("자유게임 라운드/매치 조회 성공")
     void getFreeGameRoundMatch_withExistingGame_returnsOk() throws Exception {
         UUID accountId = UUID.randomUUID();
@@ -306,6 +369,8 @@ class CourtManagerControllerTest {
                                                 List.of(teamB1, teamB2),
                                                 MatchStatus.NOT_STARTED,
                                                 MatchResult.NULL,
+                                                null,
+                                                null,
                                                 true
                                         )
                                 )

@@ -23,6 +23,11 @@ public class ManageFreeGameRoundMatchPersistenceAdapter implements ManageFreeGam
     }
 
     @Override
+    public FreeGameMatch saveMatch(FreeGameMatch match) {
+        return freeGameMatchRepository.save(match);
+    }
+
+    @Override
     public void replaceMatches(FreeGameRound round, List<FreeGameMatch> matches) {
         if (round.getId() != null) {
             freeGameMatchRepository.deleteByRoundId(round.getId());

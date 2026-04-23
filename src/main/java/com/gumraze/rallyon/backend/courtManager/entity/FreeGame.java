@@ -106,7 +106,12 @@ public class FreeGame extends MutableAuditEntity {
             String location
     ) {
         this.title = title != null ? title : this.title;
-        this.matchRecordMode = matchRecordMode != null ? matchRecordMode : this.matchRecordMode;
+        if (matchRecordMode != null && matchRecordMode != this.matchRecordMode) {
+            if (gameStatus != GameStatus.NOT_STARTED) {
+                throw new IllegalStateException("자유게임 시작 후에는 기록 방식을 변경할 수 없습니다.");
+            }
+            this.matchRecordMode = matchRecordMode;
+        }
         this.gradeType = gradeType != null ? gradeType : this.gradeType;
         this.scheduledAt = scheduledAt != null ? scheduledAt : this.scheduledAt;
         this.location = location != null ? location : this.location;
@@ -119,6 +124,20 @@ public class FreeGame extends MutableAuditEntity {
             String location
     ) {
         update(title, matchRecordMode, gradeType, null, location);
+    }
+
+    public void start() {
+        if (gameStatus != GameStatus.NOT_STARTED) {
+            throw new IllegalStateException("미진행 자유게임만 시작할 수 있습니다.");
+        }
+        gameStatus = GameStatus.IN_PROGRESS;
+    }
+
+    public void complete() {
+        if (gameStatus != GameStatus.IN_PROGRESS) {
+            throw new IllegalStateException("진행 중인 자유게임만 완료할 수 있습니다.");
+        }
+        gameStatus = GameStatus.COMPLETED;
     }
 
     public UUID getId() {

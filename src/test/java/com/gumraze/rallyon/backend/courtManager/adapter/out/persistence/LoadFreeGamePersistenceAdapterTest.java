@@ -59,7 +59,7 @@ class LoadFreeGamePersistenceAdapterTest {
     @DisplayName("게임과 세팅을 조회한다")
     void load_game_and_setting() {
         UUID gameId = UUID.randomUUID();
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, UUID.randomUUID(), MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, UUID.randomUUID(), MatchRecordMode.WINNER_ONLY);
         FreeGameSetting setting = CourtManagerTestFixtures.setting(freeGame, 2, 4);
 
         given(gameRepository.findById(gameId)).willReturn(Optional.of(freeGame));
@@ -74,7 +74,7 @@ class LoadFreeGamePersistenceAdapterTest {
     void load_rounds_matches_and_participants() {
         UUID gameId = UUID.randomUUID();
         UUID roundId = UUID.randomUUID();
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, UUID.randomUUID(), MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, UUID.randomUUID(), MatchRecordMode.WINNER_ONLY);
         FreeGameRound round = CourtManagerTestFixtures.round(freeGame, roundId, 1, RoundStatus.NOT_STARTED);
         GameParticipant participant = CourtManagerTestFixtures.participant(
                 freeGame,

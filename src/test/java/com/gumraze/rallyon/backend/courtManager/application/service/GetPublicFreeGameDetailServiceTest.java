@@ -39,7 +39,7 @@ class GetPublicFreeGameDetailServiceTest {
     @DisplayName("share code로 공개 자유게임 상세를 조회한다")
     void get_returns_public_game_detail() {
         UUID gameId = UUID.randomUUID();
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, UUID.randomUUID(), MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, UUID.randomUUID(), MatchRecordMode.WINNER_ONLY);
         FreeGameSetting setting = CourtManagerTestFixtures.setting(freeGame, 2, 3);
         given(loadFreeGamePort.loadGameByShareCode("share-code")).willReturn(Optional.of(freeGame));
         given(loadFreeGameSettingPort.loadSettingByGameId(gameId)).willReturn(Optional.of(setting));
@@ -65,7 +65,7 @@ class GetPublicFreeGameDetailServiceTest {
     @DisplayName("게임 세팅이 없으면 예외가 발생한다")
     void get_throws_when_setting_is_missing() {
         UUID gameId = UUID.randomUUID();
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, UUID.randomUUID(), MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, UUID.randomUUID(), MatchRecordMode.WINNER_ONLY);
         given(loadFreeGamePort.loadGameByShareCode("share-code")).willReturn(Optional.of(freeGame));
         given(loadFreeGameSettingPort.loadSettingByGameId(gameId)).willReturn(Optional.empty());
 

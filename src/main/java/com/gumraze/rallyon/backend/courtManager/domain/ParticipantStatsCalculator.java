@@ -51,7 +51,7 @@ public final class ParticipantStatsCalculator {
                 }
             }
 
-            if (matchRecordMode == MatchRecordMode.RESULT) {
+            if (hasWinLossRecord(matchRecordMode)) {
                 applyWinLossCounts(match, statsByParticipantId);
             }
         }
@@ -63,6 +63,11 @@ public final class ParticipantStatsCalculator {
         if (participant != null) {
             target.add(participant.getId());
         }
+    }
+
+    private static boolean hasWinLossRecord(MatchRecordMode matchRecordMode) {
+        return matchRecordMode == MatchRecordMode.WINNER_ONLY
+                || matchRecordMode == MatchRecordMode.SCORE;
     }
 
     private static void applyWinLossCounts(

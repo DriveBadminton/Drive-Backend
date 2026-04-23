@@ -58,7 +58,7 @@ class UpdateFreeGameInfoServiceTest {
                 organizerAccountId,
                 gameId,
                 "수정된 게임",
-                MatchRecordMode.RESULT,
+                MatchRecordMode.WINNER_ONLY,
                 GradeType.NATIONAL,
                 "2026-04-02T18:20",
                 "올림픽공원",
@@ -67,7 +67,7 @@ class UpdateFreeGameInfoServiceTest {
 
         assertThat(result.gameId()).isEqualTo(gameId);
         assertThat(freeGame.getTitle()).isEqualTo("수정된 게임");
-        assertThat(freeGame.getMatchRecordMode()).isEqualTo(MatchRecordMode.RESULT);
+        assertThat(freeGame.getMatchRecordMode()).isEqualTo(MatchRecordMode.WINNER_ONLY);
         assertThat(freeGame.getScheduledAt()).isEqualTo(scheduledAt);
         assertThat(freeGame.getLocation()).isEqualTo("올림픽공원");
         verify(saveFreeGamePort).save(freeGame);
@@ -93,6 +93,32 @@ class UpdateFreeGameInfoServiceTest {
         )))
                 .isInstanceOf(UnsupportedOperationException.class)
                 .hasMessageContaining("매니저 수정 기능은 현재 미개발 상태입니다.");
+
+        verify(saveFreeGamePort, never()).save(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    @DisplayName("자유게임 시작 후에는 기록 방식을 수정할 수 없다")
+    void update_rejects_match_record_mode_change_after_game_started() {
+        UUID gameId = UUID.randomUUID();
+        UUID organizerAccountId = UUID.randomUUID();
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.STATUS_ONLY);
+        freeGame.start();
+        given(loadFreeGamePort.loadGameById(gameId)).willReturn(Optional.of(freeGame));
+        given(freeGameScheduleValidator.parseOptionalFuture(null)).willReturn(null);
+
+        assertThatThrownBy(() -> service.update(new UpdateFreeGameInfoCommand(
+                organizerAccountId,
+                gameId,
+                null,
+                MatchRecordMode.WINNER_ONLY,
+                null,
+                null,
+                null,
+                null
+        )))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("자유게임 시작 후에는 기록 방식을 변경할 수 없습니다.");
 
         verify(saveFreeGamePort, never()).save(org.mockito.ArgumentMatchers.any());
     }

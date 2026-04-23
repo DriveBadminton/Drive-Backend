@@ -116,7 +116,7 @@ class AuditPersistenceCompatibilityTest {
                 "audit-game",
                 organizer.getId(),
                 GradeType.NATIONAL,
-                MatchRecordMode.RESULT,
+                MatchRecordMode.WINNER_ONLY,
                 null,
                 "잠실 배드민턴장"
         ));
