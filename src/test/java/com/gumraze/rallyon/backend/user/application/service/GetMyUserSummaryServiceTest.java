@@ -50,6 +50,7 @@ class GetMyUserSummaryServiceTest {
 
         UserMeResponse result = service.get(new GetMyUserSummaryQuery(accountId));
 
+        assertThat(result.accountId()).isEqualTo(accountId);
         assertThat(result.status()).isEqualTo(UserStatus.PENDING);
         assertThat(result.nickname()).isNull();
         assertThat(result.provider()).isNull();
@@ -86,6 +87,7 @@ class GetMyUserSummaryServiceTest {
 
         UserMeResponse result = service.get(new GetMyUserSummaryQuery(accountId));
 
+        assertThat(result.accountId()).isEqualTo(accountId);
         assertThat(result.status()).isEqualTo(UserStatus.ACTIVE);
         assertThat(result.nickname()).isEqualTo("테스트 닉네임");
         assertThat(result.profileImageUrl()).isEqualTo("https://example.com/profile.png");
