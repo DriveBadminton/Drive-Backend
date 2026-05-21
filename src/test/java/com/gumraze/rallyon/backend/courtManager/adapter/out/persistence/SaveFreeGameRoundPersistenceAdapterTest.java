@@ -114,8 +114,8 @@ public class SaveFreeGameRoundPersistenceAdapterTest {
         assertThat(savedMatch.getRound().getRoundNumber()).isEqualTo(1);
         assertThat(savedMatch.getCourtNumber()).isEqualTo(1);
         assertThat(savedMatch.getTeamAPlayer1()).isEqualTo(p1);
-        assertThat(savedMatch.getTeamAPlayer2()).isEqualTo(p3);
-        assertThat(savedMatch.getTeamBPlayer1()).isEqualTo(p2);
+        assertThat(savedMatch.getTeamAPlayer2()).isEqualTo(p2);
+        assertThat(savedMatch.getTeamBPlayer1()).isEqualTo(p3);
         assertThat(savedMatch.getTeamBPlayer2()).isEqualTo(p4);
         assertThat(savedMatch.getMatchStatus()).isEqualTo(MatchStatus.NOT_STARTED);
         assertThat(savedMatch.getMatchResult()).isEqualTo(MatchResult.NULL);
@@ -258,8 +258,8 @@ public class SaveFreeGameRoundPersistenceAdapterTest {
         FreeGameMatch savedMatch = matchCaptor.getValue();
 
         assertThat(savedMatch.getTeamAPlayer1()).isEqualTo(p1);
-        assertThat(savedMatch.getTeamAPlayer2()).isEqualTo(p3);
-        assertThat(savedMatch.getTeamBPlayer1()).isNull();
+        assertThat(savedMatch.getTeamAPlayer2()).isNull();
+        assertThat(savedMatch.getTeamBPlayer1()).isEqualTo(p3);
         assertThat(savedMatch.getTeamBPlayer2()).isNull();
     }
 

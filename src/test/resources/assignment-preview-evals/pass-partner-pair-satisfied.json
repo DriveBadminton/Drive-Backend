@@ -1,0 +1,94 @@
+{
+  "scenario": "pass - 파트너 pair 만족",
+  "command": {
+    "participants": [
+      {
+        "participantId": 1,
+        "name": "p1",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 2,
+        "name": "p2",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 3,
+        "name": "p3",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 4,
+        "name": "p4",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      }
+    ],
+    "rounds": [
+      {
+        "roundNumber": 1,
+        "courts": [
+          {
+            "courtNumber": 1,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          }
+        ]
+      }
+    ],
+    "partnerPairs": [
+      {
+        "participantId1": 1,
+        "participantId2": 2
+      }
+    ],
+    "preferences": {
+      "partnerPolicy": "PREFER_PARTNERS",
+      "existingAssignmentPolicy": "FILL_EMPTY_SLOTS"
+    }
+  },
+  "response": {
+    "rounds": [
+      {
+        "roundNumber": 1,
+        "courts": [
+          {
+            "courtNumber": 1,
+            "slots": [
+              1,
+              2,
+              3,
+              4
+            ]
+          }
+        ]
+      }
+    ],
+    "warnings": []
+  },
+  "expected": {
+    "pass": true,
+    "minFilledSlotDelta": 4,
+    "expectedWarningCodes": [],
+    "forbiddenWarningCodes": [
+      "PARTNER_CONSTRAINT_PARTIAL"
+    ],
+    "expectedSatisfiedPartnerPairCount": 1,
+    "expectedFailureReasons": []
+  }
+}

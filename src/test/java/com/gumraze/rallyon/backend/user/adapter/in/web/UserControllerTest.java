@@ -86,7 +86,7 @@ class UserControllerTest {
     @DisplayName("PENDING 사용자가 /users/me 조회 시 status만 반환한다")
     void get_me_returns_pending_user_status() throws Exception {
         UUID accountId = UUID.randomUUID();
-        UserMeResponse response = new UserMeResponse(UserStatus.PENDING, null, null, null);
+        UserMeResponse response = new UserMeResponse(accountId, UserStatus.PENDING, null, null, null);
 
         when(getMyUserSummaryUseCase.get(any())).thenReturn(response);
 
@@ -94,6 +94,7 @@ class UserControllerTest {
                         .with(authenticatedUser(accountId))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accountId").value(accountId.toString()))
                 .andExpect(jsonPath("$.status").value(UserStatus.PENDING.name()))
                 .andExpect(jsonPath("$.profileImageUrl").value(nullValue()))
                 .andExpect(jsonPath("$.nickname").value(nullValue()))
@@ -105,6 +106,7 @@ class UserControllerTest {
     void get_user_me_return_profile_when_active() throws Exception {
         UUID accountId = UUID.randomUUID();
         UserMeResponse response = new UserMeResponse(
+                accountId,
                 UserStatus.ACTIVE,
                 "http://profile-image.com",
                 "테스트 닉네임",
@@ -117,6 +119,7 @@ class UserControllerTest {
                         .with(authenticatedUser(accountId))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accountId").value(accountId.toString()))
                 .andExpect(jsonPath("$.status").value(UserStatus.ACTIVE.name()))
                 .andExpect(jsonPath("$.nickname").value("테스트 닉네임"))
                 .andExpect(jsonPath("$.profileImageUrl").value("http://profile-image.com"))

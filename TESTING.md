@@ -33,8 +33,14 @@ Role split:
 - Make the test fail for the intended reason before changing production code.
 - Do the minimum work required to return to green.
 - Refactor only after the test is green again.
+- Prefer BDD style in new or touched tests.
 - Prefer `given / when / then` comments when they improve scanability.
+- When using `given / when / then` comments, write them as `// given: ...`, `// when: ...`, `// then: ...`.
+- Keep the comment text short and noun-phrase oriented so the setup, action, and expectation scan quickly.
 - Name tests by behavior, not implementation detail.
+- Name test methods with `method_underCondition_expectedResult`.
+- Use English camelCase for test method names.
+- Keep `@DisplayName` for human-readable scenario text when it improves clarity.
 - Prefer one test for one reason to fail.
 - Prefer AssertJ for assertions in new or touched tests.
 - Avoid style-only rewrites in untouched stable tests.
@@ -137,10 +143,12 @@ mockMvc.perform(get("/free-games/{gameId}", gameId))
 
 Mockito defaults:
 
-- use `when(...)` for stubbing
-- use `verify(...)` for meaningful interaction checks
+- prefer `given(...).willReturn(...)` for stubbing in new or touched tests
+- prefer `then(mock).should(...)` for interaction verification in new or touched tests
+- treat the `andExpect(...)` block as the `then` section in MockMvc tests
 - use `ArgumentCaptor` when saved state is the assertion target
 - avoid `verifyNoMoreInteractions()` unless the interaction boundary itself is the behavior being protected
+- `when(...)` and `verify(...)` are acceptable in legacy tests or when static import conflicts make the BDD form less clear
 
 JUnit assertions such as `assertEquals` are allowed in legacy tests or very small cases, but new tests should prefer AssertJ.
 
@@ -168,6 +176,21 @@ public final class FreeGameFixtures {
 - Prefer AssertJ custom assertions or a small helper when the same assertion pattern repeats.
 - Avoid large abstract base test classes as the default reuse mechanism.
 - Avoid extracting helpers that hide the test intent or are only used once.
+
+## AI-Assisted Test Review
+
+- For meaningful changes, ask the agent to review missing tests before or alongside implementation.
+- Ask the agent to propose tests by layer:
+  - controller
+  - service / use-case
+  - adapter
+  - integration
+- Ask for edge cases, validation, authentication / authorization, and regression risks, not just the happy path.
+- Prefer a two-step flow:
+  1. review and list the required tests
+  2. implement the selected tests
+- After implementation, run the smallest relevant test suite and report the result.
+- Keep the review request concrete. Include the changed files, the expected behavior, and any boundaries that should not be tested in this step.
 
 ## Execution
 

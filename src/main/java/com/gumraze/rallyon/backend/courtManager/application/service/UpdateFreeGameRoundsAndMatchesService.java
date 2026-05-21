@@ -8,6 +8,8 @@ import com.gumraze.rallyon.backend.courtManager.application.port.out.LoadGamePar
 import com.gumraze.rallyon.backend.courtManager.application.port.out.ManageFreeGameRoundMatchPort;
 import com.gumraze.rallyon.backend.courtManager.application.support.FreeGameAccessSupport;
 import com.gumraze.rallyon.backend.courtManager.constants.GameStatus;
+import com.gumraze.rallyon.backend.courtManager.constants.MatchResult;
+import com.gumraze.rallyon.backend.courtManager.constants.MatchStatus;
 import com.gumraze.rallyon.backend.courtManager.constants.RoundStatus;
 import com.gumraze.rallyon.backend.courtManager.dto.UpdateFreeGameRoundMatchResponse;
 import com.gumraze.rallyon.backend.courtManager.entity.FreeGame;
@@ -86,8 +88,8 @@ public class UpdateFreeGameRoundsAndMatchesService implements UpdateFreeGameRoun
                             resolveParticipant(participantsById, match.teamBIds().get(0)),
                             resolveParticipant(participantsById, match.teamBIds().get(1)),
                             null,
-                            null,
-                            null,
+                            MatchStatus.NOT_STARTED,
+                            MatchResult.NULL,
                             true
                     ))
                     .toList();

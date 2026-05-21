@@ -1,4 +1,7 @@
 spring:
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
   datasource:
     url: jdbc:postgresql://db:5432/${POSTGRES_DB}
     driver-class-name: org.postgresql.Driver

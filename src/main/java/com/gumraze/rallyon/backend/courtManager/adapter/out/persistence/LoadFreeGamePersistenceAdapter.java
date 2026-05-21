@@ -63,6 +63,19 @@ public class LoadFreeGamePersistenceAdapter implements
     }
 
     @Override
+    public Optional<FreeGameMatch> loadMatchByGameIdAndRoundNumberAndCourtNumber(
+            UUID gameId,
+            Integer roundNumber,
+            Integer courtNumber
+    ) {
+        return freeGameMatchRepository.findByRoundFreeGameIdAndRoundRoundNumberAndCourtNumber(
+                gameId,
+                roundNumber,
+                courtNumber
+        );
+    }
+
+    @Override
     public List<GameParticipant> loadParticipantsByGameId(UUID gameId) {
         return gameParticipantRepository.findByFreeGameId(gameId);
     }

@@ -61,7 +61,7 @@ class UpdateFreeGameRoundsAndMatchesServiceTest {
     void update_throws_when_game_is_completed() {
         UUID gameId = UUID.randomUUID();
         UUID organizerAccountId = UUID.randomUUID();
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.WINNER_ONLY);
         ReflectionTestUtils.setField(freeGame, "gameStatus", GameStatus.COMPLETED);
         given(loadFreeGamePort.loadGameById(gameId)).willReturn(Optional.of(freeGame));
 
@@ -79,7 +79,7 @@ class UpdateFreeGameRoundsAndMatchesServiceTest {
     void update_returns_early_when_rounds_are_null() {
         UUID gameId = UUID.randomUUID();
         UUID organizerAccountId = UUID.randomUUID();
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.WINNER_ONLY);
         given(loadFreeGamePort.loadGameById(gameId)).willReturn(Optional.of(freeGame));
 
         UpdateFreeGameRoundMatchResponse result = service.update(new UpdateFreeGameRoundsAndMatchesCommand(
@@ -98,7 +98,7 @@ class UpdateFreeGameRoundsAndMatchesServiceTest {
     void update_creates_new_round_and_replaces_matches() {
         UUID gameId = UUID.randomUUID();
         UUID organizerAccountId = UUID.randomUUID();
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.WINNER_ONLY);
         GameParticipant participant1 = participant(freeGame, "서승재");
         GameParticipant participant2 = participant(freeGame, "김원호");
 
@@ -146,7 +146,7 @@ class UpdateFreeGameRoundsAndMatchesServiceTest {
     void update_replaces_matches_for_existing_round() {
         UUID gameId = UUID.randomUUID();
         UUID organizerAccountId = UUID.randomUUID();
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.WINNER_ONLY);
         FreeGameRound existingRound = CourtManagerTestFixtures.round(freeGame, UUID.randomUUID(), 1, RoundStatus.NOT_STARTED);
         GameParticipant participant1 = participant(freeGame, "서승재");
         GameParticipant participant2 = participant(freeGame, "김원호");

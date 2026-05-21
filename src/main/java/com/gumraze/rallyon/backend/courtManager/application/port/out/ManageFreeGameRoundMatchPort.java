@@ -9,5 +9,7 @@ public interface ManageFreeGameRoundMatchPort {
 
     FreeGameRound saveRound(FreeGameRound round);
 
+    FreeGameMatch saveMatch(FreeGameMatch match);
+
     void replaceMatches(FreeGameRound round, List<FreeGameMatch> matches);
 }

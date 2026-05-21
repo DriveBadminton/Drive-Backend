@@ -1,0 +1,149 @@
+{
+  "scenario": "pass - 다중 라운드 비복제 배치",
+  "command": {
+    "participants": [
+      {
+        "participantId": 1,
+        "name": "p1",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 2,
+        "name": "p2",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 3,
+        "name": "p3",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 4,
+        "name": "p4",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 5,
+        "name": "p5",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 6,
+        "name": "p6",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 7,
+        "name": "p7",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 8,
+        "name": "p8",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      }
+    ],
+    "rounds": [
+      {
+        "roundNumber": 1,
+        "courts": [
+          {
+            "courtNumber": 1,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          }
+        ]
+      },
+      {
+        "roundNumber": 2,
+        "courts": [
+          {
+            "courtNumber": 1,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          }
+        ]
+      }
+    ],
+    "partnerPairs": [],
+    "preferences": {
+      "partnerPolicy": "IGNORE_PARTNERS",
+      "existingAssignmentPolicy": "FILL_EMPTY_SLOTS"
+    }
+  },
+  "response": {
+    "rounds": [
+      {
+        "roundNumber": 1,
+        "courts": [
+          {
+            "courtNumber": 1,
+            "slots": [
+              1,
+              2,
+              3,
+              4
+            ]
+          }
+        ]
+      },
+      {
+        "roundNumber": 2,
+        "courts": [
+          {
+            "courtNumber": 1,
+            "slots": [
+              5,
+              6,
+              7,
+              8
+            ]
+          }
+        ]
+      }
+    ],
+    "warnings": []
+  },
+  "expected": {
+    "pass": true,
+    "minFilledSlotDelta": 8,
+    "expectedWarningCodes": [],
+    "forbiddenWarningCodes": [
+      "PARTNER_CONSTRAINT_PARTIAL"
+    ],
+    "expectedSatisfiedPartnerPairCount": 0,
+    "expectedFailureReasons": []
+  }
+}

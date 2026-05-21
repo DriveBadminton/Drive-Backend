@@ -1,0 +1,121 @@
+{
+  "scenario": "pass - 파트너 pair 부분 반영 warning",
+  "command": {
+    "participants": [
+      {
+        "participantId": 1,
+        "name": "p1",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 2,
+        "name": "p2",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 3,
+        "name": "p3",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 4,
+        "name": "p4",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      }
+    ],
+    "rounds": [
+      {
+        "roundNumber": 1,
+        "courts": [
+          {
+            "courtNumber": 1,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "courtNumber": 2,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          }
+        ]
+      }
+    ],
+    "partnerPairs": [
+      {
+        "participantId1": 1,
+        "participantId2": 2
+      }
+    ],
+    "preferences": {
+      "partnerPolicy": "PREFER_PARTNERS",
+      "existingAssignmentPolicy": "FILL_EMPTY_SLOTS"
+    }
+  },
+  "response": {
+    "rounds": [
+      {
+        "roundNumber": 1,
+        "courts": [
+          {
+            "courtNumber": 1,
+            "slots": [
+              1,
+              3,
+              null,
+              null
+            ]
+          },
+          {
+            "courtNumber": 2,
+            "slots": [
+              2,
+              4,
+              null,
+              null
+            ]
+          }
+        ]
+      }
+    ],
+    "warnings": [
+      {
+        "code": "PARTIAL_ASSIGNMENT",
+        "message": "일부 슬롯은 비어 있습니다."
+      },
+      {
+        "code": "PARTNER_CONSTRAINT_PARTIAL",
+        "message": "일부 파트너 조합을 완전히 반영하지 못했습니다."
+      }
+    ]
+  },
+  "expected": {
+    "pass": true,
+    "minFilledSlotDelta": 4,
+    "expectedWarningCodes": [
+      "PARTNER_CONSTRAINT_PARTIAL"
+    ],
+    "forbiddenWarningCodes": [],
+    "expectedSatisfiedPartnerPairCount": 0,
+    "expectedFailureReasons": []
+  }
+}

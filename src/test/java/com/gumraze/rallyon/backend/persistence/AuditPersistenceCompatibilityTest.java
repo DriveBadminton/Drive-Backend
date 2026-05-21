@@ -8,20 +8,17 @@ import com.gumraze.rallyon.backend.identity.adapter.out.persistence.repository.A
 import com.gumraze.rallyon.backend.identity.adapter.out.persistence.repository.LocalCredentialRepository;
 import com.gumraze.rallyon.backend.identity.entity.Account;
 import com.gumraze.rallyon.backend.identity.entity.LocalCredential;
+import com.gumraze.rallyon.backend.user.adapter.out.persistence.repository.UserProfileRepository;
 import com.gumraze.rallyon.backend.user.constants.Gender;
 import com.gumraze.rallyon.backend.user.constants.GradeType;
 import com.gumraze.rallyon.backend.user.entity.UserProfile;
-import com.gumraze.rallyon.backend.user.adapter.out.persistence.repository.UserProfileRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestClient;
-
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,9 +27,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 @Transactional
 class AuditPersistenceCompatibilityTest {
-
-    @MockitoBean
-    private RestClient.Builder restClientBuilder;
 
     @Autowired
     private AccountRepository accountRepository;
@@ -122,7 +116,7 @@ class AuditPersistenceCompatibilityTest {
                 "audit-game",
                 organizer.getId(),
                 GradeType.NATIONAL,
-                MatchRecordMode.RESULT,
+                MatchRecordMode.WINNER_ONLY,
                 null,
                 "잠실 배드민턴장"
         ));

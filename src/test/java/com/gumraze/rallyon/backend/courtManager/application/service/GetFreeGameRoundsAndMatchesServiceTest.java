@@ -51,7 +51,7 @@ class GetFreeGameRoundsAndMatchesServiceTest {
     void get_returns_empty_response_when_rounds_are_missing() {
         UUID gameId = UUID.randomUUID();
         UUID organizerAccountId = UUID.randomUUID();
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.WINNER_ONLY);
 
         given(loadFreeGamePort.loadGameById(gameId)).willReturn(Optional.of(freeGame));
         given(loadFreeGameRoundPort.loadRoundsByGameIdOrderByRoundNumber(gameId)).willReturn(List.of());
@@ -67,7 +67,7 @@ class GetFreeGameRoundsAndMatchesServiceTest {
     void get_maps_rounds_and_matches_to_response() {
         UUID gameId = UUID.randomUUID();
         UUID organizerAccountId = UUID.randomUUID();
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.WINNER_ONLY);
         FreeGameRound round = CourtManagerTestFixtures.round(freeGame, UUID.randomUUID(), 1, RoundStatus.NOT_STARTED);
         GameParticipant participant1 = CourtManagerTestFixtures.participant(
                 freeGame,

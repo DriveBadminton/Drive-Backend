@@ -41,7 +41,7 @@ class GetFreeGameDetailServiceTest {
     void get_returns_game_detail_for_organizer() {
         UUID gameId = UUID.randomUUID();
         UUID organizerAccountId = UUID.randomUUID();
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.WINNER_ONLY);
         FreeGameSetting setting = CourtManagerTestFixtures.setting(freeGame, 2, 4);
         given(loadFreeGamePort.loadGameById(gameId)).willReturn(Optional.of(freeGame));
         given(loadFreeGameSettingPort.loadSettingByGameId(gameId)).willReturn(Optional.of(setting));
@@ -59,7 +59,7 @@ class GetFreeGameDetailServiceTest {
     void get_throws_when_requester_is_not_organizer() {
         UUID gameId = UUID.randomUUID();
         UUID organizerAccountId = UUID.randomUUID();
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.WINNER_ONLY);
         given(loadFreeGamePort.loadGameById(gameId)).willReturn(Optional.of(freeGame));
 
         assertThatThrownBy(() -> service.get(new GetFreeGameDetailQuery(UUID.randomUUID(), gameId)))
@@ -71,7 +71,7 @@ class GetFreeGameDetailServiceTest {
     void get_throws_when_setting_is_missing() {
         UUID gameId = UUID.randomUUID();
         UUID organizerAccountId = UUID.randomUUID();
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.WINNER_ONLY);
         given(loadFreeGamePort.loadGameById(gameId)).willReturn(Optional.of(freeGame));
         given(loadFreeGameSettingPort.loadSettingByGameId(gameId)).willReturn(Optional.empty());
 

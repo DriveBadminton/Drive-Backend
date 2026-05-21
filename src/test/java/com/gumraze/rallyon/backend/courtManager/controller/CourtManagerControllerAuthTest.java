@@ -3,22 +3,23 @@ package com.gumraze.rallyon.backend.courtManager.adapter.in.web;
 import com.gumraze.rallyon.backend.common.exception.ForbiddenException;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.AddFreeGameParticipantUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.CreateFreeGameUseCase;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameAssignmentPreviewStatusUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameDetailUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameParticipantDetailUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameParticipantsUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameRoundsAndMatchesUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.GetPublicFreeGameDetailUseCase;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.StartFreeGameMatchUseCase;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.StartFreeGameUseCase;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.SubmitFreeGameAssignmentPreviewUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.UpdateFreeGameInfoUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.UpdateFreeGameRoundsAndMatchesUseCase;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.CompleteFreeGameMatchUseCase;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.command.UpdateFreeGameRoundsAndMatchesCommand;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.query.GetFreeGameDetailQuery;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.query.GetFreeGameParticipantDetailQuery;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.query.GetPublicFreeGameDetailQuery;
-import com.gumraze.rallyon.backend.courtManager.dto.CreateFreeGameRequest;
-import com.gumraze.rallyon.backend.courtManager.dto.FreeGameDetailResponse;
-import com.gumraze.rallyon.backend.courtManager.dto.MatchRequest;
-import com.gumraze.rallyon.backend.courtManager.dto.RoundRequest;
-import com.gumraze.rallyon.backend.courtManager.dto.UpdateFreeGameRoundMatchRequest;
+import com.gumraze.rallyon.backend.courtManager.dto.*;
 import com.gumraze.rallyon.backend.security.config.SecurityConfig;
 import com.gumraze.rallyon.backend.user.constants.Gender;
 import com.gumraze.rallyon.backend.user.constants.Grade;
@@ -34,6 +35,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -56,8 +58,13 @@ class CourtManagerControllerAuthTest {
     @Autowired private ObjectMapper objectMapper;
 
     @MockitoBean private CreateFreeGameUseCase createFreeGameUseCase;
+    @MockitoBean private SubmitFreeGameAssignmentPreviewUseCase submitFreeGameAssignmentPreviewUseCase;
+    @MockitoBean private GetFreeGameAssignmentPreviewStatusUseCase getFreeGameAssignmentPreviewStatusUseCase;
     @MockitoBean private GetFreeGameDetailUseCase getFreeGameDetailUseCase;
     @MockitoBean private UpdateFreeGameInfoUseCase updateFreeGameInfoUseCase;
+    @MockitoBean private StartFreeGameUseCase startFreeGameUseCase;
+    @MockitoBean private StartFreeGameMatchUseCase startFreeGameMatchUseCase;
+    @MockitoBean private CompleteFreeGameMatchUseCase completeFreeGameMatchUseCase;
     @MockitoBean private GetFreeGameRoundsAndMatchesUseCase getFreeGameRoundsAndMatchesUseCase;
     @MockitoBean private UpdateFreeGameRoundsAndMatchesUseCase updateFreeGameRoundsAndMatchesUseCase;
     @MockitoBean private AddFreeGameParticipantUseCase addFreeGameParticipantUseCase;
@@ -65,9 +72,11 @@ class CourtManagerControllerAuthTest {
     @MockitoBean private GetFreeGameParticipantDetailUseCase getFreeGameParticipantDetailUseCase;
     @MockitoBean private GetPublicFreeGameDetailUseCase getPublicFreeGameDetailUseCase;
     @MockitoBean private CreateFreeGameCommandMapper createFreeGameCommandMapper;
+    @MockitoBean private CreateFreeGameAssignmentPreviewCommandMapper createFreeGameAssignmentPreviewCommandMapper;
     @MockitoBean private UpdateFreeGameInfoCommandMapper updateFreeGameInfoCommandMapper;
     @MockitoBean private UpdateFreeGameRoundsAndMatchesCommandMapper updateFreeGameRoundsAndMatchesCommandMapper;
     @MockitoBean private AddFreeGameParticipantCommandMapper addFreeGameParticipantCommandMapper;
+    @MockitoBean private AssignmentPreviewJobResponseMapper assignmentPreviewJobResponseMapper;
     @MockitoBean private JwtDecoder jwtDecoder;
 
     @Test
@@ -82,7 +91,7 @@ class CourtManagerControllerAuthTest {
                 null,
                 null,
                 null,
-                List.of(new CreateFreeGameRequest.ParticipantRequest("p1", null, "참가자", Gender.MALE, Grade.ROOKIE, 20)),
+                List.of(new CreateFreeGameRequest.ParticipantRequest(1L, null, "참가자", Gender.MALE, Grade.ROOKIE, 20)),
                 List.of()
         );
 
@@ -165,5 +174,55 @@ class CourtManagerControllerAuthTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.gameId").value(response.gameId().toString()));
+    }
+
+    @Test
+    @DisplayName("코트 배정 프리뷰 생성 시 토큰이 없으면 401")
+    void createFreeGameAssignmentPreview_withoutToken_returnsUnauthorized() throws Exception {
+        // given: 유효한 프리뷰 생성 요청 준비
+        CreateFreeGameAssignmentPreviewRequest request = new CreateFreeGameAssignmentPreviewRequest(
+                List.of(
+                        new CreateFreeGameAssignmentPreviewRequest.ParticipantRequest(
+                                1L,
+                                "서승재",
+                                Gender.MALE,
+                                20,
+                                Grade.SS,
+                                1
+                        ),
+                        new CreateFreeGameAssignmentPreviewRequest.ParticipantRequest(
+                                2L,
+                                "김원호",
+                                Gender.MALE,
+                                20,
+                                Grade.SS,
+                                1
+                        )
+                ),
+                List.of(
+                        new CreateFreeGameAssignmentPreviewRequest.RoundRequest(
+                                1,
+                                List.of(
+                                        new CreateFreeGameAssignmentPreviewRequest.CourtRequest(
+                                                1,
+                                                Arrays.asList(1L, null, null, null)
+                                        )
+                                )
+                        )
+                ),
+                null,
+                new CreateFreeGameAssignmentPreviewRequest.PreferencesRequest(
+                        CreateFreeGameAssignmentPreviewRequest.PartnerPolicy.PREFER_PARTNERS,
+                        CreateFreeGameAssignmentPreviewRequest.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS
+                )
+        );
+
+        // when: 인증 없이 프리뷰 생성 요청 수행
+        mockMvc.perform(post("/free-games/assignment-previews")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                // then: 401 반환 검증
+                .andExpect(status().isUnauthorized());
     }
 }

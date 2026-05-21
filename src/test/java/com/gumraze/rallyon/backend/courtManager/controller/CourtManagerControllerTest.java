@@ -1,43 +1,18 @@
 package com.gumraze.rallyon.backend.courtManager.adapter.in.web;
 
 import com.gumraze.rallyon.backend.common.exception.NotFoundException;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.AddFreeGameParticipantUseCase;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.CreateFreeGameUseCase;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameDetailUseCase;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameParticipantDetailUseCase;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameParticipantsUseCase;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameRoundsAndMatchesUseCase;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.GetPublicFreeGameDetailUseCase;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.UpdateFreeGameInfoUseCase;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.UpdateFreeGameRoundsAndMatchesUseCase;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.command.AddFreeGameParticipantCommand;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.command.CreateFreeGameCommand;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.command.UpdateFreeGameInfoCommand;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.command.UpdateFreeGameRoundsAndMatchesCommand;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.query.GetFreeGameDetailQuery;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.query.GetFreeGameParticipantDetailQuery;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.query.GetFreeGameParticipantsQuery;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.query.GetFreeGameRoundsAndMatchesQuery;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.query.GetPublicFreeGameDetailQuery;
+import com.gumraze.rallyon.backend.common.exception.ServiceUnavailableException;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.*;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.command.*;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.query.*;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.result.SubmitFreeGameAssignmentPreviewJobResult;
+import com.gumraze.rallyon.backend.courtManager.constants.AssignmentPreviewJobStatus;
 import com.gumraze.rallyon.backend.courtManager.constants.MatchRecordMode;
 import com.gumraze.rallyon.backend.courtManager.constants.MatchResult;
 import com.gumraze.rallyon.backend.courtManager.constants.MatchStatus;
+import com.gumraze.rallyon.backend.courtManager.constants.MatchWinnerTeam;
 import com.gumraze.rallyon.backend.courtManager.constants.RoundStatus;
-import com.gumraze.rallyon.backend.courtManager.dto.AddFreeGameParticipantRequest;
-import com.gumraze.rallyon.backend.courtManager.dto.CreateFreeGameRequest;
-import com.gumraze.rallyon.backend.courtManager.dto.CreateFreeGameResponse;
-import com.gumraze.rallyon.backend.courtManager.dto.FreeGameDetailResponse;
-import com.gumraze.rallyon.backend.courtManager.dto.FreeGameMatchResponse;
-import com.gumraze.rallyon.backend.courtManager.dto.FreeGameParticipantDetailResponse;
-import com.gumraze.rallyon.backend.courtManager.dto.FreeGameParticipantResponse;
-import com.gumraze.rallyon.backend.courtManager.dto.FreeGameParticipantsResponse;
-import com.gumraze.rallyon.backend.courtManager.dto.FreeGameRoundMatchResponse;
-import com.gumraze.rallyon.backend.courtManager.dto.FreeGameRoundResponse;
-import com.gumraze.rallyon.backend.courtManager.dto.MatchRequest;
-import com.gumraze.rallyon.backend.courtManager.dto.RoundRequest;
-import com.gumraze.rallyon.backend.courtManager.dto.UpdateFreeGameRequest;
-import com.gumraze.rallyon.backend.courtManager.dto.UpdateFreeGameResponse;
-import com.gumraze.rallyon.backend.courtManager.dto.UpdateFreeGameRoundMatchRequest;
+import com.gumraze.rallyon.backend.courtManager.dto.*;
 import com.gumraze.rallyon.backend.security.config.SecurityConfig;
 import com.gumraze.rallyon.backend.user.constants.Gender;
 import com.gumraze.rallyon.backend.user.constants.Grade;
@@ -53,28 +28,19 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
-import static com.gumraze.rallyon.backend.courtManager.controller.support.CourtManagerControllerFixtures.authenticatedUser;
-import static com.gumraze.rallyon.backend.courtManager.controller.support.CourtManagerControllerFixtures.freeGameDetailResponse;
-import static com.gumraze.rallyon.backend.courtManager.controller.support.CourtManagerControllerFixtures.participantDetailResponse;
-import static com.gumraze.rallyon.backend.courtManager.controller.support.CourtManagerControllerFixtures.participantResponse;
-import static com.gumraze.rallyon.backend.courtManager.controller.support.CourtManagerControllerFixtures.participantResponseWithStats;
-import static com.gumraze.rallyon.backend.courtManager.controller.support.CourtManagerControllerFixtures.participantsResponse;
+import static com.gumraze.rallyon.backend.courtManager.controller.support.CourtManagerControllerFixtures.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(CourtManagerController.class)
 @Import(SecurityConfig.class)
@@ -87,8 +53,13 @@ class CourtManagerControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean private CreateFreeGameUseCase createFreeGameUseCase;
+    @MockitoBean private SubmitFreeGameAssignmentPreviewUseCase submitFreeGameAssignmentPreviewUseCase;
+    @MockitoBean private GetFreeGameAssignmentPreviewStatusUseCase getFreeGameAssignmentPreviewStatusUseCase;
     @MockitoBean private GetFreeGameDetailUseCase getFreeGameDetailUseCase;
     @MockitoBean private UpdateFreeGameInfoUseCase updateFreeGameInfoUseCase;
+    @MockitoBean private StartFreeGameUseCase startFreeGameUseCase;
+    @MockitoBean private StartFreeGameMatchUseCase startFreeGameMatchUseCase;
+    @MockitoBean private CompleteFreeGameMatchUseCase completeFreeGameMatchUseCase;
     @MockitoBean private GetFreeGameRoundsAndMatchesUseCase getFreeGameRoundsAndMatchesUseCase;
     @MockitoBean private UpdateFreeGameRoundsAndMatchesUseCase updateFreeGameRoundsAndMatchesUseCase;
     @MockitoBean private AddFreeGameParticipantUseCase addFreeGameParticipantUseCase;
@@ -97,6 +68,8 @@ class CourtManagerControllerTest {
     @MockitoBean private GetPublicFreeGameDetailUseCase getPublicFreeGameDetailUseCase;
 
     @MockitoBean private CreateFreeGameCommandMapper createFreeGameCommandMapper;
+    @MockitoBean private CreateFreeGameAssignmentPreviewCommandMapper createFreeGameAssignmentPreviewCommandMapper;
+    @MockitoBean private AssignmentPreviewJobResponseMapper assignmentPreviewJobResponseMapper;
     @MockitoBean private UpdateFreeGameInfoCommandMapper updateFreeGameInfoCommandMapper;
     @MockitoBean private UpdateFreeGameRoundsAndMatchesCommandMapper updateFreeGameRoundsAndMatchesCommandMapper;
     @MockitoBean private AddFreeGameParticipantCommandMapper addFreeGameParticipantCommandMapper;
@@ -104,7 +77,7 @@ class CourtManagerControllerTest {
 
     @Test
     @DisplayName("자유게임 생성 요청을 create use case로 전달한다")
-    void createFreeGame_success() throws Exception {
+    void createFreeGame_withValidRequest_returnsCreated() throws Exception {
         UUID accountId = UUID.randomUUID();
         UUID gameId = UUID.randomUUID();
         CreateFreeGameRequest request = new CreateFreeGameRequest(
@@ -149,8 +122,119 @@ class CourtManagerControllerTest {
     }
 
     @Test
+    @DisplayName("코트 배정 프리뷰 생성 시 응답 본문을 반환한다")
+    void createFreeGameAssignmentPreview_withValidRequest_returnsPreviewResponse() throws Exception {
+        // given: 유효한 프리뷰 생성 요청과 변환 결과 준비
+        UUID accountId = UUID.randomUUID();
+        CreateFreeGameAssignmentPreviewRequest request = previewRequest();
+        CreateFreeGameAssignmentPreviewCommand command = previewCommand();
+        SubmitFreeGameAssignmentPreviewJobResult result =
+                new SubmitFreeGameAssignmentPreviewJobResult(
+                        UUID.randomUUID(),
+                        AssignmentPreviewJobStatus.QUEUED,
+                        1000
+                );
+        CreateFreeGameAssignmentPreviewJobResponse response =
+                new CreateFreeGameAssignmentPreviewJobResponse(
+                        result.jobId(),
+                        result.status().name(),
+                        result.pollAfterMs()
+                );
+
+        given(createFreeGameAssignmentPreviewCommandMapper.toCommand(request)).willReturn(command);
+        given(submitFreeGameAssignmentPreviewUseCase.submit(accountId, command)).willReturn(result);
+        given(assignmentPreviewJobResponseMapper.toSubmitResponse(result)).willReturn(response);
+
+        // when: 프리뷰 생성 요청 수행
+        mockMvc.perform(post("/free-games/assignment-previews")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .with(authenticatedUser(accountId))
+                        .content(objectMapper.writeValueAsString(request)))
+                // then: 프리뷰 응답 본문 반환 검증
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.jobId").value(result.jobId().toString()))
+                .andExpect(jsonPath("$.status").value("QUEUED"))
+                .andExpect(jsonPath("$.pollAfterMs").value(1000));
+
+        verify(createFreeGameAssignmentPreviewCommandMapper).toCommand(request);
+        verify(submitFreeGameAssignmentPreviewUseCase).submit(accountId, command);
+        verify(assignmentPreviewJobResponseMapper).toSubmitResponse(result);
+    }
+
+    @Test
+    @DisplayName("코트 배정 프리뷰 job 상태 조회 시 완료 응답 본문을 반환한다")
+    void getFreeGameAssignmentPreviewStatus_withOwnedJob_returnsStatusResponse() throws Exception {
+        UUID accountId = UUID.randomUUID();
+        UUID jobId = UUID.randomUUID();
+        LocalDateTime submittedAt = LocalDateTime.of(2026, 4, 13, 14, 0);
+        LocalDateTime startedAt = submittedAt.plusSeconds(1);
+        LocalDateTime completedAt = startedAt.plusSeconds(2);
+        var result = new com.gumraze.rallyon.backend.courtManager.application.port.in.result.GetFreeGameAssignmentPreviewJobStatusResult(
+                jobId,
+                AssignmentPreviewJobStatus.SUCCEEDED,
+                new com.gumraze.rallyon.backend.courtManager.application.port.in.result.CreateFreeGameAssignmentPreviewResult(
+                        List.of(
+                                new com.gumraze.rallyon.backend.courtManager.application.port.in.result.CreateFreeGameAssignmentPreviewResult.Round(
+                                        1,
+                                        List.of(
+                                                new com.gumraze.rallyon.backend.courtManager.application.port.in.result.CreateFreeGameAssignmentPreviewResult.Court(
+                                                        1,
+                                                        Arrays.asList(1L, 2L, null, null)
+                                                )
+                                        )
+                                )
+                        ),
+                        List.of()
+                ),
+                null,
+                submittedAt,
+                startedAt,
+                completedAt
+        );
+        GetFreeGameAssignmentPreviewJobResponse response =
+                new GetFreeGameAssignmentPreviewJobResponse(
+                        jobId,
+                        "SUCCEEDED",
+                        new CreateFreeGameAssignmentPreviewResponse(
+                                List.of(
+                                        new CreateFreeGameAssignmentPreviewResponse.RoundResponse(
+                                                1,
+                                                List.of(
+                                                        new CreateFreeGameAssignmentPreviewResponse.CourtResponse(
+                                                                1,
+                                                                Arrays.asList(1L, 2L, null, null)
+                                                        )
+                                                )
+                                        )
+                                ),
+                                List.of()
+                        ),
+                        null,
+                        submittedAt,
+                        startedAt,
+                        completedAt
+                );
+
+        given(getFreeGameAssignmentPreviewStatusUseCase.getStatus(accountId, jobId)).willReturn(result);
+        given(assignmentPreviewJobResponseMapper.toStatusResponse(result)).willReturn(response);
+
+        mockMvc.perform(get("/free-games/assignment-previews/{jobId}", jobId)
+                        .with(authenticatedUser(accountId))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.jobId").value(jobId.toString()))
+                .andExpect(jsonPath("$.status").value("SUCCEEDED"))
+                .andExpect(jsonPath("$.preview.rounds[0].roundNumber").value(1))
+                .andExpect(jsonPath("$.preview.rounds[0].courts[0].slots[0]").value(1));
+
+        verify(getFreeGameAssignmentPreviewStatusUseCase).getStatus(accountId, jobId);
+        verify(assignmentPreviewJobResponseMapper).toStatusResponse(result);
+    }
+
+    @Test
     @DisplayName("자유게임 상세 조회 성공")
-    void getFreeGameDetail_success() throws Exception {
+    void getFreeGameDetail_withExistingGame_returnsOk() throws Exception {
         UUID accountId = UUID.randomUUID();
         UUID gameId = UUID.randomUUID();
         FreeGameDetailResponse response = freeGameDetailResponse(accountId, gameId);
@@ -167,12 +251,12 @@ class CourtManagerControllerTest {
 
     @Test
     @DisplayName("자유게임 기본 정보 수정 성공")
-    void updateFreeGameInfo_success() throws Exception {
+    void updateFreeGameInfo_withValidRequest_returnsOk() throws Exception {
         UUID accountId = UUID.randomUUID();
         UUID gameId = UUID.randomUUID();
         UpdateFreeGameRequest request = new UpdateFreeGameRequest(
                 "수정된 자유게임",
-                MatchRecordMode.RESULT,
+                MatchRecordMode.WINNER_ONLY,
                 GradeType.REGIONAL,
                 "2026-04-02T18:20",
                 null,
@@ -204,8 +288,67 @@ class CourtManagerControllerTest {
     }
 
     @Test
+    @DisplayName("자유게임 시작 요청 성공")
+    void startFreeGame_returnsOk() throws Exception {
+        UUID accountId = UUID.randomUUID();
+        UUID gameId = UUID.randomUUID();
+        StartFreeGameCommand command = new StartFreeGameCommand(accountId, gameId);
+        given(startFreeGameUseCase.start(command)).willReturn(new UpdateFreeGameResponse(gameId));
+
+        mockMvc.perform(post("/free-games/{gameId}/start", gameId)
+                        .with(authenticatedUser(accountId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.gameId").value(gameId.toString()));
+
+        verify(startFreeGameUseCase).start(command);
+    }
+
+    @Test
+    @DisplayName("자유게임 매치 시작 요청 성공")
+    void startFreeGameMatch_returnsNoContent() throws Exception {
+        UUID accountId = UUID.randomUUID();
+        UUID gameId = UUID.randomUUID();
+
+        mockMvc.perform(post("/free-games/{gameId}/rounds/{roundNumber}/matches/{courtNumber}/start", gameId, 1, 2)
+                        .with(authenticatedUser(accountId)))
+                .andExpect(status().isNoContent());
+
+        verify(startFreeGameMatchUseCase).start(new StartFreeGameMatchCommand(accountId, gameId, 1, 2));
+    }
+
+    @Test
+    @DisplayName("자유게임 매치 종료 요청 성공")
+    void completeFreeGameMatch_returnsNoContent() throws Exception {
+        UUID accountId = UUID.randomUUID();
+        UUID gameId = UUID.randomUUID();
+        CompleteFreeGameMatchRequest request = new CompleteFreeGameMatchRequest(
+                MatchWinnerTeam.TEAM_A,
+                null,
+                null
+        );
+
+        mockMvc.perform(post("/free-games/{gameId}/rounds/{roundNumber}/matches/{courtNumber}/complete", gameId, 1, 2)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(authenticatedUser(accountId))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNoContent());
+
+        verify(completeFreeGameMatchUseCase).complete(
+                new CompleteFreeGameMatchCommand(
+                        accountId,
+                        gameId,
+                        1,
+                        2,
+                        MatchWinnerTeam.TEAM_A,
+                        null,
+                        null
+                )
+        );
+    }
+
+    @Test
     @DisplayName("자유게임 라운드/매치 조회 성공")
-    void getFreeGameRoundMatch_success() throws Exception {
+    void getFreeGameRoundMatch_withExistingGame_returnsOk() throws Exception {
         UUID accountId = UUID.randomUUID();
         UUID gameId = UUID.randomUUID();
         UUID teamA1 = UUID.randomUUID();
@@ -226,6 +369,8 @@ class CourtManagerControllerTest {
                                                 List.of(teamB1, teamB2),
                                                 MatchStatus.NOT_STARTED,
                                                 MatchResult.NULL,
+                                                null,
+                                                null,
                                                 true
                                         )
                                 )
@@ -247,7 +392,7 @@ class CourtManagerControllerTest {
 
     @Test
     @DisplayName("라운드/매치 수정 PATCH 성공")
-    void updateRoundsAndMatches_patch_success() throws Exception {
+    void updateRoundsAndMatches_withValidRequest_returnsOk() throws Exception {
         UUID accountId = UUID.randomUUID();
         UUID gameId = UUID.randomUUID();
         UUID teamA1 = UUID.randomUUID();
@@ -300,7 +445,7 @@ class CourtManagerControllerTest {
 
     @Test
     @DisplayName("참가자 추가 성공")
-    void addFreeGameParticipant_success() throws Exception {
+    void addFreeGameParticipant_withValidRequest_returnsCreated() throws Exception {
         UUID accountId = UUID.randomUUID();
         UUID gameId = UUID.randomUUID();
         UUID participantId = UUID.randomUUID();
@@ -334,7 +479,7 @@ class CourtManagerControllerTest {
 
     @Test
     @DisplayName("자유게임 참가자 목록 조회 성공")
-    void get_free_game_participants_with_stats_success() throws Exception {
+    void getFreeGameParticipantsWithStats_withExistingGame_returnsOk() throws Exception {
         UUID gameId = UUID.randomUUID();
         UUID accountId = UUID.randomUUID();
         UUID participantAccountId = UUID.randomUUID();
@@ -356,7 +501,7 @@ class CourtManagerControllerTest {
 
     @Test
     @DisplayName("자유게임 참가자 상세 조회 성공")
-    void get_free_game_participant_detail_success() throws Exception {
+    void getFreeGameParticipantDetail_withExistingParticipant_returnsOk() throws Exception {
         UUID accountId = UUID.randomUUID();
         UUID gameId = UUID.randomUUID();
         UUID participantId = UUID.randomUUID();
@@ -377,7 +522,7 @@ class CourtManagerControllerTest {
 
     @Test
     @DisplayName("공개 자유게임 상세 조회 성공")
-    void get_public_free_game_detail_success() throws Exception {
+    void getPublicFreeGameDetail_withExistingGame_returnsOk() throws Exception {
         String shareCode = "public-share-code";
         UUID organizerId = UUID.randomUUID();
         UUID gameId = UUID.randomUUID();
@@ -393,7 +538,7 @@ class CourtManagerControllerTest {
 
     @Test
     @DisplayName("참가자 상세 조회 시 존재하지 않는 participantId면 실패")
-    void get_free_game_participant_detail_with_unknown_participant_then_not_found() throws Exception {
+    void getFreeGameParticipantDetail_withUnknownParticipant_returnsNotFound() throws Exception {
         UUID accountId = UUID.randomUUID();
         UUID gameId = UUID.randomUUID();
         UUID participantId = UUID.randomUUID();
@@ -407,4 +552,115 @@ class CourtManagerControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.detail").value("존재하지 않는 참가자입니다. participantId: " + participantId));
     }
+
+    @Test
+    @DisplayName("코트 배정 프리뷰 AI 생성 시 AI 서비스를 사용할 수 없으면 503을 반환한다")
+    void createFreeGameAssignmentPreview_whenAiServiceUnavailable_returnsServiceUnavailable() throws Exception {
+        // given: 유효한 프리뷰 생성 요청과 command 반환 결과를 준비
+        UUID accountId = UUID.randomUUID();
+        CreateFreeGameAssignmentPreviewRequest request = previewRequest();
+        CreateFreeGameAssignmentPreviewCommand command = previewCommand();
+
+
+        given(createFreeGameAssignmentPreviewCommandMapper.toCommand(request))
+                .willReturn(command);
+        given(submitFreeGameAssignmentPreviewUseCase.submit(accountId, command))
+                .willThrow(new ServiceUnavailableException("AI 코트 배정 프리뷰를 현재 생성할 수 없습니다."));
+
+        // when: 프리뷰 생성 요청을 수행한다.
+        mockMvc.perform(post("/free-games/assignment-previews")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_PROBLEM_JSON)
+                        .with(authenticatedUser(accountId))
+                        .content(objectMapper.writeValueAsString(request)))
+                // then: 503 problem detail 응답을 반환한다.
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.status").value(503))
+                .andExpect(jsonPath("$.detail").value("AI 코트 배정 프리뷰를 현재 생성할 수 없습니다."));
+
+    }
+
+    // helper method
+    private CreateFreeGameAssignmentPreviewRequest previewRequest() {
+        return new CreateFreeGameAssignmentPreviewRequest(
+                List.of(
+                        new CreateFreeGameAssignmentPreviewRequest.ParticipantRequest(
+                                1L,
+                                "서승재",
+                                Gender.MALE,
+                                20,
+                                Grade.S,
+                                1
+                        ),
+                        new CreateFreeGameAssignmentPreviewRequest.ParticipantRequest(
+                                2L,
+                                "김원호",
+                                Gender.MALE,
+                                20,
+                                Grade.A,
+                                0
+                        )
+                ),
+                List.of(
+                        new CreateFreeGameAssignmentPreviewRequest.RoundRequest(
+                                1,
+                                List.of(
+                                        new CreateFreeGameAssignmentPreviewRequest.CourtRequest(
+                                                1,
+                                                Arrays.asList(1L, null, null, null)
+                                        )
+                                )
+                        )
+                ),
+                List.of(
+                        new CreateFreeGameAssignmentPreviewRequest.PartnerPairRequest(1L, 2L)
+                ),
+                new CreateFreeGameAssignmentPreviewRequest.PreferencesRequest(
+                        CreateFreeGameAssignmentPreviewRequest.PartnerPolicy.PREFER_PARTNERS,
+                        CreateFreeGameAssignmentPreviewRequest.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS
+                )
+        );
+    }
+
+    private CreateFreeGameAssignmentPreviewCommand previewCommand() {
+        return new CreateFreeGameAssignmentPreviewCommand(
+                List.of(
+                        new CreateFreeGameAssignmentPreviewCommand.Participant(
+                                1L,
+                                "서승재",
+                                Gender.MALE,
+                                20,
+                                Grade.S,
+                                1
+                        ),
+                        new CreateFreeGameAssignmentPreviewCommand.Participant(
+                                2L,
+                                "김원호",
+                                Gender.MALE,
+                                20,
+                                Grade.A,
+                                0
+                        )
+                ),
+                List.of(
+                        new CreateFreeGameAssignmentPreviewCommand.Round(
+                                1,
+                                List.of(
+                                        new CreateFreeGameAssignmentPreviewCommand.Court(
+                                                1,
+                                                Arrays.asList(1L, null, null, null)
+                                        )
+                                )
+                        )
+                ),
+                List.of(
+                        new CreateFreeGameAssignmentPreviewCommand.PartnerPairs(1L, 2L)
+                ),
+                new CreateFreeGameAssignmentPreviewCommand.Preferences(
+                        CreateFreeGameAssignmentPreviewCommand.PartnerPolicy.PREFER_PARTNERS,
+                        CreateFreeGameAssignmentPreviewCommand.ExistingAssignmentPolicy.FILL_EMPTY_SLOTS
+                )
+        );
+    }
+
 }

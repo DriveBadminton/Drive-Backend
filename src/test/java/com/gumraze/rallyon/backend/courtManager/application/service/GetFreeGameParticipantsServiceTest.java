@@ -55,7 +55,7 @@ class GetFreeGameParticipantsServiceTest {
     void get_returns_basic_participants_sorted_by_created_at_and_id() {
         UUID gameId = UUID.randomUUID();
         UUID organizerAccountId = UUID.randomUUID();
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.WINNER_ONLY);
 
         GameParticipant later = CourtManagerTestFixtures.participant(
                 freeGame,
@@ -92,11 +92,11 @@ class GetFreeGameParticipantsServiceTest {
     }
 
     @Test
-    @DisplayName("RESULT 모드 통계 조회는 승패를 포함한다")
+    @DisplayName("WINNER_ONLY 모드 통계 조회는 승패를 포함한다")
     void get_returns_stats_with_win_loss_in_result_mode() {
         UUID gameId = UUID.randomUUID();
         UUID organizerAccountId = UUID.randomUUID();
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.WINNER_ONLY);
         FreeGameRound round = CourtManagerTestFixtures.round(freeGame, UUID.randomUUID(), 1, RoundStatus.NOT_STARTED);
 
         GameParticipant participant1 = participant(freeGame, "서승재");

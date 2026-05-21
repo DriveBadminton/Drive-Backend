@@ -62,6 +62,12 @@ public class FreeGameMatch extends MutableAuditEntity {
     @Enumerated(EnumType.STRING)
     private MatchResult matchResult;
 
+    @Column(name = "team_a_score")
+    private Integer teamAScore;
+
+    @Column(name = "team_b_score")
+    private Integer teamBScore;
+
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;       // 코트 삭제 시 삭제된 코트를 표시하기 위함, 소프트 삭제용
 
@@ -140,8 +146,61 @@ public class FreeGameMatch extends MutableAuditEntity {
         return matchResult;
     }
 
+    public Integer getTeamAScore() {
+        return teamAScore;
+    }
+
+    public Integer getTeamBScore() {
+        return teamBScore;
+    }
+
     public Boolean getIsActive() {
         return isActive;
+    }
+
+    public void start() {
+        if (matchStatus != MatchStatus.NOT_STARTED) {
+            throw new IllegalStateException("미진행 매치만 시작할 수 있습니다.");
+        }
+        matchStatus = MatchStatus.IN_PROGRESS;
+    }
+
+    public void completeStatusOnly() {
+        complete(null, null, null);
+    }
+
+    public void completeWithWinner(MatchResult winner) {
+        if (winner != MatchResult.TEAM_A_WIN && winner != MatchResult.TEAM_B_WIN) {
+            throw new IllegalArgumentException("승자 기록은 TEAM_A_WIN 또는 TEAM_B_WIN만 허용합니다.");
+        }
+        complete(winner, null, null);
+    }
+
+    public void completeWithScore(Integer teamAScore, Integer teamBScore) {
+        if (teamAScore == null || teamBScore == null) {
+            throw new IllegalArgumentException("점수 기록은 양 팀 점수가 모두 필요합니다.");
+        }
+        if (teamAScore < 0 || teamBScore < 0) {
+            throw new IllegalArgumentException("점수는 0 이상이어야 합니다.");
+        }
+        if (teamAScore.equals(teamBScore)) {
+            throw new IllegalArgumentException("점수 기록에서는 동점을 허용하지 않습니다.");
+        }
+        complete(
+                teamAScore > teamBScore ? MatchResult.TEAM_A_WIN : MatchResult.TEAM_B_WIN,
+                teamAScore,
+                teamBScore
+        );
+    }
+
+    private void complete(MatchResult result, Integer teamAScore, Integer teamBScore) {
+        if (matchStatus != MatchStatus.IN_PROGRESS) {
+            throw new IllegalStateException("진행 중인 매치만 완료할 수 있습니다.");
+        }
+        matchStatus = MatchStatus.COMPLETED;
+        matchResult = result;
+        this.teamAScore = teamAScore;
+        this.teamBScore = teamBScore;
     }
 
     @Override

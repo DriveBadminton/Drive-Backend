@@ -192,7 +192,7 @@ public class GlobalExceptionHandler {
         log.warn("[비즈니스 규칙 위반]: {}", ex.getMessage());
 
         return buildProblemDetailResponse(
-                HttpStatus.UNPROCESSABLE_ENTITY,
+                HttpStatus.UNPROCESSABLE_CONTENT,
                 "/problems/unprocessable-entity",
                 "요청을 처리할 수 없습니다.",
                 ex.getMessage(),

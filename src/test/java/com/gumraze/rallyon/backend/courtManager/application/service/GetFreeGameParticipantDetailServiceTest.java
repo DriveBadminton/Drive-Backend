@@ -44,7 +44,7 @@ class GetFreeGameParticipantDetailServiceTest {
         UUID gameId = UUID.randomUUID();
         UUID organizerAccountId = UUID.randomUUID();
         UUID participantAccountId = UUID.randomUUID();
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.WINNER_ONLY);
         GameParticipant participant = CourtManagerTestFixtures.participant(
                 freeGame,
                 UUID.randomUUID(),
@@ -75,7 +75,7 @@ class GetFreeGameParticipantDetailServiceTest {
         UUID gameId = UUID.randomUUID();
         UUID organizerAccountId = UUID.randomUUID();
         UUID participantId = UUID.randomUUID();
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.WINNER_ONLY);
 
         given(loadFreeGamePort.loadGameById(gameId)).willReturn(Optional.of(freeGame));
         given(loadGameParticipantPort.loadParticipantById(participantId)).willReturn(Optional.empty());
@@ -93,8 +93,8 @@ class GetFreeGameParticipantDetailServiceTest {
         UUID organizerAccountId = UUID.randomUUID();
         UUID gameId = UUID.randomUUID();
         UUID anotherGameId = UUID.randomUUID();
-        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.RESULT);
-        FreeGame anotherFreeGame = CourtManagerTestFixtures.freeGame(anotherGameId, organizerAccountId, MatchRecordMode.RESULT);
+        FreeGame freeGame = CourtManagerTestFixtures.freeGame(gameId, organizerAccountId, MatchRecordMode.WINNER_ONLY);
+        FreeGame anotherFreeGame = CourtManagerTestFixtures.freeGame(anotherGameId, organizerAccountId, MatchRecordMode.WINNER_ONLY);
         GameParticipant participant = CourtManagerTestFixtures.participant(
                 anotherFreeGame,
                 UUID.randomUUID(),

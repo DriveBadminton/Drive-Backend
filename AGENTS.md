@@ -121,7 +121,15 @@ TDD is the default for business logic changes, bug fixes, and new behavior.
 - Keep controller logic thin.
 - Keep persistence details out of domain code.
 - Prefer descriptive names over explanatory comments for simple behavior.
+- Prefer simple, descriptive class names that rely on package context instead of repeating it.
+- Avoid repeating domain or feature terms in class names when the package path already makes that context obvious.
+- Concrete adapter names may include the implementation technology only when it materially distinguishes the class.
+- Prefer noun-based class names and whole words over compressed abbreviations.
 - Use `record` freely for immutable request/response or command/result types when the local module already follows that direction.
+- New or modified interfaces under `src/main/java` should normally include JavaDoc before branch push.
+- This is especially important for `application/port/in`, `application/port/out`, and `api` interfaces because they define contracts across boundaries.
+- Write the first JavaDoc sentence as a short summary and describe the contract or call context rather than implementation details.
+- Add method-level JavaDoc when the meaning, input contract, or returned guarantee is not obvious from the signature alone.
 
 ## Verification Rules
 

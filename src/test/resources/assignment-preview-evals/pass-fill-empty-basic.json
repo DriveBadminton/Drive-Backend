@@ -1,0 +1,80 @@
+{
+  "scenario": "pass - 단순 빈 슬롯 채우기",
+  "command": {
+    "participants": [
+      {
+        "participantId": 1,
+        "name": "p1",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 2,
+        "name": "p2",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      }
+    ],
+    "rounds": [
+      {
+        "roundNumber": 1,
+        "courts": [
+          {
+            "courtNumber": 1,
+            "slots": [
+              1,
+              null,
+              null,
+              null
+            ]
+          }
+        ]
+      }
+    ],
+    "partnerPairs": [],
+    "preferences": {
+      "partnerPolicy": "IGNORE_PARTNERS",
+      "existingAssignmentPolicy": "FILL_EMPTY_SLOTS"
+    }
+  },
+  "response": {
+    "rounds": [
+      {
+        "roundNumber": 1,
+        "courts": [
+          {
+            "courtNumber": 1,
+            "slots": [
+              1,
+              2,
+              null,
+              null
+            ]
+          }
+        ]
+      }
+    ],
+    "warnings": [
+      {
+        "code": "PARTIAL_ASSIGNMENT",
+        "message": "일부 슬롯은 비어 있습니다."
+      }
+    ]
+  },
+  "expected": {
+    "pass": true,
+    "minFilledSlotDelta": 1,
+    "expectedWarningCodes": [
+      "PARTIAL_ASSIGNMENT"
+    ],
+    "forbiddenWarningCodes": [
+      "PARTNER_CONSTRAINT_PARTIAL"
+    ],
+    "expectedSatisfiedPartnerPairCount": 0,
+    "expectedFailureReasons": []
+  }
+}

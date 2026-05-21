@@ -1,0 +1,108 @@
+{
+  "scenario": "fail - 동일 round layout 반복",
+  "command": {
+    "participants": [
+      {
+        "participantId": 1,
+        "name": "p1",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 2,
+        "name": "p2",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      }
+    ],
+    "rounds": [
+      {
+        "roundNumber": 1,
+        "courts": [
+          {
+            "courtNumber": 1,
+            "slots": [
+              1,
+              null,
+              null,
+              null
+            ]
+          }
+        ]
+      },
+      {
+        "roundNumber": 2,
+        "courts": [
+          {
+            "courtNumber": 1,
+            "slots": [
+              null,
+              null,
+              null,
+              null
+            ]
+          }
+        ]
+      }
+    ],
+    "partnerPairs": [],
+    "preferences": {
+      "partnerPolicy": "IGNORE_PARTNERS",
+      "existingAssignmentPolicy": "FILL_EMPTY_SLOTS"
+    }
+  },
+  "response": {
+    "rounds": [
+      {
+        "roundNumber": 1,
+        "courts": [
+          {
+            "courtNumber": 1,
+            "slots": [
+              1,
+              2,
+              null,
+              null
+            ]
+          }
+        ]
+      },
+      {
+        "roundNumber": 2,
+        "courts": [
+          {
+            "courtNumber": 1,
+            "slots": [
+              1,
+              2,
+              null,
+              null
+            ]
+          }
+        ]
+      }
+    ],
+    "warnings": [
+      {
+        "code": "PARTIAL_ASSIGNMENT",
+        "message": "일부 슬롯은 비어 있습니다."
+      }
+    ]
+  },
+  "expected": {
+    "pass": false,
+    "minFilledSlotDelta": 3,
+    "expectedWarningCodes": [
+      "PARTIAL_ASSIGNMENT"
+    ],
+    "forbiddenWarningCodes": [],
+    "expectedSatisfiedPartnerPairCount": 0,
+    "expectedFailureReasons": [
+      "REPEATED_ROUND_LAYOUT"
+    ]
+  }
+}

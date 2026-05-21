@@ -82,6 +82,13 @@ public class FreeGameRound extends MutableAuditEntity {
         return finishedAt;
     }
 
+    public void start() {
+        if (roundStatus == RoundStatus.COMPLETED) {
+            throw new IllegalStateException("완료된 라운드는 다시 시작할 수 없습니다.");
+        }
+        roundStatus = RoundStatus.IN_PROGRESS;
+    }
+
     public void finish(LocalDateTime finishedAt) {
         this.roundStatus = RoundStatus.COMPLETED;
         this.finishedAt = finishedAt;

@@ -73,6 +73,8 @@ public class GetFreeGameRoundsAndMatchesService implements GetFreeGameRoundsAndM
                 ),
                 match.getMatchStatus(),
                 match.getMatchResult() != null ? match.getMatchResult() : MatchResult.NULL,
+                match.getTeamAScore(),
+                match.getTeamBScore(),
                 match.getIsActive()
         );
     }

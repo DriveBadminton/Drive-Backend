@@ -31,6 +31,7 @@ public class GetMyUserSummaryService implements GetMyUserSummaryUseCase {
         var provider = loadAccountAuthProviderPort.loadLatestAuthProvider(query.accountId()).orElse(null);
 
         return new UserMeResponse(
+                query.accountId(),
                 status,
                 profile != null ? profile.getProfileImageUrl() : null,
                 profile != null ? profile.getNickname() : null,

@@ -4,45 +4,19 @@ import com.gumraze.rallyon.backend.api.courtManager.FreeGameCommandApi;
 import com.gumraze.rallyon.backend.api.courtManager.FreeGameParticipantApi;
 import com.gumraze.rallyon.backend.api.courtManager.FreeGameQueryApi;
 import com.gumraze.rallyon.backend.api.courtManager.PublicFreeGameApi;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.AddFreeGameParticipantUseCase;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.CreateFreeGameUseCase;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameDetailUseCase;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameParticipantDetailUseCase;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameParticipantsUseCase;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.GetFreeGameRoundsAndMatchesUseCase;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.GetPublicFreeGameDetailUseCase;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.UpdateFreeGameInfoUseCase;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.UpdateFreeGameRoundsAndMatchesUseCase;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.*;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.command.CompleteFreeGameMatchCommand;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.command.CreateFreeGameAssignmentPreviewCommand;
 import com.gumraze.rallyon.backend.courtManager.application.port.in.command.CreateFreeGameCommand;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.query.GetFreeGameDetailQuery;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.query.GetFreeGameParticipantDetailQuery;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.query.GetFreeGameParticipantsQuery;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.query.GetFreeGameRoundsAndMatchesQuery;
-import com.gumraze.rallyon.backend.courtManager.application.port.in.query.GetPublicFreeGameDetailQuery;
-import com.gumraze.rallyon.backend.courtManager.dto.AddFreeGameParticipantRequest;
-import com.gumraze.rallyon.backend.courtManager.dto.AddFreeGameParticipantResponse;
-import com.gumraze.rallyon.backend.courtManager.dto.CreateFreeGameRequest;
-import com.gumraze.rallyon.backend.courtManager.dto.CreateFreeGameResponse;
-import com.gumraze.rallyon.backend.courtManager.dto.FreeGameDetailResponse;
-import com.gumraze.rallyon.backend.courtManager.dto.FreeGameParticipantDetailResponse;
-import com.gumraze.rallyon.backend.courtManager.dto.FreeGameParticipantsResponse;
-import com.gumraze.rallyon.backend.courtManager.dto.FreeGameRoundMatchResponse;
-import com.gumraze.rallyon.backend.courtManager.dto.UpdateFreeGameRequest;
-import com.gumraze.rallyon.backend.courtManager.dto.UpdateFreeGameResponse;
-import com.gumraze.rallyon.backend.courtManager.dto.UpdateFreeGameRoundMatchRequest;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.command.StartFreeGameCommand;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.command.StartFreeGameMatchCommand;
+import com.gumraze.rallyon.backend.courtManager.application.port.in.query.*;
+import com.gumraze.rallyon.backend.courtManager.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.UUID;
 
@@ -56,8 +30,13 @@ public class CourtManagerController implements
         PublicFreeGameApi {
 
     private final CreateFreeGameUseCase createFreeGameUseCase;
+    private final SubmitFreeGameAssignmentPreviewUseCase submitFreeGameAssignmentPreviewUseCase;
+    private final GetFreeGameAssignmentPreviewStatusUseCase getFreeGameAssignmentPreviewStatusUseCase;
     private final GetFreeGameDetailUseCase getFreeGameDetailUseCase;
     private final UpdateFreeGameInfoUseCase updateFreeGameInfoUseCase;
+    private final StartFreeGameUseCase startFreeGameUseCase;
+    private final StartFreeGameMatchUseCase startFreeGameMatchUseCase;
+    private final CompleteFreeGameMatchUseCase completeFreeGameMatchUseCase;
     private final GetFreeGameRoundsAndMatchesUseCase getFreeGameRoundsAndMatchesUseCase;
     private final UpdateFreeGameRoundsAndMatchesUseCase updateFreeGameRoundsAndMatchesUseCase;
     private final AddFreeGameParticipantUseCase addFreeGameParticipantUseCase;
@@ -65,9 +44,11 @@ public class CourtManagerController implements
     private final GetFreeGameParticipantDetailUseCase getFreeGameParticipantDetailUseCase;
     private final GetPublicFreeGameDetailUseCase getPublicFreeGameDetailUseCase;
     private final CreateFreeGameCommandMapper createFreeGameCommandMapper;
+    private final CreateFreeGameAssignmentPreviewCommandMapper createFreeGameAssignmentPreviewCommandMapper;
     private final UpdateFreeGameInfoCommandMapper updateFreeGameInfoCommandMapper;
     private final UpdateFreeGameRoundsAndMatchesCommandMapper updateFreeGameRoundsAndMatchesCommandMapper;
     private final AddFreeGameParticipantCommandMapper addFreeGameParticipantCommandMapper;
+    private final AssignmentPreviewJobResponseMapper assignmentPreviewJobResponseMapper;
 
     @Override
     @PostMapping
@@ -79,6 +60,34 @@ public class CourtManagerController implements
         UUID gameId = createFreeGameUseCase.create(accountId, command);
         return ResponseEntity.created(URI.create("/free-games/" + gameId))
                 .body(new CreateFreeGameResponse(gameId));
+    }
+
+    @Override
+    @PostMapping("/assignment-previews")
+    public ResponseEntity<CreateFreeGameAssignmentPreviewJobResponse> createFreeGameAssignmentPreview(
+            @AuthenticationPrincipal UUID accountId,
+            @RequestBody @Valid CreateFreeGameAssignmentPreviewRequest request
+    ) {
+        CreateFreeGameAssignmentPreviewCommand command =
+                createFreeGameAssignmentPreviewCommandMapper.toCommand(request);
+        return ResponseEntity.accepted().body(
+                assignmentPreviewJobResponseMapper.toSubmitResponse(
+                        submitFreeGameAssignmentPreviewUseCase.submit(accountId, command)
+                )
+        );
+    }
+
+    @Override
+    @GetMapping("/assignment-previews/{jobId}")
+    public ResponseEntity<GetFreeGameAssignmentPreviewJobResponse> getFreeGameAssignmentPreviewStatus(
+            @AuthenticationPrincipal UUID accountId,
+            @PathVariable UUID jobId
+    ) {
+        return ResponseEntity.ok(
+                assignmentPreviewJobResponseMapper.toStatusResponse(
+                        getFreeGameAssignmentPreviewStatusUseCase.getStatus(accountId, jobId)
+                )
+        );
     }
 
     @Override
@@ -124,6 +133,54 @@ public class CourtManagerController implements
     ) {
         updateFreeGameRoundsAndMatchesUseCase.update(
                 updateFreeGameRoundsAndMatchesCommandMapper.toCommand(accountId, gameId, request)
+        );
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    @PostMapping("/{gameId}/start")
+    public ResponseEntity<UpdateFreeGameResponse> startFreeGame(
+            @AuthenticationPrincipal UUID accountId,
+            @PathVariable UUID gameId
+    ) {
+        return ResponseEntity.ok(
+                startFreeGameUseCase.start(new StartFreeGameCommand(accountId, gameId))
+        );
+    }
+
+    @Override
+    @PostMapping("/{gameId}/rounds/{roundNumber}/matches/{courtNumber}/start")
+    public ResponseEntity<Void> startFreeGameMatch(
+            @AuthenticationPrincipal UUID accountId,
+            @PathVariable UUID gameId,
+            @PathVariable Integer roundNumber,
+            @PathVariable Integer courtNumber
+    ) {
+        startFreeGameMatchUseCase.start(
+                new StartFreeGameMatchCommand(accountId, gameId, roundNumber, courtNumber)
+        );
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    @PostMapping("/{gameId}/rounds/{roundNumber}/matches/{courtNumber}/complete")
+    public ResponseEntity<Void> completeFreeGameMatch(
+            @AuthenticationPrincipal UUID accountId,
+            @PathVariable UUID gameId,
+            @PathVariable Integer roundNumber,
+            @PathVariable Integer courtNumber,
+            @RequestBody @Valid CompleteFreeGameMatchRequest request
+    ) {
+        completeFreeGameMatchUseCase.complete(
+                new CompleteFreeGameMatchCommand(
+                        accountId,
+                        gameId,
+                        roundNumber,
+                        courtNumber,
+                        request.winnerTeam(),
+                        request.teamAScore(),
+                        request.teamBScore()
+                )
         );
         return ResponseEntity.noContent().build();
     }

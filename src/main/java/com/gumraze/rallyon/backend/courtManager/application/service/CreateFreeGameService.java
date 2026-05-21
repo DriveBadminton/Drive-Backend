@@ -59,12 +59,12 @@ public class CreateFreeGameService implements CreateFreeGameUseCase {
         FreeGame savedGame = saveFreeGamePort.save(freeGame);
         saveFreeGameSettingPort.save(savedGame, command.courtCount(), command.roundCount());
 
-        Map<String, GameParticipant> participantsByClientId =
+        Map<Long, GameParticipant> participantsByParticipantId =
                 saveGameParticipantPort.saveAll(savedGame, command.participants());
 
         List<RoundAssignment> roundAssignments = toRoundAssignments(
                 command.rounds(),
-                participantsByClientId
+                participantsByParticipantId
         );
 
         saveFreeGameRoundPort.saveAll(savedGame, roundAssignments);
@@ -94,7 +94,7 @@ public class CreateFreeGameService implements CreateFreeGameUseCase {
 
     private List<RoundAssignment> toRoundAssignments(
             List<CreateFreeGameCommand.Round> rounds,
-            Map<String, GameParticipant> participantsByClientId
+            Map<Long, GameParticipant> participantsByParticipantId
     ) {
         if (rounds == null || rounds.isEmpty()) {
             return List.of();
@@ -106,10 +106,10 @@ public class CreateFreeGameService implements CreateFreeGameUseCase {
                         round.courts().stream()
                                 .map(court -> new CourtAssignment(
                                         court.courtNumber(),
-                                        resolveParticipantId(participantsByClientId, court.slots().get(0)),
-                                        resolveParticipantId(participantsByClientId, court.slots().get(1)),
-                                        resolveParticipantId(participantsByClientId, court.slots().get(2)),
-                                        resolveParticipantId(participantsByClientId, court.slots().get(3))
+                                        resolveParticipantId(participantsByParticipantId, court.slots().get(0)),
+                                        resolveParticipantId(participantsByParticipantId, court.slots().get(1)),
+                                        resolveParticipantId(participantsByParticipantId, court.slots().get(2)),
+                                        resolveParticipantId(participantsByParticipantId, court.slots().get(3))
                                 ))
                                 .toList()
                 ))
@@ -117,16 +117,16 @@ public class CreateFreeGameService implements CreateFreeGameUseCase {
     }
 
     private UUID resolveParticipantId(
-            Map<String, GameParticipant> participantsByClientId,
-            String clientId
+            Map<Long, GameParticipant> participantsByParticipantId,
+            Long participantId
     ) {
-        if (clientId == null) {
+        if (participantId == null) {
             return null;
         }
 
-        GameParticipant participant = participantsByClientId.get(clientId);
+        GameParticipant participant = participantsByParticipantId.get(participantId);
         if (participant == null) {
-            throw new IllegalArgumentException("참가자 매핑에 실패했습니다. clientId: " + clientId);
+            throw new IllegalArgumentException("참가자 매핑에 실패했습니다. participantId: " + participantId);
         }
         return participant.getId();
     }

@@ -1,0 +1,89 @@
+{
+  "scenario": "pass - REASSIGN_ALL 기본 재배정",
+  "command": {
+    "participants": [
+      {
+        "participantId": 1,
+        "name": "p1",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 2,
+        "name": "p2",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 3,
+        "name": "p3",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      },
+      {
+        "participantId": 4,
+        "name": "p4",
+        "gender": "MALE",
+        "ageGroup": 20,
+        "grade": "S",
+        "gamesAssigned": 0
+      }
+    ],
+    "rounds": [
+      {
+        "roundNumber": 1,
+        "courts": [
+          {
+            "courtNumber": 1,
+            "slots": [
+              1,
+              null,
+              null,
+              null
+            ]
+          }
+        ]
+      }
+    ],
+    "partnerPairs": [],
+    "preferences": {
+      "partnerPolicy": "IGNORE_PARTNERS",
+      "existingAssignmentPolicy": "REASSIGN_ALL"
+    }
+  },
+  "response": {
+    "rounds": [
+      {
+        "roundNumber": 1,
+        "courts": [
+          {
+            "courtNumber": 1,
+            "slots": [
+              1,
+              2,
+              3,
+              4
+            ]
+          }
+        ]
+      }
+    ],
+    "warnings": []
+  },
+  "expected": {
+    "pass": true,
+    "minFilledSlotDelta": 3,
+    "expectedWarningCodes": [],
+    "forbiddenWarningCodes": [
+      "PARTNER_CONSTRAINT_PARTIAL"
+    ],
+    "expectedSatisfiedPartnerPairCount": 0,
+    "expectedFailureReasons": []
+  }
+}

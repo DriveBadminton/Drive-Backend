@@ -42,13 +42,13 @@ class SaveGameParticipantPersistenceAdapterTest {
     }
 
     @Test
-    @DisplayName("참가자를 저장하고 clientId 기준 매핑을 반환한다")
+    @DisplayName("참가자를 저장하고 participantId 기준 매핑을 반환한다")
     void saveAll_returnsParticipantsByClientId() {
         FreeGame freeGame = freeGame();
 
         List<CreateFreeGameCommand.Participant> participants = List.of(
-                new CreateFreeGameCommand.Participant("p1", null, "서승재", Gender.MALE, Grade.SS, 20),
-                new CreateFreeGameCommand.Participant("p2", null, "김원호", Gender.MALE, Grade.SS, 20)
+                new CreateFreeGameCommand.Participant(1L, null, "서승재", Gender.MALE, Grade.SS, 20),
+                new CreateFreeGameCommand.Participant(2L, null, "김원호", Gender.MALE, Grade.SS, 20)
         );
 
         AtomicInteger sequence = new AtomicInteger(1);
@@ -62,12 +62,12 @@ class SaveGameParticipantPersistenceAdapterTest {
                     return participant;
                 });
 
-        Map<String, GameParticipant> result = adapter.saveAll(freeGame, participants);
+        Map<Long, GameParticipant> result = adapter.saveAll(freeGame, participants);
 
         assertThat(result).hasSize(2);
-        assertThat(result).containsKeys("p1", "p2");
-        assertThat(result.get("p1").getOriginalName()).isEqualTo("서승재");
-        assertThat(result.get("p2").getOriginalName()).isEqualTo("김원호");
+        assertThat(result).containsKeys(1L, 2L);
+        assertThat(result.get(1L).getOriginalName()).isEqualTo("서승재");
+        assertThat(result.get(2L).getOriginalName()).isEqualTo("김원호");
     }
 
     @Test
@@ -76,7 +76,7 @@ class SaveGameParticipantPersistenceAdapterTest {
         UUID accountId = UUID.randomUUID();
         FreeGame freeGame = freeGame();
         List<CreateFreeGameCommand.Participant> participants = List.of(
-                new CreateFreeGameCommand.Participant("p1", accountId, "서승재", Gender.MALE, Grade.A, 20)
+                new CreateFreeGameCommand.Participant(1L, accountId, "서승재", Gender.MALE, Grade.A, 20)
         );
 
         given(accountRepository.findById(accountId)).willReturn(Optional.of(mock()));
@@ -96,7 +96,7 @@ class SaveGameParticipantPersistenceAdapterTest {
         UUID accountId = UUID.randomUUID();
         FreeGame freeGame = freeGame();
         List<CreateFreeGameCommand.Participant> participants = List.of(
-                new CreateFreeGameCommand.Participant("p1", accountId, "서승재", Gender.MALE, Grade.A, 20)
+                new CreateFreeGameCommand.Participant(1L, accountId, "서승재", Gender.MALE, Grade.A, 20)
         );
 
         given(accountRepository.findById(accountId)).willReturn(Optional.empty());
@@ -111,8 +111,8 @@ class SaveGameParticipantPersistenceAdapterTest {
     void saveAll_withDuplicateParticipants_assignsDistinctDisplayNames() {
         FreeGame freeGame = freeGame();
         List<CreateFreeGameCommand.Participant> participants = List.of(
-                new CreateFreeGameCommand.Participant("p1", null, "홍길동", Gender.MALE, Grade.A, 20),
-                new CreateFreeGameCommand.Participant("p2", null, "홍길동", Gender.MALE, Grade.A, 20)
+                new CreateFreeGameCommand.Participant(1L, null, "홍길동", Gender.MALE, Grade.A, 20),
+                new CreateFreeGameCommand.Participant(2L, null, "홍길동", Gender.MALE, Grade.A, 20)
         );
 
         given(gameParticipantRepository.save(any(GameParticipant.class)))
